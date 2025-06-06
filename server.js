@@ -1,4 +1,3 @@
-HEAD
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
@@ -280,9 +279,6 @@ async function cargarDatos() {
   }
 }
 
-
-
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
-
