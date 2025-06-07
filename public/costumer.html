@@ -135,7 +135,7 @@
     }
     .table-wrapper {
       flex: 1;
-      padding: 0 40px 40px 40px;
+      padding: 0 40px 0 40px;
       box-sizing: border-box;
       width: 100%;
     }
@@ -197,6 +197,73 @@
     .btn-editar:hover {
       background-color: #ffd700;
     }
+    .editar-form-wrapper {
+      padding: 30px 40px 40px 40px;
+      background: #fffbe6;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      margin: 20px 40px 0 40px;
+      max-width: 1100px;
+      border: 1px solid #ffe066;
+    }
+    .editar-form-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #665c00;
+    }
+    .editar-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .editar-form-row label {
+      font-weight: 500;
+      min-width: 110px;
+      color: #444;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .editar-form-row input,
+    .editar-form-row select {
+      padding: 7px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 2px;
+    }
+    .editar-form-buttons {
+      margin-top: 24px;
+      display: flex;
+      gap: 14px;
+    }
+    .editar-form-buttons button {
+      font-size: 1rem;
+      padding: 9px 22px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .editar-form-buttons .guardar {
+      background: #007bff;
+      color: #fff;
+    }
+    .editar-form-buttons .guardar:hover {
+      background: #0056b3;
+    }
+    .editar-form-buttons .cancelar {
+      background: #fff;
+      color: #222;
+      border: 1px solid #bbb;
+    }
+    .editar-form-buttons .cancelar:hover {
+      background: #eee;
+    }
     @media (max-width: 900px) {
       nav {
         width: 54px;
@@ -214,11 +281,19 @@
         padding: 18px 0;
         margin: 2px 6px;
       }
-    }
-    @media (max-width: 700px) {
-      .table-wrapper, .filters, header {
+      .editar-form-wrapper, .table-wrapper, .filters, header {
         padding-left: 10px;
         padding-right: 10px;
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+    @media (max-width: 700px) {
+      .table-wrapper, .filters, header, .editar-form-wrapper {
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-left: 0;
+        margin-right: 0;
       }
       .main-content {
         margin-left: 0;
@@ -294,6 +369,8 @@
         <tbody></tbody>
       </table>
     </div>
+    <!-- Formulario de edición dinámico (aparece solo si se edita un lead) -->
+    <div id="editar-form-container"></div>
   </div>
  <script>
   const filtroTeam = document.getElementById("filtro-team");
@@ -304,8 +381,10 @@
   const fechaDesde = document.getElementById("fecha-desde");
   const fechaHasta = document.getElementById("fecha-hasta");
   const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
+  const editarFormContainer = document.getElementById("editar-form-container");
 
   let datos = [];
+  let leadEditando = null;
 
   const agentesPorTeam = {
     "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
@@ -431,9 +510,11 @@
         datos = [];
       }
       aplicarFiltros();
+      ocultarFormularioEdicion();
     } catch (e) {
       datos = [];
       aplicarFiltros();
+      ocultarFormularioEdicion();
       console.error("Error cargando datos:", e.message);
     }
   }
@@ -462,10 +543,123 @@
       .catch(() => alert("Error eliminando el lead"));
   }
 
-  // Función para editar un lead (placeholder, debes implementar el formulario/modal)
+  // NUEVO: Mostrar formulario de edición debajo de la tabla
   function editarLead(fecha, numero, agente) {
-    alert(`Función editar pendiente para:\nFecha: ${fecha}\nNúmero: ${numero}\nAgente: ${agente}`);
-    // Aquí puedes abrir un modal o formulario para editar los datos.
+    // Busca el lead por los identificadores
+    const lead = datos.find(l =>
+      l["FECHA"] === fecha &&
+      l["NÚMERO"] === numero &&
+      l["AGENTE"] === agente
+    );
+    if (!lead) {
+      alert("No se encontró el lead para editar.");
+      return;
+    }
+    leadEditando = { ...lead }; // Copia para edición
+    renderizarFormularioEdicion(leadEditando);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  }
+
+  // Renderiza el formulario de edición
+  function renderizarFormularioEdicion(lead) {
+    editarFormContainer.innerHTML = `
+      <form id="form-editar-lead" class="editar-form-wrapper">
+        <div class="editar-form-title">Editar Lead</div>
+        <div class="editar-form-row">
+          <label>Fecha
+            <input type="date" name="FECHA" value="${lead.FECHA}" required>
+          </label>
+          <label>Team
+            <select name="TEAM" required>
+              <option value="">Seleccione</option>
+              <option value="Team Irania"${lead.TEAM === "Team Irania" ? " selected" : ""}>Team Irania</option>
+              <option value="Team Pleitez"${lead.TEAM === "Team Pleitez" ? " selected" : ""}>Team Pleitez</option>
+              <option value="Team Roberto"${lead.TEAM === "Team Roberto" ? " selected" : ""}>Team Roberto</option>
+              <option value="Team Lineas"${lead.TEAM === "Team Lineas" ? " selected" : ""}>Team Lineas</option>
+              <option value="Team Randal"${lead.TEAM === "Team Randal" ? " selected" : ""}>Team Randal</option>
+              <option value="Team Marisol"${lead.TEAM === "Team Marisol" ? " selected" : ""}>Team Marisol</option>
+            </select>
+          </label>
+          <label>Agente
+            <input type="text" name="AGENTE" value="${lead.AGENTE}" required>
+          </label>
+          <label>Número
+            <input type="text" name="NÚMERO" value="${lead["NÚMERO"]}" required>
+          </label>
+        </div>
+        <div class="editar-form-row">
+          <label>Servicio
+            <input type="text" name="SERVICIO" value="${lead.SERVICIO || ""}">
+          </label>
+          <label>Puntos
+            <input type="number" step="0.01" name="PUNTOS" value="${lead.PUNTOS || ""}">
+          </label>
+          <label>Cuenta
+            <input type="text" name="CUENTA" value="${lead.CUENTA || ""}">
+          </label>
+          <label>Dirección
+            <input type="text" name="DIRECCIÓN" value="${lead.DIRECCIÓN || ""}">
+          </label>
+          <label>ZIP Code
+            <input type="text" name="ZIP CODE" value="${lead["ZIP CODE"] || ""}">
+          </label>
+        </div>
+        <div class="editar-form-buttons">
+          <button type="submit" class="guardar">Guardar</button>
+          <button type="button" class="cancelar" onclick="ocultarFormularioEdicion()">Cancelar</button>
+        </div>
+      </form>
+    `;
+    // Actualizar agentes sugeridos si cambia el Team dentro del formulario
+    const teamSelect = editarFormContainer.querySelector('select[name="TEAM"]');
+    const agenteInput = editarFormContainer.querySelector('input[name="AGENTE"]');
+    teamSelect.addEventListener('change', function() {
+      const agentes = agentesPorTeam[teamSelect.value] || [];
+      if (agentes.length > 0) {
+        agenteInput.value = agentes[0];
+      } else {
+        agenteInput.value = "";
+      }
+    });
+    // Evento submit
+    document.getElementById('form-editar-lead').addEventListener('submit', guardarEdicionLead);
+  }
+
+  // Oculta el formulario de edición
+  function ocultarFormularioEdicion() {
+    editarFormContainer.innerHTML = "";
+    leadEditando = null;
+  }
+
+  // Guardar los cambios realizados en el formulario de edición
+  async function guardarEdicionLead(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    // Construir objeto actualizado
+    const leadActualizado = {};
+    for (let [key, value] of formData.entries()) {
+      leadActualizado[key] = value;
+    }
+
+    // Buscar el lead original para identificarlo (puedes usar un id si lo tienes)
+    // Aquí usamos FECHA+NÚMERO+AGENTE como identificador compuesto
+    try {
+      // Ajusta la URL y el método según tu backend
+      const res = await fetch(`/api/leads?fecha=${encodeURIComponent(leadEditando.FECHA)}&numero=${encodeURIComponent(leadEditando["NÚMERO"])}&agente=${encodeURIComponent(leadEditando.AGENTE)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadActualizado)
+      });
+      if (!res.ok) {
+        alert("Error al guardar los cambios.");
+        return;
+      }
+      ocultarFormularioEdicion();
+      cargarDatos();
+    } catch {
+      alert("Error de red al guardar los cambios.");
+    }
   }
  </script>
  <script>

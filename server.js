@@ -217,6 +217,144 @@ app.get("/api/graficas", (req, res) => {
   }
 });
 
+// NUEVO: ELIMINAR LEAD (por fecha, numero y agente)
+app.delete("/api/leads", async (req, res) => {
+  const { fecha, numero, agente } = req.query;
+  if (!fecha || !numero || !agente) {
+    return res.status(400).json({ success: false, error: "Faltan parámetros para eliminar." });
+  }
+
+  let eliminadoMongo = false;
+  let eliminadoExcel = false;
+  let errores = [];
+
+  // Eliminar en MongoDB
+  try {
+    const resultado = await Lead.deleteOne({
+      fecha: { $regex: `^${fecha}` }, // Por si hay hora en fecha
+      telefono: numero,
+      agent: agente
+    });
+    eliminadoMongo = resultado.deletedCount > 0;
+  } catch (err) {
+    errores.push("Error MongoDB: " + err.message);
+  }
+
+  // Eliminar en Excel
+  try {
+    if (fs.existsSync(EXCEL_FILE_PATH)) {
+      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
+      let cambiado = false;
+      workbook.SheetNames.forEach(nombreHoja => {
+        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+        const antes = datos.length;
+        datos = datos.filter(row =>
+          !(row.fecha && row.fecha.startsWith(fecha) && row.telefono === numero && row.agent === agente)
+        );
+        if (datos.length !== antes) {
+          cambiado = true;
+          const nuevaHoja = XLSX.utils.json_to_sheet(datos);
+          workbook.Sheets[nombreHoja] = nuevaHoja;
+        }
+      });
+      if (cambiado) XLSX.writeFile(workbook, EXCEL_FILE_PATH);
+      eliminadoExcel = cambiado;
+    }
+  } catch (err) {
+    errores.push("Error Excel: " + err.message);
+  }
+
+  if (eliminadoMongo || eliminadoExcel) {
+    return res.json({ success: true });
+  } else {
+    return res.status(404).json({ success: false, error: errores.join("; ") || "No se encontró el lead" });
+  }
+});
+
+// NUEVO: EDITAR LEAD (por fecha, numero y agente)
+app.put("/api/leads", async (req, res) => {
+  const { fecha, numero, agente } = req.query;
+  const cambios = req.body;
+  if (!fecha || !numero || !agente) {
+    return res.status(400).json({ success: false, error: "Faltan parámetros para editar." });
+  }
+
+  let actualizadoMongo = false;
+  let actualizadoExcel = false;
+  let errores = [];
+
+  // Actualizar en MongoDB
+  try {
+    const resultado = await Lead.updateOne(
+      {
+        fecha: { $regex: `^${fecha}` },
+        telefono: numero,
+        agent: agente
+      },
+      {
+        $set: {
+          fecha: cambios["FECHA"] || fecha,
+          team: cambios["TEAM"] || "",
+          agent: cambios["AGENTE"] || "",
+          telefono: cambios["NÚMERO"] || "",
+          producto: cambios["SERVICIO"] || "",
+          puntaje: cambios["PUNTOS"] || 0,
+          cuenta: cambios["CUENTA"] || "",
+          direccion: cambios["DIRECCIÓN"] || "",
+          zip: cambios["ZIP CODE"] || ""
+        }
+      }
+    );
+    actualizadoMongo = resultado.modifiedCount > 0;
+  } catch (err) {
+    errores.push("Error MongoDB: " + err.message);
+  }
+
+  // Actualizar en Excel
+  try {
+    if (fs.existsSync(EXCEL_FILE_PATH)) {
+      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
+      let cambiado = false;
+      workbook.SheetNames.forEach(nombreHoja => {
+        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+        let modificado = false;
+        datos = datos.map(row => {
+          if (row.fecha && row.fecha.startsWith(fecha) && row.telefono === numero && row.agent === agente) {
+            modificado = true;
+            return {
+              ...row,
+              fecha: cambios["FECHA"] || row.fecha,
+              team: cambios["TEAM"] || row.team,
+              agent: cambios["AGENTE"] || row.agent,
+              telefono: cambios["NÚMERO"] || row.telefono,
+              producto: cambios["SERVICIO"] || row.producto,
+              puntaje: cambios["PUNTOS"] || row.puntaje,
+              cuenta: cambios["CUENTA"] || row.cuenta,
+              direccion: cambios["DIRECCIÓN"] || row.direccion,
+              zip: cambios["ZIP CODE"] || row.zip
+            };
+          }
+          return row;
+        });
+        if (modificado) {
+          cambiado = true;
+          workbook.Sheets[nombreHoja] = XLSX.utils.json_to_sheet(datos);
+        }
+      });
+      if (cambiado) XLSX.writeFile(workbook, EXCEL_FILE_PATH);
+      actualizadoExcel = cambiado;
+    }
+  } catch (err) {
+    errores.push("Error Excel: " + err.message);
+  }
+
+  if (actualizadoMongo || actualizadoExcel) {
+    return res.json({ success: true });
+  } else {
+    return res.status(404).json({ success: false, error: errores.join("; ") || "No se encontró el lead para editar" });
+  }
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
