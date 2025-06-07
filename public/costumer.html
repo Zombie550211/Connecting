@@ -5,73 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Connecting</title>
   <style>
-
+    /* --- Tus estilos originales, no se han modificado --- */
     table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-  white-space: nowrap;
-}
-th {
-  cursor: pointer;
-}
-
-
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+    }
+    th {
+      cursor: pointer;
+    }
     html, body {
-  height: 100%;
-  margin: 0;
-}
-
-.container {
-  display: flex;
-  height: 100%;
-}
-
-nav {
-  width: 200px;
-  background-color: #1c2b39;
-  color: white;
-  padding: 10px;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-}
-
-.table-wrapper {
-  flex-grow: 1;
-  overflow: auto;
-}
-
-
+      height: 100%;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      height: 100%;
+    }
+    nav {
+      width: 200px;
+      background-color: #1c2b39;
+      color: white;
+      padding: 10px;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+    }
+    .table-wrapper {
+      flex-grow: 1;
+      overflow: auto;
+    }
     .btn-eliminar {
-  background-color: #add8e6; /* azul claro */
-  border: none;
-  color: black;
-  font-size: 16px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-
-.btn-eliminar:hover {
-  background-color: #87ceeb;
-}
-
+      background-color: #add8e6;
+      border: none;
+      color: black;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-eliminar:hover {
+      background-color: #87ceeb;
+    }
     * {
       box-sizing: border-box;
     }
-
     body {
       font-family: Arial, sans-serif;
       background-color: white;
@@ -79,8 +67,6 @@ nav {
       padding: 0;
       display: flex;
     }
-
-    /* Sidebar infinita estilo Lead */
     nav {
       width: 220px;
       background: #1E2A38;
@@ -93,13 +79,11 @@ nav {
       left: 0;
       bottom: 0;
     }
-
     nav h2 {
       font-size: 20px;
       font-weight: bold;
       text-align: center;
     }
-
     nav button {
       background: #2A3B4C;
       color: white;
@@ -111,23 +95,18 @@ nav {
       cursor: pointer;
       transition: background 0.3s;
     }
-
     nav button:hover,
     nav button.active {
       background: #00aaff;
     }
-
     .main-content {
       margin-left: 220px;
       flex-grow: 1;
     }
-
-   header {
-  background-color: white;
-  color: #003366;
-
+    header {
+      background-color: white;
+      color: #003366;
     }
-
     .descargar-excel {
       position: absolute;
       right: 1rem;
@@ -141,7 +120,6 @@ nav {
       font-size: 0.9rem;
       cursor: pointer;
     }
-
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -149,48 +127,42 @@ nav {
       padding: 1rem;
       background-color: #f2f2f2;
     }
-
     .filters input,
-.filters select {
-  padding: 8px 12px;
-  font-size: 0.95rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background-color: white;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.filters input:focus,
-.filters select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
-}
-
-th {
-  background-color: #003366;
-  color: white;
-  padding: 0.75rem 0.5rem;
-  text-align: left;
-  font-weight: 600;
-}
-
-td {
-  padding: 0.5rem 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 400;
-  border-bottom: 1px solid #ccc;
-  background-color: white;
-}
-tbody tr:nth-child(odd) td {
-  background-color: #ffffff;
-}
-tbody tr:nth-child(even) td {
-  background-color: #f5f5f5;
-}
-
+    .filters select {
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: white;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .filters input:focus,
+    .filters select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+    }
+    th {
+      background-color: #003366;
+      color: white;
+      padding: 0.75rem 0.5rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    td {
+      padding: 0.5rem 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 400;
+      border-bottom: 1px solid #ccc;
+      background-color: white;
+    }
+    tbody tr:nth-child(odd) td {
+      background-color: #ffffff;
+    }
+    tbody tr:nth-child(even) td {
+      background-color: #f5f5f5;
+    }
   </style>
-  
 </head>
 <body>
   <!-- Sidebar -->
@@ -201,14 +173,12 @@ tbody tr:nth-child(even) td {
     <button class="active">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
   </nav>
-
   <!-- Contenido principal -->
   <div class="main-content">
     <header>
       <h1>Connecting</h1>
       <a class="descargar-excel" onclick="exportarExcel()">Descargar Excel</a>
     </header>
-
     <div class="filters">
       <label>Fecha desde: <input type="date" id="fecha-desde"></label>
       <label>Fecha hasta: <input type="date" id="fecha-hasta"></label>
@@ -228,7 +198,6 @@ tbody tr:nth-child(even) td {
       <label>Dirección: <input type="text" id="filtro-direccion" placeholder="Buscar dirección"></label>
       <label>ZIP Code: <input type="text" id="filtro-zip" placeholder="Buscar ZIP"></label>
     </div>
-
     <div class="table-wrapper">
       <table id="tabla-clientes">
         <thead>
@@ -245,10 +214,9 @@ tbody tr:nth-child(even) td {
             <th>ACCIÓN</th>
           </tr>
         </thead>
-        <tbody></tbody> <!-- ✅ tbody presente -->
+        <tbody></tbody>
       </table>
     </div>
-
   </div>
  <script>
   const filtroTeam = document.getElementById("filtro-team");
@@ -288,10 +256,11 @@ tbody tr:nth-child(even) td {
   });
 
   function convertirFecha(fechaStr) {
-    const partes = fechaStr.split("/");
+    // formato esperado: yyyy-mm-dd
+    const partes = fechaStr.split("-");
     if (partes.length === 3) {
-      const [mes, dia, año] = partes;
-      return new Date(`${año}-${mes}-${dia}`);
+      const [año, mes, dia] = partes;
+      return new Date(`${año}-${mes}-${dia}T00:00:00`);
     }
     return new Date(fechaStr);
   }
@@ -302,117 +271,93 @@ tbody tr:nth-child(even) td {
     return fecha.toDateString() === hoy.toDateString();
   }
 
-  
-
   function renderizarTabla(filas) {
-  tabla.innerHTML = "";
-
-  // 🟨 Mostrar mensaje si no hay datos
-  if (filas.length === 0) {
-    const row = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = 10; // abarca todas las columnas
-    td.textContent = "No hay datos para mostrar.";
-    td.style.textAlign = "center";
-    td.style.padding = "1rem";
-    row.appendChild(td);
-    tabla.appendChild(row);
-    return;
-  }
-
-  const ordenadas = ordenarPorFechaDesc(filas);
-  ordenadas.forEach(fila => {
-    const tr = document.createElement("tr");
-
-    ["FECHA", "TEAM", "AGENTE", "NÚMERO", "SERVICIO", "PUNTOS", "CUENTA", "DIRECCIÓN", "ZIP CODE"].forEach(clave => {
+    tabla.innerHTML = "";
+    if (filas.length === 0) {
+      const row = document.createElement("tr");
       const td = document.createElement("td");
-      td.textContent = fila[clave] || "";
-      tr.appendChild(td);
+      td.colSpan = 10;
+      td.textContent = "No hay datos para mostrar.";
+      td.style.textAlign = "center";
+      td.style.padding = "1rem";
+      row.appendChild(td);
+      tabla.appendChild(row);
+      return;
+    }
+    const ordenadas = ordenarPorFechaDesc(filas);
+    ordenadas.forEach(fila => {
+      const tr = document.createElement("tr");
+      ["FECHA", "TEAM", "AGENTE", "NÚMERO", "SERVICIO", "PUNTOS", "CUENTA", "DIRECCIÓN", "ZIP CODE"].forEach(clave => {
+        const td = document.createElement("td");
+        td.textContent = fila[clave] || "";
+        tr.appendChild(td);
+      });
+      const tdAccion = document.createElement("td");
+      tdAccion.innerHTML = `
+        <button class="btn-editar" onclick="editarLead('${fila.FECHA}', '${fila["NÚMERO"]}', '${fila.AGENTE}')">✏️</button>
+        <button class="btn-eliminar" onclick="eliminarLead('${fila.FECHA}', '${fila["NÚMERO"]}', '${fila.AGENTE}')">🗑️</button>
+      `;
+      tr.appendChild(tdAccion);
+      tabla.appendChild(tr);
     });
-
-    const tdAccion = document.createElement("td");
-    tdAccion.innerHTML = `<button class="btn-eliminar" onclick="eliminarLead('${fila.FECHA}', '${fila["NÚMERO"]}', '${fila.AGENTE}')">🗑️</button>`;
-    tr.appendChild(tdAccion);
-
-    tabla.appendChild(tr);
-  });
-}
-
-function aplicarFiltros() {
-  const team = filtroTeam.value;
-  const agente = filtroAgente.value.toLowerCase();
-  const numero = filtroNumero.value.toLowerCase();
-  const direccion = filtroDireccion.value.toLowerCase();
-  const zip = filtroZip.value.toLowerCase();
-  const desde = fechaDesde.value;
-  const hasta = fechaHasta.value;
-
-  let filtrados = datos.filter(item => {
-    const fechaItem = convertirFecha(item.FECHA);
-    const cumpleDesde = desde ? fechaItem >= new Date(desde) : true;
-    const cumpleHasta = hasta ? fechaItem <= new Date(hasta) : true;
-    const coincideTeam = !team || (agentesPorTeam[team] || []).includes(item.AGENTE);
-    const coincideAgente = !agente || item.AGENTE.toLowerCase().includes(agente);
-    const coincideNumero = !numero || item["NÚMERO"].toLowerCase().includes(numero);
-    const coincideDireccion = !direccion || item.DIRECCIÓN.toLowerCase().includes(direccion);
-    const coincideZip = !zip || item["ZIP CODE"].toLowerCase().includes(zip);
-
-    return cumpleDesde && cumpleHasta && coincideTeam && coincideAgente &&
-           coincideNumero && coincideDireccion && coincideZip;
-  });
-
-  // Por defecto mostrar solo lo de hoy
-  if (!desde && !hasta) {
-    filtrados = filtrados.filter(item => esHoy(item.FECHA));
   }
 
-  renderizarTabla(filtrados);
-}
+  function aplicarFiltros() {
+    const team = filtroTeam.value;
+    const agente = filtroAgente.value.toLowerCase();
+    const numero = filtroNumero.value.toLowerCase();
+    const direccion = filtroDireccion.value.toLowerCase();
+    const zip = filtroZip.value.toLowerCase();
+    const desde = fechaDesde.value;
+    const hasta = fechaHasta.value;
+    let filtrados = datos.filter(item => {
+      const fechaItem = convertirFecha(item.FECHA);
+      const cumpleDesde = desde ? fechaItem >= new Date(desde) : true;
+      const cumpleHasta = hasta ? fechaItem <= new Date(hasta) : true;
+      const coincideTeam = !team || (item.TEAM === team);
+      const coincideAgente = !agente || (item.AGENTE && item.AGENTE.toLowerCase().includes(agente));
+      const coincideNumero = !numero || (item["NÚMERO"] && item["NÚMERO"].toLowerCase().includes(numero));
+      const coincideDireccion = !direccion || (item.DIRECCIÓN && item.DIRECCIÓN.toLowerCase().includes(direccion));
+      const coincideZip = !zip || (item["ZIP CODE"] && item["ZIP CODE"].toLowerCase().includes(zip));
+      return cumpleDesde && cumpleHasta && coincideTeam && coincideAgente && coincideNumero && coincideDireccion && coincideZip;
+    });
+    // Por defecto mostrar solo lo de hoy
+    if (!desde && !hasta) {
+      filtrados = filtrados.filter(item => esHoy(item.FECHA));
+    }
+    renderizarTabla(filtrados);
+  }
 
-async function cargarDatos() {
+  async function cargarDatos() {
     try {
       const res = await fetch("/api/leads");
       const tipo = res.headers.get("content-type");
       if (!tipo.includes("application/json")) throw new Error("Respuesta inesperada");
       datos = await res.json();
-      aplicarFiltros(); // << esto sí renderiza al inicio
+      aplicarFiltros();
     } catch (e) {
       console.error("Error cargando datos:", e.message);
     }
   }
 
   cargarDatos();
-</script>
-
-
-  <script> function convertirFecha(fechaStr) {
-  const partes = fechaStr.split("/");
-  if (partes.length === 3) {
-    const [mes, dia, año] = partes;  // <-- el orden correcto para tu Excel
-    return new Date(`${año}-${mes}-${dia}`);
-  }
-  return new Date(fechaStr);
-}
-
+ </script>
+ <script>
 function ordenarPorFechaDesc(arr) {
   return arr.sort((a, b) => convertirFecha(b.FECHA) - convertirFecha(a.FECHA));
 }
-
-</script>  
+</script>
 <script>
 let ordenActual = {
   columna: null,
   ascendente: true,
 };
-
 document.querySelectorAll("#tabla-clientes thead th").forEach((th, index) => {
   th.addEventListener("click", () => {
     const clave = th.textContent.trim();
     if (!clave || clave === "ACCIÓN") return;
-
     const nuevaAsc = ordenActual.columna === clave ? !ordenActual.ascendente : true;
     ordenActual = { columna: clave, ascendente: nuevaAsc };
-
     const datosOrdenados = [...datos].sort((a, b) => {
       const valA = (a[clave] || "").toString().toLowerCase();
       const valB = (b[clave] || "").toString().toLowerCase();
@@ -421,13 +366,9 @@ document.querySelectorAll("#tabla-clientes thead th").forEach((th, index) => {
       }
       return nuevaAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
     });
-
     renderizarTabla(datosOrdenados);
   });
 });
 </script>
-<script src="costumer.js"></script>
-<script src="costumer.js"></script>
-
 </body>
 </html>

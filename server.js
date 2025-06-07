@@ -1,11 +1,15 @@
 const express = require("express");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
 
 const app = express();
 const PORT = 3000;
+
+// Usa tu URL real de MongoDB Atlas o local aquí:
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/tuDB";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -14,6 +18,7 @@ app.use(session({
   secret: "secreto_crm_conectado",
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: MONGO_URL })
 }));
 
 app.use(express.static(__dirname + '/public'));
@@ -50,7 +55,7 @@ const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
 
 // Obtener nombre de la hoja (fecha actual)
 function obtenerNombreHoja() {
-  return new Date().toISOString().split("T")[0]; // Ej: 2025-06-06
+  return new Date().toISOString().split("T")[0];
 }
 
 // Función para leer o crear el archivo Excel
@@ -75,7 +80,6 @@ function inicializarExcelConHojaDelDia() {
     workbook = XLSX.utils.book_new();
   }
 
-  // Si la hoja del día no existe, crearla vacía
   if (!workbook.Sheets[nombreHoja]) {
     const hojaVacia = XLSX.utils.json_to_sheet([]);
     XLSX.utils.book_append_sheet(workbook, hojaVacia, nombreHoja);
@@ -86,10 +90,8 @@ function inicializarExcelConHojaDelDia() {
   }
 }
 
-// Ejecutar al iniciar el servidor
 inicializarExcelConHojaDelDia();
 
-// Guardar nuevo lead en la hoja del día
 app.post("/api/leads", (req, res) => {
   try {
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
@@ -112,7 +114,6 @@ app.post("/api/leads", (req, res) => {
 
     const workbook = obtenerWorkbook();
 
-    // Leer hoja actual o iniciar vacía
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
@@ -121,7 +122,6 @@ app.post("/api/leads", (req, res) => {
     datos.push(nuevoLead);
     const nuevaHoja = XLSX.utils.json_to_sheet(datos);
 
-    // Reemplazar hoja si ya existe
     if (workbook.SheetNames.includes(nombreHoja)) {
       const idx = workbook.SheetNames.indexOf(nombreHoja);
       workbook.SheetNames.splice(idx, 1);
@@ -137,11 +137,10 @@ app.post("/api/leads", (req, res) => {
   }
 });
 
-// Obtener todos los leads de todas las hojas del Excel
 app.get("/api/leads", (req, res) => {
   try {
     if (!fs.existsSync(EXCEL_FILE_PATH)) {
-      return res.json([]); // No hay archivo, no hay leads
+      return res.json([]);
     }
     const workbook = XLSX.readFile(EXCEL_FILE_PATH);
     let todosLeads = [];
@@ -152,7 +151,6 @@ app.get("/api/leads", (req, res) => {
       todosLeads = todosLeads.concat(datos);
     });
 
-    // Ordenar por fecha descendente
     todosLeads.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     res.json(todosLeads);
@@ -162,7 +160,6 @@ app.get("/api/leads", (req, res) => {
   }
 });
 
-// Obtener datos para gráficas desde el Excel
 app.get("/api/graficas", (req, res) => {
   try {
     if (!fs.existsSync(EXCEL_FILE_PATH)) {
