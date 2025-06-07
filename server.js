@@ -1,8 +1,7 @@
 require('dotenv').config();
 
 console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
-
-const Lead = require('./models/Lead');
+const lead = require('./models/lead'); // <-- todo en minúsculas
 
 const express = require("express");
 const session = require("express-session");
