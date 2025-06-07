@@ -1,45 +1,16 @@
 const mongoose = require('mongoose');
 
-const LeadSchema = new mongoose.Schema({
-  fecha: {
-    type: Date,
-    required: true
-  },
-  team: {
-    type: String,
-    trim: true,
-    required: [true, 'El equipo es obligatorio']
-  },
-  agent: {
-    type: String,
-    trim: true,
-    required: [true, 'El agente es obligatorio']
-  },
-  telefono: {
-    type: String,
-    trim: true
-  },
-  producto: {
-    type: String,
-    trim: true,
-    required: [true, 'El producto es obligatorio']
-  },
-  puntaje: {
-    type: Number,
-    default: 0
-  },
-  cuenta: {
-    type: String,
-    trim: true
-  },
-  direccion: {
-    type: String,
-    trim: true
-  },
-  zip: {
-    type: String,
-    trim: true
-  }
+const leadSchema = new mongoose.Schema({
+  fecha: { type: Date, default: Date.now },
+  team: String,
+  agent: String,
+  telefono: String,
+  producto: String,
+  puntaje: Number,
+  cuenta: String,
+  direccion: String,
+  zip: String
+  // No incluir campo email aquí
 });
 
-module.exports = mongoose.model('Lead', LeadSchema);
+module.exports = mongoose.model('Lead', leadSchema);

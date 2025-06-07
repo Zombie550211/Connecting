@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
-const Lead = require('./models/lead'); // Ahora con mayúscula para coherencia
+const Lead = require('./models/lead');
 
 const express = require("express");
 const session = require("express-session");
@@ -19,7 +19,7 @@ if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
 }
 
-// Conexión a MongoDB Atlas (sin opciones deprecated)
+// Conexión a MongoDB Atlas
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
@@ -50,7 +50,6 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Middleware para proteger rutas
 const protegerRuta = (req, res, next) => {
   if (!req.session.usuario) return res.redirect("/login.html");
   next();
@@ -103,9 +102,11 @@ function inicializarExcelConHojaDelDia() {
 
 inicializarExcelConHojaDelDia();
 
+// ENDPOINT PARA GUARDAR LEAD (sin email)
 app.post("/api/leads", async (req, res) => {
   try {
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
+
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
