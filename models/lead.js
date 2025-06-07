@@ -1,48 +1,45 @@
 const mongoose = require('mongoose');
 
 const LeadSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    unique: true
-  },
-  phone: {
-    type: String,
-    trim: true
-  },
-  company: {
-    type: String,
-    trim: true
-  },
-  status: {
-    type: String,
-    enum: ['Nuevo', 'En Proceso', 'Contactado', 'Convertido', 'Perdido'],
-    default: 'Nuevo'
-  },
-  notes: {
-    type: String,
-    trim: true
-  },
-  createdAt: {
+  fecha: {
     type: Date,
-    default: Date.now
+    required: true
   },
-  updatedAt: {
-    type: Date
+  team: {
+    type: String,
+    trim: true,
+    required: [true, 'El equipo es obligatorio']
+  },
+  agent: {
+    type: String,
+    trim: true,
+    required: [true, 'El agente es obligatorio']
+  },
+  telefono: {
+    type: String,
+    trim: true
+  },
+  producto: {
+    type: String,
+    trim: true,
+    required: [true, 'El producto es obligatorio']
+  },
+  puntaje: {
+    type: Number,
+    default: 0
+  },
+  cuenta: {
+    type: String,
+    trim: true
+  },
+  direccion: {
+    type: String,
+    trim: true
+  },
+  zip: {
+    type: String,
+    trim: true
   }
-});
-
-// Actualiza 'updatedAt' antes de guardar
-LeadSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
 });
 
 module.exports = mongoose.model('Lead', LeadSchema);

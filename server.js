@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
-const lead = require('./models/lead'); // <-- todo en minúsculas
+const Lead = require('./models/lead'); // Ahora con mayúscula para coherencia
 
 const express = require("express");
 const session = require("express-session");
@@ -14,18 +14,15 @@ const XLSX = require("xlsx");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Usa tu URL real de MongoDB Atlas en el archivo .env
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
 }
-// Conexión a MongoDB Atlas
-mongoose.connect(MONGO_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('✅ Conectado a MongoDB Atlas'))
-.catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
+
+// Conexión a MongoDB Atlas (sin opciones deprecated)
+mongoose.connect(MONGO_URL)
+  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
+  .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,7 +34,7 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: MONGO_URL })
 }));
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
@@ -53,6 +50,7 @@ app.post("/login", (req, res) => {
   }
 });
 
+// Middleware para proteger rutas
 const protegerRuta = (req, res, next) => {
   if (!req.session.usuario) return res.redirect("/login.html");
   next();
@@ -66,15 +64,13 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-// Archivo Excel
+// Excel
 const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
 
-// Obtener nombre de la hoja (fecha actual)
 function obtenerNombreHoja() {
   return new Date().toISOString().split("T")[0];
 }
 
-// Función para leer o crear el archivo Excel
 function obtenerWorkbook() {
   if (fs.existsSync(EXCEL_FILE_PATH)) {
     return XLSX.readFile(EXCEL_FILE_PATH);
@@ -85,7 +81,6 @@ function obtenerWorkbook() {
   }
 }
 
-// Crear el archivo Excel y hoja del día automáticamente al iniciar el servidor
 function inicializarExcelConHojaDelDia() {
   const nombreHoja = obtenerNombreHoja();
 
