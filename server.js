@@ -124,23 +124,42 @@ app.post("/api/leads", async (req, res) => {
       zip: zip || ''
     };
 
-    // Guardar en Excel
-    const workbook = obtenerWorkbook();
+    // Guardar en MongoDB primero
+    await Lead.create(nuevoLead);
+
+    // Guardar en Excel (manejo robusto)
+    let workbook;
+    if (fs.existsSync(EXCEL_FILE_PATH)) {
+      workbook = XLSX.readFile(EXCEL_FILE_PATH);
+    } else {
+      workbook = XLSX.utils.book_new();
+    }
+
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
-      datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+      datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
     }
     datos.push(nuevoLead);
-    const nuevaHoja = XLSX.utils.json_to_sheet(datos);
-    if (workbook.SheetNames.includes(nombreHoja)) {
-      const idx = workbook.SheetNames.indexOf(nombreHoja);
-      workbook.SheetNames.splice(idx, 1);
-    }
-    XLSX.utils.book_append_sheet(workbook, nuevaHoja, nombreHoja);
-    XLSX.writeFile(workbook, EXCEL_FILE_PATH);
 
-    // Guardar en MongoDB
-    await Lead.create(nuevoLead);
+    const encabezados = [
+      "fecha",
+      "team",
+      "agent",
+      "telefono",
+      "producto",
+      "puntaje",
+      "cuenta",
+      "direccion",
+      "zip"
+    ];
+
+    // Siempre crear la hoja y asegurar encabezados
+    const nuevaHoja = XLSX.utils.json_to_sheet(datos, { header: encabezados });
+    workbook.Sheets[nombreHoja] = nuevaHoja;
+    if (!workbook.SheetNames.includes(nombreHoja)) {
+      workbook.SheetNames.push(nombreHoja);
+    }
+    XLSX.writeFile(workbook, EXCEL_FILE_PATH);
 
     res.json({ success: true });
   } catch (err) {
@@ -158,7 +177,7 @@ app.get("/api/leads", async (req, res) => {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
       workbook.SheetNames.forEach(nombreHoja => {
         const hoja = workbook.Sheets[nombreHoja];
-        const datos = XLSX.utils.sheet_to_json(hoja);
+        const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
         leadsExcel = leadsExcel.concat(datos);
       });
       leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
@@ -199,7 +218,7 @@ app.get("/api/graficas", (req, res) => {
 
     workbook.SheetNames.forEach(nombreHoja => {
       const hoja = workbook.Sheets[nombreHoja];
-      const datos = XLSX.utils.sheet_to_json(hoja);
+      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
       datos.forEach(row => {
         if (!row.team || !row.producto) return;
@@ -217,7 +236,7 @@ app.get("/api/graficas", (req, res) => {
   }
 });
 
-// NUEVO: ELIMINAR LEAD (por fecha, numero y agente)
+// ELIMINAR LEAD (por fecha, numero y agente)
 app.delete("/api/leads", async (req, res) => {
   const { fecha, numero, agente } = req.query;
   if (!fecha || !numero || !agente) {
@@ -246,14 +265,26 @@ app.delete("/api/leads", async (req, res) => {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
       let cambiado = false;
       workbook.SheetNames.forEach(nombreHoja => {
-        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
         const antes = datos.length;
         datos = datos.filter(row =>
           !(row.fecha && row.fecha.startsWith(fecha) && row.telefono === numero && row.agent === agente)
         );
         if (datos.length !== antes) {
           cambiado = true;
-          const nuevaHoja = XLSX.utils.json_to_sheet(datos);
+          const nuevaHoja = XLSX.utils.json_to_sheet(datos, {
+            header: [
+              "fecha",
+              "team",
+              "agent",
+              "telefono",
+              "producto",
+              "puntaje",
+              "cuenta",
+              "direccion",
+              "zip"
+            ]
+          });
           workbook.Sheets[nombreHoja] = nuevaHoja;
         }
       });
@@ -271,7 +302,7 @@ app.delete("/api/leads", async (req, res) => {
   }
 });
 
-// NUEVO: EDITAR LEAD (por fecha, numero y agente)
+// EDITAR LEAD (por fecha, numero y agente)
 app.put("/api/leads", async (req, res) => {
   const { fecha, numero, agente } = req.query;
   const cambios = req.body;
@@ -316,7 +347,7 @@ app.put("/api/leads", async (req, res) => {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
       let cambiado = false;
       workbook.SheetNames.forEach(nombreHoja => {
-        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
         let modificado = false;
         datos = datos.map(row => {
           if (row.fecha && row.fecha.startsWith(fecha) && row.telefono === numero && row.agent === agente) {
@@ -338,7 +369,19 @@ app.put("/api/leads", async (req, res) => {
         });
         if (modificado) {
           cambiado = true;
-          workbook.Sheets[nombreHoja] = XLSX.utils.json_to_sheet(datos);
+          // Asegura encabezados
+          const encabezados = [
+            "fecha",
+            "team",
+            "agent",
+            "telefono",
+            "producto",
+            "puntaje",
+            "cuenta",
+            "direccion",
+            "zip"
+          ];
+          workbook.Sheets[nombreHoja] = XLSX.utils.json_to_sheet(datos, { header: encabezados });
         }
       });
       if (cambiado) XLSX.writeFile(workbook, EXCEL_FILE_PATH);
