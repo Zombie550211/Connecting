@@ -16,8 +16,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Usa tu URL real de MongoDB Atlas en el archivo .env
-const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/tuDB";
-
+const MONGO_URL = process.env.MONGO_URL;
+if (!MONGO_URL) {
+  throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
+}
 // Conexión a MongoDB Atlas
 mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
