@@ -1,15 +1,30 @@
+require('dotenv').config();
+
+console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
+
+const Lead = require('./models/Lead');
+
 const express = require("express");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
+const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Usa tu URL real de MongoDB Atlas o local aquí:
+// Usa tu URL real de MongoDB Atlas en el archivo .env
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/tuDB";
+
+// Conexión a MongoDB Atlas
+mongoose.connect(MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Conectado a MongoDB Atlas'))
+.catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -92,7 +107,7 @@ function inicializarExcelConHojaDelDia() {
 
 inicializarExcelConHojaDelDia();
 
-app.post("/api/leads", (req, res) => {
+app.post("/api/leads", async (req, res) => {
   try {
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
     if (!agent || !producto) {
@@ -112,23 +127,23 @@ app.post("/api/leads", (req, res) => {
       zip: zip || ''
     };
 
+    // Guardar en Excel
     const workbook = obtenerWorkbook();
-
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
     }
-
     datos.push(nuevoLead);
     const nuevaHoja = XLSX.utils.json_to_sheet(datos);
-
     if (workbook.SheetNames.includes(nombreHoja)) {
       const idx = workbook.SheetNames.indexOf(nombreHoja);
       workbook.SheetNames.splice(idx, 1);
     }
-
     XLSX.utils.book_append_sheet(workbook, nuevaHoja, nombreHoja);
     XLSX.writeFile(workbook, EXCEL_FILE_PATH);
+
+    // Guardar en MongoDB
+    await Lead.create(nuevoLead);
 
     res.json({ success: true });
   } catch (err) {
@@ -137,23 +152,33 @@ app.post("/api/leads", (req, res) => {
   }
 });
 
-app.get("/api/leads", (req, res) => {
+// GET leads: Lee leads de Excel y MongoDB, y los regresa en dos arreglos
+app.get("/api/leads", async (req, res) => {
   try {
-    if (!fs.existsSync(EXCEL_FILE_PATH)) {
-      return res.json([]);
+    // 1. Leads desde Excel
+    let leadsExcel = [];
+    if (fs.existsSync(EXCEL_FILE_PATH)) {
+      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
+      workbook.SheetNames.forEach(nombreHoja => {
+        const hoja = workbook.Sheets[nombreHoja];
+        const datos = XLSX.utils.sheet_to_json(hoja);
+        leadsExcel = leadsExcel.concat(datos);
+      });
+      leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     }
-    const workbook = XLSX.readFile(EXCEL_FILE_PATH);
-    let todosLeads = [];
 
-    workbook.SheetNames.forEach(nombreHoja => {
-      const hoja = workbook.Sheets[nombreHoja];
-      const datos = XLSX.utils.sheet_to_json(hoja);
-      todosLeads = todosLeads.concat(datos);
+    // 2. Leads desde MongoDB
+    let leadsMongo = [];
+    try {
+      leadsMongo = await Lead.find().sort({ fecha: -1 }).lean();
+    } catch (errorMongo) {
+      console.error("Error al leer leads de MongoDB:", errorMongo);
+    }
+
+    res.json({
+      leadsExcel,
+      leadsMongo
     });
-
-    todosLeads.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-    res.json(todosLeads);
   } catch (error) {
     console.error("Error al leer leads:", error);
     res.status(500).json({ error: "No se pudieron cargar los leads." });
