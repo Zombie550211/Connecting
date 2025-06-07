@@ -105,6 +105,8 @@ inicializarExcelConHojaDelDia();
 // ENDPOINT PARA GUARDAR LEAD (sin email)
 app.post("/api/leads", async (req, res) => {
   try {
+    console.log("BODY RECIBIDO:", req.body);
+
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
 
     if (!agent || !producto) {
@@ -124,10 +126,10 @@ app.post("/api/leads", async (req, res) => {
       zip: zip || ''
     };
 
-    // Guardar en MongoDB primero
+    // Guardar en MongoDB
     await Lead.create(nuevoLead);
 
-    // Guardar en Excel (manejo robusto)
+    // Guardar en Excel
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -135,6 +137,7 @@ app.post("/api/leads", async (req, res) => {
       workbook = XLSX.utils.book_new();
     }
 
+    // Leer datos previos o inicializar array
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
@@ -153,13 +156,16 @@ app.post("/api/leads", async (req, res) => {
       "zip"
     ];
 
-    // Siempre crear la hoja y asegurar encabezados
+    // Escribe la hoja con encabezados siempre
     const nuevaHoja = XLSX.utils.json_to_sheet(datos, { header: encabezados });
     workbook.Sheets[nombreHoja] = nuevaHoja;
     if (!workbook.SheetNames.includes(nombreHoja)) {
       workbook.SheetNames.push(nombreHoja);
     }
     XLSX.writeFile(workbook, EXCEL_FILE_PATH);
+
+    // LOG extra para ver si se escribió bien
+    console.log(`Lead guardado. Total filas en hoja ${nombreHoja}:`, datos.length);
 
     res.json({ success: true });
   } catch (err) {
