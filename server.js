@@ -95,7 +95,7 @@ app.post("/api/costumer", async (req, res) => {
   }
 });
 
-// Obtener todos los costumers (puedes agregar filtros si quieres)
+// Obtener todos los costumers
 app.get("/api/costumer", async (req, res) => {
   try {
     const { fecha } = req.query;
@@ -134,6 +134,20 @@ app.delete("/api/costumer/:id", async (req, res) => {
     } else {
       res.status(404).json({ success: false, error: "No se encontró el costumer para eliminar" });
     }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar varios costumers por IDs
+app.post('/api/costumer/delete-multiple', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: "No se recibieron IDs." });
+    }
+    await Costumer.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
