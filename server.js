@@ -378,6 +378,14 @@ app.put("/api/leads", async (req, res) => {
     errores.push("Error MongoDB: " + err.message);
   }
 
+  const multer = require('multer');
+const XLSX = require('xlsx');
+const upload = multer({ dest: 'uploads/' }); // crea un folder 'uploads' si no existe
+
+app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
+  // ...código de importación aquí...
+});
+
   // Actualizar en Excel
   try {
     if (fs.existsSync(EXCEL_FILE_PATH)) {
