@@ -332,6 +332,10 @@
       <h1>Connecting</h1>
       <!-- Puedes quitar el botón Excel si solo quieres Mongo -->
     </header>
+    <form action="/api/costumer/import" method="post" enctype="multipart/form-data" style="margin:24px 40px;">
+  <input type="file" name="archivo" accept=".xlsx,.xls"/>
+  <button type="submit">Importar Excel</button>
+</form>
     <form id="costumerForm" style="margin:24px 40px;">
       <input placeholder="Team" id="team" required>
       <input placeholder="Agente" id="agent" required>
