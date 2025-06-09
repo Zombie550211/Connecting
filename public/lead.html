@@ -111,95 +111,132 @@
       font-weight: 700;
       margin-bottom: 10px;
     }
+    .charts-filter {
+      margin-bottom: 20px;
+      padding: 10px 15px;
+      background: #f3f7fa;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .charts-filter label {
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .charts-filter input[type="date"] {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #b4c5d4;
+    }
+    .charts-filter button {
+      width: auto;
+      padding: 7px 20px;
+      margin: 0;
+      background: #126de4e5;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .charts-filter button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <nav>
-  <h1>Connecting</h1>
-  <button onclick="location.href='#'">Inicio</button>
-  <button onclick="location.href='lead.html'">Lead</button>
-  <button onclick="location.href='costumer.html'">Costumer</button>
-  <button onclick="location.href='#'">Reports</button>
-</nav>
-<main>
-  <section class="form-section">
-    <h2>Formulario de Registro</h2>
-    <form id="crmForm">
-      <div class="form-group">
-        <label for="team">Team</label>
-       <!-- Solo mostramos el fragmento del <select id="team"> corregido -->
-<select id="team">
-  <option value="">Seleccione team</option>
-  <option value="Team Irania">Team Irania</option>
-  <option value="Team Pleitez">Team Pleitez</option>
-  <option value="Team Roberto">Team Roberto</option>
-  <option value="Team Lineas">Team Lineas</option>
-  <option value="Team Randal">Team Randal</option>
-  <option value="Team Marisol">Team Marisol</option>
-</select>
-
+    <h1>Connecting</h1>
+    <button onclick="location.href='#'">Inicio</button>
+    <button onclick="location.href='lead.html'">Lead</button>
+    <button onclick="location.href='costumer.html'">Costumer</button>
+    <button onclick="location.href='#'">Reports</button>
+  </nav>
+  <main>
+    <section class="form-section">
+      <h2>Formulario de Registro</h2>
+      <form id="crmForm">
+        <div class="form-group">
+          <label for="team">Team</label>
+          <select id="team">
+            <option value="">Seleccione team</option>
+            <option value="Team Irania">Team Irania</option>
+            <option value="Team Pleitez">Team Pleitez</option>
+            <option value="Team Roberto">Team Roberto</option>
+            <option value="Team Lineas">Team Lineas</option>
+            <option value="Team Randal">Team Randal</option>
+            <option value="Team Marisol">Team Marisol</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="agent">Agente</label>
+          <select id="agent">
+            <option>Seleccione Agente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="producto">Producto</label>
+          <select id="producto">
+            <option>Seleccione Producto</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="puntaje">Puntaje</label>
+          <select id="puntaje">
+            <option>Seleccione Puntaje</option>
+            <option>Sin Puntaje</option>
+            <option>0.25</option>
+            <option>0.35</option>
+            <option>1.0</option>
+            <option>1.25</option>
+            <option>1.50</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cuenta">Cuenta</label>
+          <select id="cuenta">
+            <option>Seleccione Cuenta</option>
+            <option>Cuenta Alexis</option>
+            <option>Cuenta Eduardo</option>
+            <option>Cuenta Israel</option>
+            <option>Cuenta Lineas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="telefono">Agregue número de teléfono</label>
+          <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" />
+        </div>
+        <div class="form-group">
+          <label for="direccion">Dirección</label>
+          <input type="text" id="direccion" placeholder="Dirección del cliente" />
+        </div>
+        <div class="form-group">
+          <label for="zip">ZIP Code</label>
+          <input type="text" id="zip" placeholder="Código ZIP" />
+        </div>
+        <button type="submit">Guardar Lead</button>
+      </form>
+    </section>
+    <section class="charts-section">
+      <div class="charts-filter">
+        <label for="fechaGraficas">Filtrar gráficas por fecha:</label>
+        <input type="date" id="fechaGraficas" />
+        <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
       </div>
-      <div class="form-group">
-        <label for="agent">Agente</label>
-        <select id="agent">
-          <option>Seleccione Agente</option>
-        </select>
+      <div class="chart-container">
+        <h3>Ventas y Puntaje por Team</h3>
+        <canvas id="ventasTeamChart"></canvas>
       </div>
-      <div class="form-group">
-        <label for="producto">Producto</label>
-        <select id="producto">
-          <option>Seleccione Producto</option>
-        </select>
+      <div class="chart-container">
+        <h3>Ventas por Producto</h3>
+        <canvas id="productosChart"></canvas>
       </div>
-      <div class="form-group">
-        <label for="puntaje">Puntaje</label>
-        <select id="puntaje">
-          <option>Seleccione Puntaje</option>
-          <option>Sin Puntaje</option>
-          <option>0.25</option>
-          <option>0.35</option>
-          <option>1.0</option>
-          <option>1.25</option>
-          <option>1.50</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="cuenta">Cuenta</label>
-        <select id="cuenta">
-          <option>Seleccione Cuenta</option>
-          <option>Cuenta Alexis</option>
-          <option>Cuenta Eduardo</option>
-          <option>Cuenta Israel</option>
-          <option>Cuenta Lineas</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="telefono">Agregue número de teléfono</label>
-        <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" />
-      </div>
-      <div class="form-group">
-        <label for="direccion">Dirección</label>
-        <input type="text" id="direccion" placeholder="Dirección del cliente" />
-      </div>
-      <div class="form-group">
-        <label for="zip">ZIP Code</label>
-        <input type="text" id="zip" placeholder="Código ZIP" />
-      </div>
-      <button type="submit">Guardar Lead</button>
-    </form>
-  </section>
-  <section class="charts-section">
-    <div class="chart-container">
-      <h3>Ventas y Puntaje por Team</h3>
-      <canvas id="ventasTeamChart"></canvas>
-    </div>
-    <div class="chart-container">
-      <h3>Ventas por Producto</h3>
-      <canvas id="productosChart"></canvas>
-    </div>
-  </section>
-</main>
+    </section>
+  </main>
 </div>
 
 <script>
@@ -248,42 +285,17 @@ document.addEventListener("DOMContentLoaded", () => {
     selectProducto.appendChild(opt);
   });
   iniciarGraficas();
-  
-  // ✅ BLOQUE AÑADIDO: Cargar datos desde leads.xlsx
-function cargarGraficas() {
-  fetch("/api/graficas")
-    .then(res => res.json())
-    .then(data => {
-      equipos.forEach(team => {
-        ventasPorEquipo[team] = data.ventasPorEquipo[team] || 0;
-        puntosPorEquipo[team] = data.puntosPorEquipo[team] || 0;
-      });
 
-      productos.forEach(prod => {
-        ventasPorProducto[prod] = data.ventasPorProducto[prod] || 0;
-      });
+  // Selecciona la fecha de hoy por defecto al cargar la página
+  const hoy = new Date().toISOString().slice(0,10);
+  document.getElementById('fechaGraficas').value = hoy;
 
-      equipos.forEach((team, i) => {
-        ventasTeamChart.data.datasets[0].data[i] = ventasPorEquipo[team];
-        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntosPorEquipo[team];
-      });
-      ventasTeamChart.update();
+  // Cargar las gráficas de la fecha seleccionada
+  actualizarGraficas();
 
-      productos.forEach((prod, i) => {
-        productosChart.data.datasets[0].data[i] = ventasPorProducto[prod];
-      });
-      productosChart.update();
-    })
-    .catch(err => console.error("Error al cargar gráficas:", err));
-}
-
-// Llamada inicial
-cargarGraficas();
-
-// Auto-actualización cada 30 segundos
-setInterval(cargarGraficas, 30000);
+  // Opcional: auto-actualización cada 30 segundos con la fecha seleccionada
+  setInterval(actualizarGraficas, 30000);
 });
-
 
 let ventasTeamChart, productosChart;
 
@@ -365,6 +377,31 @@ function iniciarGraficas() {
   });
 }
 
+// NUEVA FUNCIÓN para cargar gráficas según la fecha seleccionada
+function actualizarGraficas() {
+  const fecha = document.getElementById('fechaGraficas').value;
+  fetch(`/api/graficas?fecha=${fecha}`)
+    .then(res => res.json())
+    .then(data => {
+      // Actualizamos los datos de los equipos
+      equipos.forEach((team, i) => {
+        ventasPorEquipo[team] = data.ventasPorEquipo[team] || 0;
+        puntosPorEquipo[team] = data.puntosPorEquipo[team] || 0;
+        ventasTeamChart.data.datasets[0].data[i] = ventasPorEquipo[team];
+        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntosPorEquipo[team];
+      });
+      ventasTeamChart.update();
+
+      // Actualizamos los datos de los productos
+      productos.forEach((prod, i) => {
+        ventasPorProducto[prod] = data.ventasPorProducto[prod] || 0;
+        productosChart.data.datasets[0].data[i] = ventasPorProducto[prod];
+      });
+      productosChart.update();
+    })
+    .catch(err => console.error("Error al cargar gráficas:", err));
+}
+
 document.getElementById("crmForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
@@ -387,41 +424,29 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
     return;
   }
 
-fetch("/api/leads", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
-})
-  .then(async res => {
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Error en respuesta:", res.status, errorText);
-      throw new Error("Error al guardar el lead.");
-    }
-    return res.json();
+  fetch("/api/leads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
   })
-  .then(() => {
-    ventasPorEquipo[team]++;
-    puntosPorEquipo[team] += puntaje;
-    ventasPorProducto[producto]++;
-
-    const idxTeam = equipos.indexOf(team);
-    ventasTeamChart.data.datasets[0].data[idxTeam] = ventasPorEquipo[team];
-    ventasTeamChart.data.datasets[1].data[idxTeam] = team === "Team Lineas" ? 0 : puntosPorEquipo[team];
-    ventasTeamChart.update();
-
-    const idxProducto = productos.indexOf(producto);
-    productosChart.data.datasets[0].data[idxProducto] = ventasPorProducto[producto];
-    productosChart.update();
-
-    document.getElementById("crmForm").reset();
-    alert("Lead guardado exitosamente.");
-  })
-  .catch(error => {
-    console.error("Error al guardar lead:", error);
-    alert("Hubo un error al guardar el lead. Revisa la consola.");
-  });
-
+    .then(async res => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error en respuesta:", res.status, errorText);
+        throw new Error("Error al guardar el lead.");
+      }
+      return res.json();
+    })
+    .then(() => {
+      // Después de guardar, refresca las gráficas de la fecha seleccionada
+      actualizarGraficas();
+      document.getElementById("crmForm").reset();
+      alert("Lead guardado exitosamente.");
+    })
+    .catch(error => {
+      console.error("Error al guardar lead:", error);
+      alert("Hubo un error al guardar el lead. Revisa la consola.");
+    });
 });
 </script>
 <script>
