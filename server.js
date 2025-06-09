@@ -203,7 +203,7 @@ app.get("/api/leads", async (req, res) => {
 // ENDPOINT GRAFICAS: AHORA FILTRA POR FECHA SI SE LE PASA ?fecha=YYYY-MM-DD
 app.get("/api/graficas", (req, res) => {
   try {
-    const fechaFiltro = req.query.fecha; // Ejemplo: "2025-06-08"
+    const fechaFiltro = req.query.fecha; // Ejemplo: "2025-06-09"
     if (!fs.existsSync(EXCEL_FILE_PATH)) {
       return res.json({
         ventasPorEquipo: {},

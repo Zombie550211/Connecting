@@ -3,154 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CRM - Versión Clásica con Productos y Teams</title>
+  <title>CRM - Lead desde Costumer</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
     * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      color: #333;
-    }
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
-    nav {
-      width: 220px;
-      background: #1E2A38;
-      color: white;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    nav h1 {
-      margin: 0 0 20px;
-      font-size: 1.5em;
-      font-weight: 700;
-    }
-    nav button {
-      background: #2A3B4C;
-      color: white;
-      border: none;
-      padding: 10px;
-      text-align: left;
-      font-weight: 600;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      transition: background 0.3s;
-    }
-    nav button:hover {
-      background: #00aaff;
-    }
-    main {
-      flex: 1;
-      padding: 30px;
-      display: flex;
-      gap: 30px;
-      background: white;
-    }
-    .form-section {
-      flex: 1;
-      background: #fff;
-      padding: 20px 25px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);
-    }
-    .form-section h2 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-weight: 700;
-      color: #222;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    select, input[type="text"], input[type="number"], button {
-      width: 100%;
-      padding: 8px 10px;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #126de4e5;
-      border: none;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .charts-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .chart-container {
-      background: #fff;
-      padding: 15px 20px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);
-    }
-    .chart-container h3 {
-      margin-top: 0;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .charts-filter {
-      margin-bottom: 20px;
-      padding: 10px 15px;
-      background: #f3f7fa;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .charts-filter label {
-      font-weight: 600;
-      margin-bottom: 0;
-    }
-    .charts-filter input[type="date"] {
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #b4c5d4;
-    }
-    .charts-filter button {
-      width: auto;
-      padding: 7px 20px;
-      margin: 0;
-      background: #126de4e5;
-      border: none;
-      color: white;
-      border-radius: 4px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .charts-filter button:hover {
-      background: #0056b3;
-    }
-    .no-data-msg {
-      color: #a00;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 10px;
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
+    .container { display: flex; min-height: 100vh; }
+    nav { width: 220px; background: #1E2A38; color: white; padding: 20px; display: flex; flex-direction: column; }
+    nav h1 { margin: 0 0 20px; font-size: 1.5em; font-weight: 700; }
+    nav button { background: #2A3B4C; color: white; border: none; padding: 10px; text-align: left; font-weight: 600; border-radius: 4px; cursor: pointer; margin-bottom: 10px; transition: background 0.3s;}
+    nav button:hover { background: #00aaff; }
+    main { flex: 1; padding: 30px; display: flex; gap: 30px; background: white; }
+    .form-section { flex: 1; background: #fff; padding: 20px 25px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
+    .form-section h2 { margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #222;}
+    .form-group { margin-bottom: 15px;}
+    label { display: block; font-weight: 600; margin-bottom: 6px;}
+    select, input[type="text"], input[type="number"], button { width: 100%; padding: 8px 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;}
+    button { background-color: #126de4e5; border: none; color: white; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
+    button:hover { background-color: #0056b3; }
+    .charts-section { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
+    .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
+    .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
+    .charts-filter label { font-weight: 600; margin-bottom: 0;}
+    .charts-filter input[type="date"] { padding: 6px 10px; border-radius: 4px; border: 1px solid #b4c5d4;}
+    .charts-filter button { width: auto; padding: 7px 20px; margin: 0; background: #126de4e5; border: none; color: white; border-radius: 4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
+    .charts-filter button:hover { background: #0056b3; }
+    .no-data-msg { color: #a00; font-weight: bold; text-align: center; margin-top: 10px;}
   </style>
 </head>
 <body>
@@ -259,7 +139,7 @@ const productos = [
 
 const agentesPorTeam = {
   "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
-  "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Ellen Diaz", ],
+  "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Ellen Diaz"],
   "Team Roberto": ["Carlos Marroquin", "Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala"],
   "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward", "Lineas-Kenia", "Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
   "Team Randal": ["Abigail Morales", "Alexander Montecinos", "Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
@@ -381,13 +261,12 @@ function iniciarGraficas() {
   });
 }
 
-// Nueva función robusta para actualizar las gráficas y mostrar mensaje si no hay datos
+// Usa los datos de costumer.xlsx
 function actualizarGraficas() {
   const fecha = document.getElementById('fechaGraficas').value;
-  fetch(`/api/graficas?fecha=${fecha}`)
+  fetch(`/api/graficas-costumer?fecha=${fecha}`)
     .then(res => res.json())
     .then(data => {
-      // Maneja caso de error del backend
       if (!data || typeof data !== 'object') {
         mostrarNoData(true, true);
         return;
@@ -421,7 +300,6 @@ function actualizarGraficas() {
     });
 }
 
-// Muestra/oculta mensaje "No hay datos" en cada gráfica
 function mostrarNoData(team, producto) {
   document.getElementById('no-data-team').style.display = team ? '' : 'none';
   document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
@@ -464,7 +342,6 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
       return res.json();
     })
     .then(() => {
-      // Después de guardar, refresca las gráficas de la fecha seleccionada
       actualizarGraficas();
       document.getElementById("crmForm").reset();
       alert("Lead guardado exitosamente.");
@@ -474,21 +351,6 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
       alert("Hubo un error al guardar el lead. Revisa la consola.");
     });
 });
-</script>
-<script>
-  // Verifica si el usuario inició sesión (simulación, puedes mejorar esto con un token)
-  const loggedIn = sessionStorage.getItem("loggedIn");
-
-  // Si no hay sesión, redirige al login
-  if (!loggedIn) {
-    window.location.href = "login.html";
-  }
-
-  // Si sí hay sesión, habilita navegación
-  document.querySelectorAll('.nav-button').forEach(btn => {
-    btn.disabled = false;
-    btn.classList.remove('disabled');
-  });
 </script>
 </body>
 </html>
