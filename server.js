@@ -1,9 +1,5 @@
 require('dotenv').config();
 
-console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
-const Lead = require('./models/lead');
-const Costumer = require('./models/costumer');
-
 const express = require("express");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
@@ -14,6 +10,9 @@ const XLSX = require("xlsx");
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
+const Lead = require('./models/lead');
+const Costumer = require('./models/costumer');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -22,7 +21,18 @@ const COSTUMER_FILE_PATH = path.join(__dirname, "Costumer.xlsx");
 
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
-  throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
+  throw new Error("La variable de entorno MONGO_URL no está definida.");
+}
+
+// Middleware mejorado para autenticación y AJAX/fetch
+function protegerRuta(req, res, next) {
+  if (!req.session.usuario) {
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
+    }
+    return res.redirect("/login.html");
+  }
+  next();
 }
 
 mongoose.connect(MONGO_URL)
@@ -55,11 +65,6 @@ app.post("/login", (req, res) => {
   }
 });
 
-const protegerRuta = (req, res, next) => {
-  if (!req.session.usuario) return res.redirect("/login.html");
-  next();
-};
-
 app.get("/lead.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "lead.html"));
 });
@@ -68,93 +73,8 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-// === BLOQUE COSTUMER (100% MongoDB) ===
-
-// Crear costumer
-app.post("/api/costumer", async (req, res) => {
-  try {
-    const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const nuevoCostumer = {
-      fecha: new Date().toISOString().slice(0, 10),
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Costumer.create(nuevoCostumer);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Obtener todos los costumers
-app.get("/api/costumer", async (req, res) => {
-  try {
-    const { fecha } = req.query;
-    const query = {};
-    if (fecha) query.fecha = { $regex: `^${fecha}` };
-    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    res.json({ costumers });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Editar costumer (por _id)
-app.put("/api/costumer/:id", async (req, res) => {
-  try {
-    const costumerId = req.params.id;
-    const cambios = req.body;
-    const resultado = await Costumer.findByIdAndUpdate(costumerId, cambios, { new: true });
-    if (resultado) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ success: false, error: "No se encontró el costumer para editar" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Eliminar costumer (por _id)
-app.delete("/api/costumer/:id", async (req, res) => {
-  try {
-    const costumerId = req.params.id;
-    const resultado = await Costumer.findByIdAndDelete(costumerId);
-    if (resultado) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ success: false, error: "No se encontró el costumer para eliminar" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Eliminar varios costumers por IDs
-app.post('/api/costumer/delete-multiple', async (req, res) => {
-  try {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ success: false, error: "No se recibieron IDs." });
-    }
-    await Costumer.deleteMany({ _id: { $in: ids } });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Importar costumer desde Excel con filtro de filas vacías
-app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
+// === ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS ===
+app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
@@ -163,69 +83,32 @@ app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    // FILTRO de filas vacías: solo importa filas con algún dato relevante
-    const mapped = rows
-      .filter(row =>
-        (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
-      )
-      .map(row => ({
-        fecha: row.fecha || new Date().toISOString().slice(0, 10),
-        equipo: row.equipo || row.team || "",
-        agente: row.agente || row.agent || "",
-        telefono: row.telefono || "",
-        producto: row.producto || "",
-        puntaje: Number(row.puntaje) || 0,
-        cuenta: row.cuenta || "",
-        direccion: row.direccion || "",
-        zip: row.zip || ""
-      }));
+    // Filtra filas vacías
+    const mapped = rows.filter(row =>
+      row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
+    ).map(row => ({
+      fecha: row.fecha || new Date().toISOString(),
+      equipo: row.equipo || row.team || "",
+      agente: row.agente || row.agent || "",
+      teléfono: row.telefono || "",
+      producto: row.producto || "",
+      puntaje: Number(row.puntaje) || 0,
+      cuenta: row.cuenta || "",
+      direccion: row.direccion || "",
+      zip: row.zip || ""
+    }));
 
     if (mapped.length) {
-      await Costumer.insertMany(mapped);
+      await Lead.insertMany(mapped);
     }
-    fs.unlinkSync(filePath); // Borra archivo temporal
+    fs.unlinkSync(filePath);
     res.json({ success: true, count: mapped.length });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ENDPOINT PARA GRAFICAS COSTUMER
-app.get("/api/graficas-costumer", async (req, res) => {
-  try {
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-    if (fechaFiltro) {
-      query.fecha = { $regex: `^${fechaFiltro}` };
-    }
-    const costumers = await Costumer.find(query).lean();
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    costumers.forEach(row => {
-      const equipo = row.equipo || row.team || "";
-      const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje || 0);
-
-      if (!equipo || !producto) return;
-
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
-  }
-});
-
-// ========== ENDPOINTS DE DESCARGA DE EXCEL ==========
-
-// Descargar el excel de leads
+// === ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS ===
 app.get('/descargar/leads', protegerRuta, (req, res) => {
   const filePath = path.join(__dirname, 'leads.xlsx');
   if (fs.existsSync(filePath)) {
@@ -235,26 +118,8 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
   }
 });
 
-// Descargar el excel de costumers
-app.get('/descargar/costumers', protegerRuta, (req, res) => {
-  const filePath = path.join(__dirname, 'Costumer.xlsx');
-  if (fs.existsSync(filePath)) {
-    res.download(filePath, 'Costumer.xlsx');
-  } else {
-    res.status(404).send('No existe el archivo de costumers.');
-  }
-});
-
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login.html");
-  });
-});
-
-// == RESTO DE ENDPOINTS LEADS, GRÁFICAS, ETC. ==
-
-// ENDPOINT PARA GUARDAR LEAD
-app.post("/api/leads", async (req, res) => {
+// --- ENDPOINTS CRUD Y GRAFICAS DE LEADS ---
+app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
 
@@ -276,7 +141,6 @@ app.post("/api/leads", async (req, res) => {
 
     await Lead.create(nuevoLead);
 
-    // Excel guardado si lo necesitas
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -322,7 +186,7 @@ app.post("/api/leads", async (req, res) => {
 });
 
 // GET leads
-app.get("/api/leads", async (req, res) => {
+app.get("/api/leads", protegerRuta, async (req, res) => {
   try {
     let leadsExcel = [];
     if (fs.existsSync(EXCEL_FILE_PATH)) {
@@ -352,7 +216,7 @@ app.get("/api/leads", async (req, res) => {
 });
 
 // ENDPOINT GRAFICAS PARA LEADS (por fecha)
-app.get("/api/graficas", async (req, res) => {
+app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
     const query = {};
@@ -385,161 +249,124 @@ app.get("/api/graficas", async (req, res) => {
   }
 });
 
-// ELIMINAR LEAD (por fecha, numero y agente)
-app.delete("/api/leads", async (req, res) => {
-  const { fecha, numero, agente } = req.query;
-  if (!fecha || !numero || !agente) {
-    return res.status(400).json({ success: false, error: "Faltan parámetros para eliminar." });
-  }
-
-  let eliminadoMongo = false;
-  let eliminadoExcel = false;
-  let errores = [];
-
+// ====================== COSTUMER ENDPOINTS =========================
+app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const resultado = await Lead.deleteOne({
-      fecha: { $regex: `^${fecha}` },
-      teléfono: numero,
-      agente: agente
-    });
-    eliminadoMongo = resultado.deletedCount > 0;
-  } catch (err) {
-    errores.push("Error MongoDB: " + err.message);
-  }
-
-  try {
-    if (fs.existsSync(EXCEL_FILE_PATH)) {
-      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
-      let cambiado = false;
-      workbook.SheetNames.forEach(nombreHoja => {
-        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
-        const antes = datos.length;
-        datos = datos.filter(row =>
-          !(row.fecha && row.fecha.startsWith(fecha) && row["teléfono"] === numero && row["agente"] === agente)
-        );
-        if (datos.length !== antes) {
-          cambiado = true;
-          const nuevaHoja = XLSX.utils.json_to_sheet(datos, {
-            header: [
-              "fecha",
-              "equipo",
-              "agente",
-              "teléfono",
-              "producto",
-              "puntaje",
-              "cuenta",
-              "direccion",
-              "zip"
-            ]
-          });
-          workbook.Sheets[nombreHoja] = nuevaHoja;
-        }
-      });
-      if (cambiado) XLSX.writeFile(workbook, EXCEL_FILE_PATH);
-      eliminadoExcel = cambiado;
+    const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
+    if (!agent || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
+    const nuevoCostumer = {
+      fecha: new Date().toISOString().slice(0, 10),
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+    await Costumer.create(nuevoCostumer);
+    res.json({ success: true });
   } catch (err) {
-    errores.push("Error Excel: " + err.message);
-  }
-
-  if (eliminadoMongo || eliminadoExcel) {
-    return res.json({ success: true });
-  } else {
-    return res.status(404).json({ success: false, error: errores.join("; ") || "No se encontró el lead" });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// EDITAR LEAD (por fecha, numero y agente)
-app.put("/api/leads", async (req, res) => {
-  const { fecha, numero, agente } = req.query;
-  const cambios = req.body;
-  if (!fecha || !numero || !agente) {
-    return res.status(400).json({ success: false, error: "Faltan parámetros para editar." });
-  }
-
-  let actualizadoMongo = false;
-  let actualizadoExcel = false;
-  let errores = [];
-
+app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const resultado = await Lead.updateOne(
-      {
-        fecha: { $regex: `^${fecha}` },
-        teléfono: numero,
-        agente: agente
-      },
-      {
-        $set: {
-          fecha: cambios["FECHA"] || fecha,
-          equipo: cambios["EQUIPO"] || "",
-          agente: cambios["AGENTE"] || "",
-          teléfono: cambios["NÚMERO"] || "",
-          producto: cambios["PRODUCTO"] || "",
-          puntaje: cambios["PUNTAJE"] || 0,
-          cuenta: cambios["CUENTA"] || "",
-          direccion: cambios["DIRECCION"] || "",
-          zip: cambios["ZIP"] || ""
-        }
-      }
-    );
-    actualizadoMongo = resultado.modifiedCount > 0;
+    const { fecha } = req.query;
+    const query = {};
+    if (fecha) query.fecha = { $regex: `^${fecha}` };
+    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    res.json({ costumers });
   } catch (err) {
-    errores.push("Error MongoDB: " + err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
+});
 
+app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
-    if (fs.existsSync(EXCEL_FILE_PATH)) {
-      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
-      let cambiado = false;
-      workbook.SheetNames.forEach(nombreHoja => {
-        let datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
-        let modificado = false;
-        datos = datos.map(row => {
-          if (row.fecha && row.fecha.startsWith(fecha) && row["teléfono"] === numero && row["agente"] === agente) {
-            modificado = true;
-            return {
-              ...row,
-              fecha: cambios["FECHA"] || row.fecha,
-              equipo: cambios["EQUIPO"] || row.equipo,
-              agente: cambios["AGENTE"] || row.agente,
-              teléfono: cambios["NÚMERO"] || row["teléfono"],
-              producto: cambios["PRODUCTO"] || row.producto,
-              puntaje: cambios["PUNTAJE"] || row.puntaje,
-              cuenta: cambios["CUENTA"] || row.cuenta,
-              direccion: cambios["DIRECCION"] || row.direccion,
-              zip: cambios["ZIP"] || row.zip
-            };
-          }
-          return row;
-        });
-        if (modificado) {
-          cambiado = true;
-          const encabezados = [
-            "fecha",
-            "equipo",
-            "agente",
-            "teléfono",
-            "producto",
-            "puntaje",
-            "cuenta",
-            "direccion",
-            "zip"
-          ];
-          workbook.Sheets[nombreHoja] = XLSX.utils.json_to_sheet(datos, { header: encabezados });
-        }
-      });
-      if (cambiado) XLSX.writeFile(workbook, EXCEL_FILE_PATH);
-      actualizadoExcel = cambiado;
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
     }
-  } catch (err) {
-    errores.push("Error Excel: " + err.message);
-  }
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-  if (actualizadoMongo || actualizadoExcel) {
-    return res.json({ success: true });
-  } else {
-    return res.status(404).json({ success: false, error: errores.join("; ") || "No se encontró el lead para editar" });
+    const mapped = rows
+      .filter(row =>
+        (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
+      )
+      .map(row => ({
+        fecha: row.fecha || new Date().toISOString().slice(0, 10),
+        equipo: row.equipo || row.team || "",
+        agente: row.agente || row.agent || "",
+        telefono: row.telefono || "",
+        producto: row.producto || "",
+        puntaje: Number(row.puntaje) || 0,
+        cuenta: row.cuenta || "",
+        direccion: row.direccion || "",
+        zip: row.zip || ""
+      }));
+
+    if (mapped.length) {
+      await Costumer.insertMany(mapped);
+    }
+    fs.unlinkSync(filePath);
+    res.json({ success: true, count: mapped.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
+});
+
+app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
+  try {
+    const fechaFiltro = req.query.fecha;
+    const query = {};
+    if (fechaFiltro) {
+      query.fecha = { $regex: `^${fechaFiltro}` };
+    }
+    const costumers = await Costumer.find(query).lean();
+
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    const ventasPorProducto = {};
+
+    costumers.forEach(row => {
+      const equipo = row.equipo || row.team || "";
+      const producto = row.producto || "";
+      const puntaje = parseFloat(row.puntaje || 0);
+
+      if (!equipo || !producto) return;
+
+      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
+      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
+      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
+    });
+
+    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
+  } catch (error) {
+    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
+  }
+});
+
+// Descargar el excel de costumers
+app.get('/descargar/costumers', protegerRuta, (req, res) => {
+  const filePath = path.join(__dirname, 'Costumer.xlsx');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'Costumer.xlsx');
+  } else {
+    res.status(404).send('No existe el archivo de costumers.');
+  }
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login.html");
+  });
 });
 
 app.listen(PORT, () => {
