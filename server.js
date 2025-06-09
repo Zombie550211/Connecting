@@ -191,6 +191,38 @@ app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
   }
 });
 
+// ENDPOINT PARA GRAFICAS COSTUMER
+app.get("/api/graficas-costumer", async (req, res) => {
+  try {
+    const fechaFiltro = req.query.fecha;
+    const query = {};
+    if (fechaFiltro) {
+      query.fecha = { $regex: `^${fechaFiltro}` };
+    }
+    const costumers = await Costumer.find(query).lean();
+
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    const ventasPorProducto = {};
+
+    costumers.forEach(row => {
+      const equipo = row.equipo || row.team || "";
+      const producto = row.producto || "";
+      const puntaje = parseFloat(row.puntaje || 0);
+
+      if (!equipo || !producto) return;
+
+      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
+      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
+      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
+    });
+
+    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
+  } catch (error) {
+    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
+  }
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
