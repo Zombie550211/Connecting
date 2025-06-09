@@ -221,8 +221,9 @@ app.get("/api/graficas", (req, res) => {
     workbook.SheetNames.forEach(nombreHoja => {
       if (fechaFiltro && nombreHoja !== fechaFiltro) return;
 
-      const hoja = workbook.Sheets[nombreHoja];
-      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+console.log("Filas leídas para gráficas:", datos.length);
+console.log("Primeras filas:", datos.slice(0, 5));
 
       // Logs para depuración de gráficas
       console.log("Procesando hoja para gráficas:", nombreHoja);
