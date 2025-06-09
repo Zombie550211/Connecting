@@ -529,7 +529,6 @@
   // Función para eliminar un lead
   function eliminarLead(fecha, numero, agente) {
     if (!confirm("¿Seguro que deseas eliminar este lead?")) return;
-    // Ajusta el endpoint según tu backend (por ejemplo, por id en vez de estos params)
     fetch(`/api/leads?fecha=${encodeURIComponent(fecha)}&numero=${encodeURIComponent(numero)}&agente=${encodeURIComponent(agente)}`, {
       method: "DELETE"
     })
@@ -537,7 +536,11 @@
         if (res.ok) {
           cargarDatos();
         } else {
-          alert("Error eliminando el lead");
+          res.json().then(data => {
+            alert(data.error || "Error eliminando el lead");
+          }).catch(() => {
+            alert("Error eliminando el lead");
+          });
         }
       })
       .catch(() => alert("Error eliminando el lead"));
@@ -645,7 +648,6 @@
     // Buscar el lead original para identificarlo (puedes usar un id si lo tienes)
     // Aquí usamos FECHA+NÚMERO+AGENTE como identificador compuesto
     try {
-      // Ajusta la URL y el método según tu backend
       const res = await fetch(`/api/leads?fecha=${encodeURIComponent(leadEditando.FECHA)}&numero=${encodeURIComponent(leadEditando["NÚMERO"])}&agente=${encodeURIComponent(leadEditando.AGENTE)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

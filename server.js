@@ -214,18 +214,22 @@ app.get("/api/graficas", (req, res) => {
     const ventasPorProducto = {};
 
     workbook.SheetNames.forEach(nombreHoja => {
-      // Si se pide filtrar por fecha, solo toma la hoja de esa fecha
       if (fechaFiltro && nombreHoja !== fechaFiltro) return;
 
       const hoja = workbook.Sheets[nombreHoja];
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
-      // Mapeo de columnas Excel a nombres backend
+      // Normaliza claves de cada fila
       datos.forEach(row => {
-        // Si ya está en el formato correcto, úsalo; si no, mapea
-        const team = row.team || row["TEAM"] || "";
-        const producto = row.producto || row["SERVICIO"] || "";
-        const puntaje = row.puntaje || row["PUNTOS"] || 0;
+        const normalized = {};
+        Object.keys(row).forEach(key => {
+          // Elimina espacios, pone en minúsculas y quita tildes
+          normalized[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
+        });
+
+        const team = normalized.team || "";
+        const producto = normalized.producto || normalized.servicio || "";
+        const puntaje = normalized.puntaje || normalized.puntos || 0;
 
         if (!team || !producto) return;
 
