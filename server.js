@@ -474,4 +474,4 @@ app.get("/api/graficas-costumer", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
+})
