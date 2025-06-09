@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Connecting</title>
+  <title>Connecting - Costumer</title>
   <style>
     html, body {
       height: 100%;
@@ -81,23 +81,6 @@
       letter-spacing: 1px;
       font-weight: 700;
     }
-    .descargar-excel {
-      background-color: #007bff;
-      color: white;
-      padding: 0.5rem 1.2rem;
-      border: none;
-      border-radius: 4px;
-      text-decoration: none;
-      font-size: 1rem;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-      transition: background 0.2s;
-      margin-left: 24px;
-    }
-    .descargar-excel:hover {
-      background-color: #0056b3;
-    }
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -133,6 +116,14 @@
       border-color: #007bff;
       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
     }
+    .grafica-container {
+      margin: 2rem 40px 2rem 40px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.03);
+      padding: 1.5rem;
+    }
+    #mensajeSinDatos { color: red; font-weight: bold; }
     .table-wrapper {
       flex: 1;
       padding: 0 40px 0 40px;
@@ -197,73 +188,6 @@
     .btn-editar:hover {
       background-color: #ffd700;
     }
-    .editar-form-wrapper {
-      padding: 30px 40px 40px 40px;
-      background: #fffbe6;
-      border-radius: 8px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      margin: 20px 40px 0 40px;
-      max-width: 1100px;
-      border: 1px solid #ffe066;
-    }
-    .editar-form-title {
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin-bottom: 16px;
-      color: #665c00;
-    }
-    .editar-form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 24px;
-      margin-bottom: 14px;
-      align-items: center;
-    }
-    .editar-form-row label {
-      font-weight: 500;
-      min-width: 110px;
-      color: #444;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .editar-form-row input,
-    .editar-form-row select {
-      padding: 7px 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-top: 2px;
-    }
-    .editar-form-buttons {
-      margin-top: 24px;
-      display: flex;
-      gap: 14px;
-    }
-    .editar-form-buttons button {
-      font-size: 1rem;
-      padding: 9px 22px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s;
-    }
-    .editar-form-buttons .guardar {
-      background: #007bff;
-      color: #fff;
-    }
-    .editar-form-buttons .guardar:hover {
-      background: #0056b3;
-    }
-    .editar-form-buttons .cancelar {
-      background: #fff;
-      color: #222;
-      border: 1px solid #bbb;
-    }
-    .editar-form-buttons .cancelar:hover {
-      background: #eee;
-    }
     @media (max-width: 900px) {
       nav {
         width: 54px;
@@ -281,7 +205,7 @@
         padding: 18px 0;
         margin: 2px 6px;
       }
-      .editar-form-wrapper, .table-wrapper, .filters, header {
+      .table-wrapper, .filters, header {
         padding-left: 10px;
         padding-right: 10px;
         margin-left: 0;
@@ -289,7 +213,7 @@
       }
     }
     @media (max-width: 700px) {
-      .table-wrapper, .filters, header, .editar-form-wrapper {
+      .table-wrapper, .filters, header {
         padding-left: 5px;
         padding-right: 5px;
         margin-left: 0;
@@ -314,6 +238,28 @@
         margin: 2px 2px;
       }
     }
+    #modalEditar {
+      display: none;
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background: #0008;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    #modalEditar.active {
+      display: flex;
+    }
+    #modalEditar .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 25px;
+      min-width: 320px;
+      box-shadow: 0 4px 20px #0002;
+    }
+    #modalEditar form input { margin-bottom: 10px; width: 100%; }
+    #modalEditar form button { margin-right: 8px; }
   </style>
 </head>
 <body>
@@ -329,368 +275,251 @@
   <div class="main-content">
     <header>
       <h1>Connecting</h1>
-      <a class="descargar-excel" onclick="exportarExcel()">Descargar Excel</a>
     </header>
-    <div class="filters">
-      <label>Fecha desde: <input type="date" id="fecha-desde"></label>
-      <label>Fecha hasta: <input type="date" id="fecha-hasta"></label>
-      <label>Team:
-        <select id="filtro-team">
-          <option value="">Todos</option>
-          <option value="Team Irania">Team Irania</option>
-          <option value="Team Pleitez">Team Pleitez</option>
-          <option value="Team Roberto">Team Roberto</option>
-          <option value="Team Lineas">Team Lineas</option>
-          <option value="Team Randal">Team Randal</option>
-          <option value="Team Marisol">Team Marisol</option>
-        </select>
-      </label>
-      <label>Agente: <select id="filtro-agente"><option value="">Todos</option></select></label>
-      <label>Número: <input type="text" id="filtro-numero" placeholder="Buscar número"></label>
-      <label>Dirección: <input type="text" id="filtro-direccion" placeholder="Buscar dirección"></label>
-      <label>ZIP Code: <input type="text" id="filtro-zip" placeholder="Buscar ZIP"></label>
+    <!-- Formulario para agregar costumer -->
+    <form id="costumerForm" style="margin:24px 40px;">
+      <input placeholder="Team" id="team" required>
+      <input placeholder="Agente" id="agent" required>
+      <input placeholder="Producto" id="producto" required>
+      <input placeholder="Puntaje" id="puntaje" type="number" step="0.01" required>
+      <input placeholder="Cuenta" id="cuenta" required>
+      <input placeholder="Teléfono" id="telefono" required>
+      <input placeholder="Dirección" id="direccion" required>
+      <input placeholder="ZIP" id="zip" required>
+      <button type="submit">Agregar Costumer</button>
+    </form>
+    <div class="grafica-container">
+      <h2>Ventas y Puntaje por Team</h2>
+      <canvas id="graficaTeam"></canvas>
+    </div>
+    <div class="grafica-container">
+      <h2>Ventas por Producto</h2>
+      <canvas id="graficaProducto"></canvas>
+      <div id="mensajeSinDatos"></div>
     </div>
     <div class="table-wrapper">
-      <table id="tabla-clientes">
+      <table id="tabla-costumer">
         <thead>
           <tr>
             <th>FECHA</th>
             <th>TEAM</th>
             <th>AGENTE</th>
-            <th>NÚMERO</th>
-            <th>SERVICIO</th>
-            <th>PUNTOS</th>
+            <th>TELÉFONO</th>
+            <th>PRODUCTO</th>
+            <th>PUNTAJE</th>
             <th>CUENTA</th>
             <th>DIRECCIÓN</th>
-            <th>ZIP CODE</th>
+            <th>ZIP</th>
             <th>ACCIÓN</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-    <!-- Formulario de edición dinámico (aparece solo si se edita un lead) -->
-    <div id="editar-form-container"></div>
+    <!-- Modal de edición -->
+    <div id="modalEditar">
+      <div class="modal-content">
+        <h3>Editar Costumer</h3>
+        <form id="formEditarCostumer">
+          <input id="editTeam" placeholder="Team" required>
+          <input id="editAgent" placeholder="Agente" required>
+          <input id="editProducto" placeholder="Producto" required>
+          <input id="editPuntaje" type="number" step="0.01" placeholder="Puntaje" required>
+          <input id="editCuenta" placeholder="Cuenta" required>
+          <input id="editTelefono" placeholder="Teléfono" required>
+          <input id="editDireccion" placeholder="Dirección" required>
+          <input id="editZip" placeholder="ZIP" required>
+          <input type="hidden" id="editId">
+          <button type="submit">Guardar</button>
+          <button type="button" onclick="cerrarModalEditar()">Cancelar</button>
+        </form>
+      </div>
+    </div>
   </div>
- <script>
-  const filtroTeam = document.getElementById("filtro-team");
-  const filtroAgente = document.getElementById("filtro-agente");
-  const filtroNumero = document.getElementById("filtro-numero");
-  const filtroDireccion = document.getElementById("filtro-direccion");
-  const filtroZip = document.getElementById("filtro-zip");
-  const fechaDesde = document.getElementById("fecha-desde");
-  const fechaHasta = document.getElementById("fecha-hasta");
-  const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
-  const editarFormContainer = document.getElementById("editar-form-container");
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let costumers = [];
+    let costumerEditandoId = null;
+    let graficaTeam, graficaProducto;
 
-  let datos = [];
-  let leadEditando = null;
+    // Cargar costumers y graficas al iniciar
+    window.onload = () => {
+      cargarCostumers();
+      iniciarGraficasCostumer();
+      actualizarGraficasCostumer();
+      setInterval(actualizarGraficasCostumer, 30000);
+    };
 
-  const agentesPorTeam = {
-    "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
-    "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Ellen Diaz"],
-    "Team Roberto": ["Carlos Marroquin", "Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala"],
-    "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward", "Lineas-Kenia", "Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
-    "Team Randal": ["Abigail Morales", "Alexander Montecinos", "Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez", "Priscila Hernandez", "Randal Martinez"],
-    "Team Marisol": ["Alessandro Romero", "Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran", "Paola Trejo", "Rodrigo Hernandez", "Tatiana Valdez"]
-  };
-
-  filtroTeam.addEventListener("change", () => {
-    const agentes = agentesPorTeam[filtroTeam.value] || [];
-    filtroAgente.innerHTML = '<option value="">Todos</option>';
-    agentes.forEach(agente => {
-      const option = document.createElement("option");
-      option.value = agente;
-      option.textContent = agente;
-      filtroAgente.appendChild(option);
-    });
-    aplicarFiltros();
-  });
-
-  [filtroAgente, filtroNumero, filtroDireccion, filtroZip, fechaDesde, fechaHasta].forEach(filtro => {
-    filtro.addEventListener("input", aplicarFiltros);
-  });
-
-  function convertirFecha(fechaStr) {
-    // formato esperado: yyyy-mm-dd
-    const partes = fechaStr.split("-");
-    if (partes.length === 3) {
-      const [año, mes, dia] = partes;
-      return new Date(`${año}-${mes}-${dia}T00:00:00`);
-    }
-    return new Date(fechaStr);
-  }
-
-  function esHoy(fechaStr) {
-    const fecha = convertirFecha(fechaStr);
-    const hoy = new Date();
-    return fecha.toDateString() === hoy.toDateString();
-  }
-
-  function renderizarTabla(filas) {
-    tabla.innerHTML = "";
-    if (!Array.isArray(filas) || filas.length === 0) {
-      const row = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 10;
-      td.textContent = "No hay datos para mostrar.";
-      td.style.textAlign = "center";
-      td.style.padding = "1rem";
-      row.appendChild(td);
-      tabla.appendChild(row);
-      return;
-    }
-    const ordenadas = ordenarPorFechaDesc(filas);
-    ordenadas.forEach(fila => {
-      const tr = document.createElement("tr");
-      ["FECHA", "TEAM", "AGENTE", "NÚMERO", "SERVICIO", "PUNTOS", "CUENTA", "DIRECCIÓN", "ZIP CODE"].forEach(clave => {
-        const td = document.createElement("td");
-        td.textContent = fila[clave] || "";
-        tr.appendChild(td);
+    // 1. AGREGAR COSTUMER
+    document.getElementById('costumerForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const body = {
+        team: document.getElementById('team').value,
+        agent: document.getElementById('agent').value,
+        producto: document.getElementById('producto').value,
+        puntaje: parseFloat(document.getElementById('puntaje').value),
+        cuenta: document.getElementById('cuenta').value,
+        telefono: document.getElementById('telefono').value,
+        direccion: document.getElementById('direccion').value,
+        zip: document.getElementById('zip').value
+      };
+      const res = await fetch('/api/costumer', {
+        method:"POST",
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
       });
-      const tdAccion = document.createElement("td");
-      tdAccion.innerHTML = `
-        <button class="btn-editar" onclick="editarLead('${fila.FECHA}', '${fila["NÚMERO"]}', '${fila["AGENTE"]}')">✏️</button>
-        <button class="btn-eliminar" onclick="eliminarLead('${fila.FECHA}', '${fila["NÚMERO"]}', '${fila["AGENTE"]}')">🗑️</button>
-      `;
-      tr.appendChild(tdAccion);
-      tabla.appendChild(tr);
-    });
-  }
-
-  function aplicarFiltros() {
-    // Asegura que datos sea siempre un array antes de filtrar
-    const datosArray = Array.isArray(datos) ? datos : [];
-    const team = filtroTeam.value;
-    const agente = filtroAgente.value.toLowerCase();
-    const numero = filtroNumero.value.toLowerCase();
-    const direccion = filtroDireccion.value.toLowerCase();
-    const zip = filtroZip.value.toLowerCase();
-    const desde = fechaDesde.value;
-    const hasta = fechaHasta.value;
-    let filtrados = datosArray.filter(item => {
-      const fechaItem = convertirFecha(item.FECHA);
-      const cumpleDesde = desde ? fechaItem >= new Date(desde) : true;
-      const cumpleHasta = hasta ? fechaItem <= new Date(hasta) : true;
-      const coincideTeam = !team || (item.TEAM === team);
-      const coincideAgente = !agente || (item.AGENTE && item.AGENTE.toLowerCase().includes(agente));
-      const coincideNumero = !numero || (item["NÚMERO"] && item["NÚMERO"].toLowerCase().includes(numero));
-      const coincideDireccion = !direccion || (item.DIRECCIÓN && item.DIRECCIÓN.toLowerCase().includes(direccion));
-      const coincideZip = !zip || (item["ZIP CODE"] && item["ZIP CODE"].toLowerCase().includes(zip));
-      return cumpleDesde && cumpleHasta && coincideTeam && coincideAgente && coincideNumero && coincideDireccion && coincideZip;
-    });
-    // Por defecto mostrar solo lo de hoy
-    if (!desde && !hasta) {
-      filtrados = filtrados.filter(item => esHoy(item.FECHA));
-    }
-    renderizarTabla(filtrados);
-  }
-
-  // Procesa correctamente el objeto de respuesta de /api/leads
-  async function cargarDatos() {
-    try {
-      const res = await fetch("/api/leads");
-      const tipo = res.headers.get("content-type");
-      if (!tipo || !tipo.includes("application/json")) throw new Error("Respuesta inesperada");
-      const resultado = await res.json();
-      // Usa leadsMongo, pero puedes cambiar a leadsExcel si lo prefieres
-      if (resultado && Array.isArray(resultado.leadsMongo)) {
-        datos = resultado.leadsMongo.map(item => ({
-          "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
-          "TEAM": item.team || "",
-          "AGENTE": item.agent || "",
-          "NÚMERO": item.telefono || "",
-          "SERVICIO": item.producto || "",
-          "PUNTOS": item.puntaje || "",
-          "CUENTA": item.cuenta || "",
-          "DIRECCIÓN": item.direccion || "",
-          "ZIP CODE": item.zip || ""
-        }));
+      if(res.ok) {
+        await cargarCostumers();
+        actualizarGraficasCostumer();
+        this.reset();
       } else {
-        datos = [];
+        alert("Error al guardar costumer.");
       }
-      aplicarFiltros();
-      ocultarFormularioEdicion();
-    } catch (e) {
-      datos = [];
-      aplicarFiltros();
-      ocultarFormularioEdicion();
-      console.error("Error cargando datos:", e.message);
-    }
-  }
+    };
 
-  cargarDatos();
-
-  // Función para exportar Excel
-  function exportarExcel() {
-    window.location.href = "/api/leads/excel";
-  }
-
-  // Función para eliminar un lead
-  function eliminarLead(fecha, numero, agente) {
-    if (!confirm("¿Seguro que deseas eliminar este lead?")) return;
-    fetch(`/api/leads?fecha=${encodeURIComponent(fecha)}&numero=${encodeURIComponent(numero)}&agente=${encodeURIComponent(agente)}`, {
-      method: "DELETE"
-    })
-      .then(res => {
-        if (res.ok) {
-          cargarDatos();
-        } else {
-          res.json().then(data => {
-            alert(data.error || "Error eliminando el lead");
-          }).catch(() => {
-            alert("Error eliminando el lead");
-          });
-        }
-      })
-      .catch(() => alert("Error eliminando el lead"));
-  }
-
-  // NUEVO: Mostrar formulario de edición debajo de la tabla
-  function editarLead(fecha, numero, agente) {
-    // Busca el lead por los identificadores
-    const lead = datos.find(l =>
-      l["FECHA"] === fecha &&
-      l["NÚMERO"] === numero &&
-      l["AGENTE"] === agente
-    );
-    if (!lead) {
-      alert("No se encontró el lead para editar.");
-      return;
-    }
-    leadEditando = { ...lead }; // Copia para edición
-    renderizarFormularioEdicion(leadEditando);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-  }
-
-  // Renderiza el formulario de edición
-  function renderizarFormularioEdicion(lead) {
-    editarFormContainer.innerHTML = `
-      <form id="form-editar-lead" class="editar-form-wrapper">
-        <div class="editar-form-title">Editar Lead</div>
-        <div class="editar-form-row">
-          <label>Fecha
-            <input type="date" name="FECHA" value="${lead.FECHA}" required>
-          </label>
-          <label>Team
-            <select name="TEAM" required>
-              <option value="">Seleccione</option>
-              <option value="Team Irania"${lead.TEAM === "Team Irania" ? " selected" : ""}>Team Irania</option>
-              <option value="Team Pleitez"${lead.TEAM === "Team Pleitez" ? " selected" : ""}>Team Pleitez</option>
-              <option value="Team Roberto"${lead.TEAM === "Team Roberto" ? " selected" : ""}>Team Roberto</option>
-              <option value="Team Lineas"${lead.TEAM === "Team Lineas" ? " selected" : ""}>Team Lineas</option>
-              <option value="Team Randal"${lead.TEAM === "Team Randal" ? " selected" : ""}>Team Randal</option>
-              <option value="Team Marisol"${lead.TEAM === "Team Marisol" ? " selected" : ""}>Team Marisol</option>
-            </select>
-          </label>
-          <label>Agente
-            <input type="text" name="AGENTE" value="${lead.AGENTE}" required>
-          </label>
-          <label>Número
-            <input type="text" name="NÚMERO" value="${lead["NÚMERO"]}" required>
-          </label>
-        </div>
-        <div class="editar-form-row">
-          <label>Servicio
-            <input type="text" name="SERVICIO" value="${lead.SERVICIO || ""}">
-          </label>
-          <label>Puntos
-            <input type="number" step="0.01" name="PUNTOS" value="${lead.PUNTOS || ""}">
-          </label>
-          <label>Cuenta
-            <input type="text" name="CUENTA" value="${lead.CUENTA || ""}">
-          </label>
-          <label>Dirección
-            <input type="text" name="DIRECCIÓN" value="${lead.DIRECCIÓN || ""}">
-          </label>
-          <label>ZIP Code
-            <input type="text" name="ZIP CODE" value="${lead["ZIP CODE"] || ""}">
-          </label>
-        </div>
-        <div class="editar-form-buttons">
-          <button type="submit" class="guardar">Guardar</button>
-          <button type="button" class="cancelar" onclick="ocultarFormularioEdicion()">Cancelar</button>
-        </div>
-      </form>
-    `;
-    // Actualizar agentes sugeridos si cambia el Team dentro del formulario
-    const teamSelect = editarFormContainer.querySelector('select[name="TEAM"]');
-    const agenteInput = editarFormContainer.querySelector('input[name="AGENTE"]');
-    teamSelect.addEventListener('change', function() {
-      const agentes = agentesPorTeam[teamSelect.value] || [];
-      if (agentes.length > 0) {
-        agenteInput.value = agentes[0];
-      } else {
-        agenteInput.value = "";
-      }
-    });
-    // Evento submit
-    document.getElementById('form-editar-lead').addEventListener('submit', guardarEdicionLead);
-  }
-
-  // Oculta el formulario de edición
-  function ocultarFormularioEdicion() {
-    editarFormContainer.innerHTML = "";
-    leadEditando = null;
-  }
-
-  // Guardar los cambios realizados en el formulario de edición
-  async function guardarEdicionLead(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    // Construir objeto actualizado
-    const leadActualizado = {};
-    for (let [key, value] of formData.entries()) {
-      leadActualizado[key] = value;
+    // 2. CARGAR Y MOSTRAR COSTUMERS
+    async function cargarCostumers() {
+      const res = await fetch('/api/costumer');
+      const data = await res.json();
+      costumers = data.costumers || [];
+      renderizarTablaCostumer();
     }
 
-    // Buscar el lead original para identificarlo (puedes usar un id si lo tienes)
-    // Aquí usamos FECHA+NÚMERO+AGENTE como identificador compuesto
-    try {
-      const res = await fetch(`/api/leads?fecha=${encodeURIComponent(leadEditando.FECHA)}&numero=${encodeURIComponent(leadEditando["NÚMERO"])}&agente=${encodeURIComponent(leadEditando.AGENTE)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(leadActualizado)
-      });
-      if (!res.ok) {
-        alert("Error al guardar los cambios.");
+    function renderizarTablaCostumer() {
+      const tbody = document.querySelector('#tabla-costumer tbody');
+      tbody.innerHTML = "";
+      if (costumers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center">No hay datos</td></tr>';
         return;
       }
-      ocultarFormularioEdicion();
-      cargarDatos();
-    } catch {
-      alert("Error de red al guardar los cambios.");
+      costumers.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.fecha ? c.fecha.slice(0,10) : ''}</td>
+          <td>${c.equipo || ''}</td>
+          <td>${c.agente || ''}</td>
+          <td>${c.telefono || ''}</td>
+          <td>${c.producto || ''}</td>
+          <td>${c.puntaje || ''}</td>
+          <td>${c.cuenta || ''}</td>
+          <td>${c.direccion || ''}</td>
+          <td>${c.zip || ''}</td>
+          <td>
+            <button class="btn-editar" onclick="mostrarEditarCostumer('${c._id}')">✏️</button>
+            <button class="btn-eliminar" onclick="eliminarCostumer('${c._id}')">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
-  }
- </script>
- <script>
-function ordenarPorFechaDesc(arr) {
-  return arr.sort((a, b) => convertirFecha(b.FECHA) - convertirFecha(a.FECHA));
-}
-</script>
-<script>
-let ordenActual = {
-  columna: null,
-  ascendente: true,
-};
-document.querySelectorAll("#tabla-clientes thead th").forEach((th, index) => {
-  th.addEventListener("click", () => {
-    const clave = th.textContent.trim();
-    if (!clave || clave === "ACCIÓN") return;
-    const nuevaAsc = ordenActual.columna === clave ? !ordenActual.ascendente : true;
-    ordenActual = { columna: clave, ascendente: nuevaAsc };
-    const datosOrdenados = Array.isArray(datos) ? [...datos].sort((a, b) => {
-      const valA = (a[clave] || "").toString().toLowerCase();
-      const valB = (b[clave] || "").toString().toLowerCase();
-      if (!isNaN(valA) && !isNaN(valB)) {
-        return nuevaAsc ? valA - valB : valB - valA;
+
+    // 3. ELIMINAR COSTUMER
+    async function eliminarCostumer(id) {
+      if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
+      const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        await cargarCostumers();
+        actualizarGraficasCostumer();
+      } else {
+        alert("No se pudo eliminar el costumer.");
       }
-      return nuevaAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-    }) : [];
-    renderizarTabla(datosOrdenados);
-  });
-});
-</script>
+    }
+
+    // 4. EDITAR COSTUMER
+    function mostrarEditarCostumer(id) {
+      const c = costumers.find(x => x._id === id);
+      if (!c) return;
+      costumerEditandoId = id;
+      document.getElementById('editTeam').value = c.equipo || '';
+      document.getElementById('editAgent').value = c.agente || '';
+      document.getElementById('editProducto').value = c.producto || '';
+      document.getElementById('editPuntaje').value = c.puntaje || '';
+      document.getElementById('editCuenta').value = c.cuenta || '';
+      document.getElementById('editTelefono').value = c.telefono || '';
+      document.getElementById('editDireccion').value = c.direccion || '';
+      document.getElementById('editZip').value = c.zip || '';
+      document.getElementById('editId').value = c._id;
+      document.getElementById('modalEditar').classList.add('active');
+    }
+
+    function cerrarModalEditar() {
+      document.getElementById('modalEditar').classList.remove('active');
+      costumerEditandoId = null;
+    }
+
+    document.getElementById('formEditarCostumer').onsubmit = async function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const body = {
+        equipo: document.getElementById('editTeam').value,
+        agente: document.getElementById('editAgent').value,
+        producto: document.getElementById('editProducto').value,
+        puntaje: parseFloat(document.getElementById('editPuntaje').value),
+        cuenta: document.getElementById('editCuenta').value,
+        telefono: document.getElementById('editTelefono').value,
+        direccion: document.getElementById('editDireccion').value,
+        zip: document.getElementById('editZip').value
+      };
+      const res = await fetch(`/api/costumer/${id}`, {
+        method: "PUT",
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if(res.ok) {
+        cerrarModalEditar();
+        await cargarCostumers();
+        actualizarGraficasCostumer();
+      } else {
+        alert("No se pudo editar el costumer.");
+      }
+    };
+
+    // 5. GRÁFICAS COSTUMER
+    function iniciarGraficasCostumer() {
+      const ctx1 = document.getElementById('graficaTeam').getContext('2d');
+      graficaTeam = new Chart(ctx1, {
+        type: 'bar',
+        data: { labels: [], datasets: [
+          { label: "Ventas por Equipo", data: [], backgroundColor:'#007bff', borderRadius:6 }
+        ] },
+        options: {
+          plugins: {
+            legend: { position: 'top' }
+          }
+        }
+      });
+      const ctx2 = document.getElementById('graficaProducto').getContext('2d');
+      graficaProducto = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: [], datasets: [
+          { label: "Ventas por Producto", data: [], backgroundColor:'#126de4e5', borderRadius:6 }
+        ] },
+        options: {
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    async function actualizarGraficasCostumer() {
+      const res = await fetch('/api/graficas-costumer');
+      const data = await res.json();
+
+      // Equipo
+      const labelsEquipo = Object.keys(data.ventasPorEquipo || {});
+      const ventasEquipo = Object.values(data.ventasPorEquipo || {});
+      graficaTeam.data.labels = labelsEquipo;
+      graficaTeam.data.datasets[0].data = ventasEquipo;
+      graficaTeam.update();
+      // Producto
+      const labelsProd = Object.keys(data.ventasPorProducto || {});
+      const ventasProd = Object.values(data.ventasPorProducto || {});
+      graficaProducto.data.labels = labelsProd;
+      graficaProducto.data.datasets[0].data = ventasProd;
+      graficaProducto.update();
+      document.getElementById('mensajeSinDatos').style.display = ventasProd.some(v=>v>0) ? 'none' : '';
+    }
+  </script>
 </body>
 </html>
