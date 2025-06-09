@@ -421,6 +421,57 @@ app.get("/logout", (req, res) => {
   });
 });
 
+// ... (tu código previo)
+
+// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER
+app.get("/api/graficas-costumer", (req, res) => {
+  try {
+    const COSTUMER_FILE_PATH = path.join(__dirname, "costumer.xlsx");
+    const fechaFiltro = req.query.fecha;
+    if (!fs.existsSync(COSTUMER_FILE_PATH)) {
+      return res.json({
+        ventasPorEquipo: {},
+        puntosPorEquipo: {},
+        ventasPorProducto: {}
+      });
+    }
+    const workbook = XLSX.readFile(COSTUMER_FILE_PATH);
+
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    const ventasPorProducto = {};
+
+    workbook.SheetNames.forEach(nombreHoja => {
+      if (fechaFiltro && nombreHoja !== fechaFiltro) return;
+
+      const hoja = workbook.Sheets[nombreHoja];
+      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+
+      datos.forEach(row => {
+        const normalized = {};
+        Object.keys(row).forEach(key => {
+          normalized[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
+        });
+
+        const team = normalized.team || "";
+        const producto = normalized.producto || normalized.servicio || "";
+        const puntaje = normalized.puntaje || normalized.puntos || 0;
+
+        if (!team || !producto) return;
+
+        ventasPorEquipo[team] = (ventasPorEquipo[team] || 0) + 1;
+        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + parseFloat(puntaje || 0)) * 100) / 100;
+        ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
+      });
+    });
+
+    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
+  } catch (error) {
+    console.error("Error al obtener datos para gráficas costumer:", error);
+    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas costumer." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
