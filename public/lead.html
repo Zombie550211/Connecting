@@ -261,10 +261,10 @@ function iniciarGraficas() {
   });
 }
 
-// Usa los datos de costumer.xlsx
+// AHORA USA EL ENDPOINT DE MONGODB
 function actualizarGraficas() {
   const fecha = document.getElementById('fechaGraficas').value;
-  fetch(`/api/graficas-costumer?fecha=${fecha}`)
+  fetch(`/api/graficas?fecha=${fecha}`)
     .then(res => res.json())
     .then(data => {
       if (!data || typeof data !== 'object') {
