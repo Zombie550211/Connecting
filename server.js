@@ -14,6 +14,8 @@ const XLSX = require("xlsx");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
+
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
@@ -63,21 +65,8 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-// Excel
-const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
-
 function obtenerNombreHoja() {
   return new Date().toISOString().split("T")[0];
-}
-
-function obtenerWorkbook() {
-  if (fs.existsSync(EXCEL_FILE_PATH)) {
-    return XLSX.readFile(EXCEL_FILE_PATH);
-  } else {
-    const wb = XLSX.utils.book_new();
-    XLSX.writeFile(wb, EXCEL_FILE_PATH);
-    return wb;
-  }
 }
 
 function inicializarExcelConHojaDelDia() {
@@ -102,7 +91,7 @@ function inicializarExcelConHojaDelDia() {
 
 inicializarExcelConHojaDelDia();
 
-// ENDPOINT PARA GUARDAR LEAD (sin email)
+// ENDPOINT PARA GUARDAR LEAD
 app.post("/api/leads", async (req, res) => {
   try {
     console.log("BODY RECIBIDO:", req.body);
@@ -207,8 +196,10 @@ app.get("/api/leads", async (req, res) => {
   }
 });
 
+// ENDPOINT GRAFICAS: AHORA FILTRA POR FECHA SI SE LE PASA ?fecha=YYYY-MM-DD
 app.get("/api/graficas", (req, res) => {
   try {
+    const fechaFiltro = req.query.fecha; // Ejemplo: "2025-06-08"
     if (!fs.existsSync(EXCEL_FILE_PATH)) {
       return res.json({
         ventasPorEquipo: {},
@@ -223,12 +214,14 @@ app.get("/api/graficas", (req, res) => {
     const ventasPorProducto = {};
 
     workbook.SheetNames.forEach(nombreHoja => {
+      // Si se pide filtrar por fecha, solo toma la hoja de esa fecha
+      if (fechaFiltro && nombreHoja !== fechaFiltro) return;
+
       const hoja = workbook.Sheets[nombreHoja];
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
       datos.forEach(row => {
         if (!row.team || !row.producto) return;
-
         ventasPorEquipo[row.team] = (ventasPorEquipo[row.team] || 0) + 1;
         puntosPorEquipo[row.team] = Math.round(((puntosPorEquipo[row.team] || 0) + parseFloat(row.puntaje || 0)) * 100) / 100;
         ventasPorProducto[row.producto] = (ventasPorProducto[row.producto] || 0) + 1;
