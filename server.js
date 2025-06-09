@@ -424,9 +424,12 @@ app.get("/logout", (req, res) => {
 });
 
 // NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER (EXCEL)
+// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER (EXCEL)
+// Lee correctamente encabezados y datos aunque tengan mayúsculas, minúsculas o espacios
 app.get("/api/graficas-costumer", (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
+    const COSTUMER_FILE_PATH = path.join(__dirname, "Costumer.xlsx");
     if (!fs.existsSync(COSTUMER_FILE_PATH)) {
       return res.json({
         ventasPorEquipo: {},
@@ -441,25 +444,35 @@ app.get("/api/graficas-costumer", (req, res) => {
     const ventasPorProducto = {};
 
     workbook.SheetNames.forEach(nombreHoja => {
+      // Solo procesa la hoja si coincide con el filtro
       if (fechaFiltro && nombreHoja !== fechaFiltro) return;
 
       const hoja = workbook.Sheets[nombreHoja];
+      // Lee datos con encabezados tal como están en el archivo
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
-      datos.forEach(row => {
-        const normalized = {};
-        Object.keys(row).forEach(key => {
-          normalized[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
-        });
+      // DEBUG: muestra cuántas filas se leyeron y los encabezados reales
+      console.log("Procesando hoja para gráficas:", nombreHoja);
+      console.log("Filas leídas para gráficas:", datos.length);
+      if (datos.length > 0) {
+        console.log("Encabezados detectados:", Object.keys(datos[0]));
+      }
 
-        const team = normalized.team || "";
-        const producto = normalized.producto || normalized.servicio || "";
-        const puntaje = normalized.puntaje || normalized.puntos || 0;
+      datos.forEach(row => {
+        // Lee los campos sin importar mayúsculas/minúsculas/espacios
+        const keys = Object.keys(row).reduce((map, k) => {
+          map[k.trim().toLowerCase()] = k;
+          return map;
+        }, {});
+
+        const team = row[keys['team']] || "";
+        const producto = row[keys['producto']] || row[keys['servicio']] || "";
+        const puntaje = parseFloat(row[keys['puntaje']] || row[keys['puntos']] || 0) || 0;
 
         if (!team || !producto) return;
 
         ventasPorEquipo[team] = (ventasPorEquipo[team] || 0) + 1;
-        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + parseFloat(puntaje || 0)) * 100) / 100;
+        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + puntaje) * 100) / 100;
         ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
       });
     });
