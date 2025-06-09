@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Connecting - Costumer</title>
+  <title>Connecting</title>
   <style>
+    /* ... Tu CSS original, igual que en tu código ... */
     html, body {
       height: 100%;
       margin: 0;
@@ -81,6 +82,23 @@
       letter-spacing: 1px;
       font-weight: 700;
     }
+    .descargar-excel {
+      background-color: #007bff;
+      color: white;
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+      transition: background 0.2s;
+      margin-left: 24px;
+    }
+    .descargar-excel:hover {
+      background-color: #0056b3;
+    }
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -116,14 +134,6 @@
       border-color: #007bff;
       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
     }
-    .grafica-container {
-      margin: 2rem 40px 2rem 40px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.03);
-      padding: 1.5rem;
-    }
-    #mensajeSinDatos { color: red; font-weight: bold; }
     .table-wrapper {
       flex: 1;
       padding: 0 40px 0 40px;
@@ -188,6 +198,73 @@
     .btn-editar:hover {
       background-color: #ffd700;
     }
+    .editar-form-wrapper {
+      padding: 30px 40px 40px 40px;
+      background: #fffbe6;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      margin: 20px 40px 0 40px;
+      max-width: 1100px;
+      border: 1px solid #ffe066;
+    }
+    .editar-form-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #665c00;
+    }
+    .editar-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .editar-form-row label {
+      font-weight: 500;
+      min-width: 110px;
+      color: #444;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .editar-form-row input,
+    .editar-form-row select {
+      padding: 7px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 2px;
+    }
+    .editar-form-buttons {
+      margin-top: 24px;
+      display: flex;
+      gap: 14px;
+    }
+    .editar-form-buttons button {
+      font-size: 1rem;
+      padding: 9px 22px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .editar-form-buttons .guardar {
+      background: #007bff;
+      color: #fff;
+    }
+    .editar-form-buttons .guardar:hover {
+      background: #0056b3;
+    }
+    .editar-form-buttons .cancelar {
+      background: #fff;
+      color: #222;
+      border: 1px solid #bbb;
+    }
+    .editar-form-buttons .cancelar:hover {
+      background: #eee;
+    }
     @media (max-width: 900px) {
       nav {
         width: 54px;
@@ -205,7 +282,7 @@
         padding: 18px 0;
         margin: 2px 6px;
       }
-      .table-wrapper, .filters, header {
+      .editar-form-wrapper, .table-wrapper, .filters, header {
         padding-left: 10px;
         padding-right: 10px;
         margin-left: 0;
@@ -213,7 +290,7 @@
       }
     }
     @media (max-width: 700px) {
-      .table-wrapper, .filters, header {
+      .table-wrapper, .filters, header, .editar-form-wrapper {
         padding-left: 5px;
         padding-right: 5px;
         margin-left: 0;
@@ -238,28 +315,6 @@
         margin: 2px 2px;
       }
     }
-    #modalEditar {
-      display: none;
-      position: fixed;
-      left: 0; top: 0;
-      width: 100vw; height: 100vh;
-      background: #0008;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-    }
-    #modalEditar.active {
-      display: flex;
-    }
-    #modalEditar .modal-content {
-      background: white;
-      border-radius: 8px;
-      padding: 25px;
-      min-width: 320px;
-      box-shadow: 0 4px 20px #0002;
-    }
-    #modalEditar form input { margin-bottom: 10px; width: 100%; }
-    #modalEditar form button { margin-right: 8px; }
   </style>
 </head>
 <body>
@@ -275,8 +330,8 @@
   <div class="main-content">
     <header>
       <h1>Connecting</h1>
+      <!-- Puedes quitar el botón Excel si solo quieres Mongo -->
     </header>
-    <!-- Formulario para agregar costumer -->
     <form id="costumerForm" style="margin:24px 40px;">
       <input placeholder="Team" id="team" required>
       <input placeholder="Agente" id="agent" required>
@@ -288,26 +343,27 @@
       <input placeholder="ZIP" id="zip" required>
       <button type="submit">Agregar Costumer</button>
     </form>
-    <div class="grafica-container">
-      <h2>Ventas y Puntaje por Team</h2>
-      <canvas id="graficaTeam"></canvas>
-    </div>
-    <div class="grafica-container">
-      <h2>Ventas por Producto</h2>
-      <canvas id="graficaProducto"></canvas>
-      <div id="mensajeSinDatos"></div>
+    <div class="filters">
+      <label>Team:<input type="text" id="filtro-team"></label>
+      <label>Agente:<input type="text" id="filtro-agente"></label>
+      <label>Producto:<input type="text" id="filtro-producto"></label>
+      <label>Puntaje:<input type="text" id="filtro-puntaje"></label>
+      <label>Cuenta:<input type="text" id="filtro-cuenta"></label>
+      <label>Teléfono:<input type="text" id="filtro-telefono"></label>
+      <label>Dirección:<input type="text" id="filtro-direccion"></label>
+      <label>ZIP:<input type="text" id="filtro-zip"></label>
     </div>
     <div class="table-wrapper">
-      <table id="tabla-costumer">
+      <table id="tabla-clientes">
         <thead>
           <tr>
             <th>FECHA</th>
             <th>TEAM</th>
             <th>AGENTE</th>
-            <th>TELÉFONO</th>
             <th>PRODUCTO</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
+            <th>TELÉFONO</th>
             <th>DIRECCIÓN</th>
             <th>ZIP</th>
             <th>ACCIÓN</th>
@@ -316,41 +372,30 @@
         <tbody></tbody>
       </table>
     </div>
-    <!-- Modal de edición -->
-    <div id="modalEditar">
-      <div class="modal-content">
-        <h3>Editar Costumer</h3>
-        <form id="formEditarCostumer">
-          <input id="editTeam" placeholder="Team" required>
-          <input id="editAgent" placeholder="Agente" required>
-          <input id="editProducto" placeholder="Producto" required>
-          <input id="editPuntaje" type="number" step="0.01" placeholder="Puntaje" required>
-          <input id="editCuenta" placeholder="Cuenta" required>
-          <input id="editTelefono" placeholder="Teléfono" required>
-          <input id="editDireccion" placeholder="Dirección" required>
-          <input id="editZip" placeholder="ZIP" required>
-          <input type="hidden" id="editId">
-          <button type="submit">Guardar</button>
-          <button type="button" onclick="cerrarModalEditar()">Cancelar</button>
-        </form>
-      </div>
-    </div>
+    <div id="editar-form-container"></div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    let costumers = [];
-    let costumerEditandoId = null;
-    let graficaTeam, graficaProducto;
+    // ---- Estado y referencias ----
+    let datos = [];
+    let costumerEditando = null;
+    const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
+    const editarFormContainer = document.getElementById("editar-form-container");
 
-    // Cargar costumers y graficas al iniciar
-    window.onload = () => {
-      cargarCostumers();
-      iniciarGraficasCostumer();
-      actualizarGraficasCostumer();
-      setInterval(actualizarGraficasCostumer, 30000);
-    };
+    // Filtros
+    const filtroTeam = document.getElementById("filtro-team");
+    const filtroAgente = document.getElementById("filtro-agente");
+    const filtroProducto = document.getElementById("filtro-producto");
+    const filtroPuntaje = document.getElementById("filtro-puntaje");
+    const filtroCuenta = document.getElementById("filtro-cuenta");
+    const filtroTelefono = document.getElementById("filtro-telefono");
+    const filtroDireccion = document.getElementById("filtro-direccion");
+    const filtroZip = document.getElementById("filtro-zip");
 
-    // 1. AGREGAR COSTUMER
+    [filtroTeam, filtroAgente, filtroProducto, filtroPuntaje, filtroCuenta, filtroTelefono, filtroDireccion, filtroZip].forEach(f =>
+      f.addEventListener("input", aplicarFiltros)
+    );
+
+    // ---- Agregar Costumer ----
     document.getElementById('costumerForm').onsubmit = async function(e) {
       e.preventDefault();
       const body = {
@@ -370,156 +415,165 @@
       });
       if(res.ok) {
         await cargarCostumers();
-        actualizarGraficasCostumer();
         this.reset();
       } else {
         alert("Error al guardar costumer.");
       }
     };
 
-    // 2. CARGAR Y MOSTRAR COSTUMERS
+    // ---- Cargar desde Mongo ----
     async function cargarCostumers() {
       const res = await fetch('/api/costumer');
       const data = await res.json();
-      costumers = data.costumers || [];
-      renderizarTablaCostumer();
+      datos = (data.costumers || []).map(item => ({
+        "_id": item._id,
+        "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
+        "TEAM": item.equipo || "",
+        "AGENTE": item.agente || "",
+        "PRODUCTO": item.producto || "",
+        "PUNTAJE": item.puntaje || "",
+        "CUENTA": item.cuenta || "",
+        "TELÉFONO": item.telefono || "",
+        "DIRECCIÓN": item.direccion || "",
+        "ZIP": item.zip || ""
+      }));
+      aplicarFiltros();
+      ocultarFormularioEdicion();
     }
 
-    function renderizarTablaCostumer() {
-      const tbody = document.querySelector('#tabla-costumer tbody');
-      tbody.innerHTML = "";
-      if (costumers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center">No hay datos</td></tr>';
+    // ---- Renderizar y filtrar ----
+    function renderizarTabla(filas) {
+      tabla.innerHTML = "";
+      if (!Array.isArray(filas) || filas.length === 0) {
+        const row = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 10;
+        td.textContent = "No hay datos para mostrar.";
+        td.style.textAlign = "center";
+        td.style.padding = "1rem";
+        row.appendChild(td);
+        tabla.appendChild(row);
         return;
       }
-      costumers.forEach(c => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${c.fecha ? c.fecha.slice(0,10) : ''}</td>
-          <td>${c.equipo || ''}</td>
-          <td>${c.agente || ''}</td>
-          <td>${c.telefono || ''}</td>
-          <td>${c.producto || ''}</td>
-          <td>${c.puntaje || ''}</td>
-          <td>${c.cuenta || ''}</td>
-          <td>${c.direccion || ''}</td>
-          <td>${c.zip || ''}</td>
-          <td>
-            <button class="btn-editar" onclick="mostrarEditarCostumer('${c._id}')">✏️</button>
-            <button class="btn-eliminar" onclick="eliminarCostumer('${c._id}')">🗑️</button>
-          </td>
+      filas.forEach(fila => {
+        const tr = document.createElement("tr");
+        ["FECHA", "TEAM", "AGENTE", "PRODUCTO", "PUNTAJE", "CUENTA", "TELÉFONO", "DIRECCIÓN", "ZIP"].forEach(clave => {
+          const td = document.createElement("td");
+          td.textContent = fila[clave] || "";
+          tr.appendChild(td);
+        });
+        const tdAccion = document.createElement("td");
+        tdAccion.innerHTML = `
+          <button class="btn-editar" onclick="editarCostumer('${fila._id}')">✏️</button>
+          <button class="btn-eliminar" onclick="eliminarCostumer('${fila._id}')">🗑️</button>
         `;
-        tbody.appendChild(tr);
+        tr.appendChild(tdAccion);
+        tabla.appendChild(tr);
       });
     }
 
-    // 3. ELIMINAR COSTUMER
+    function aplicarFiltros() {
+      let filtrados = datos.filter(item => {
+        return (
+          (!filtroTeam.value || (item["TEAM"]).toLowerCase().includes(filtroTeam.value.toLowerCase())) &&
+          (!filtroAgente.value || (item["AGENTE"]).toLowerCase().includes(filtroAgente.value.toLowerCase())) &&
+          (!filtroProducto.value || (item["PRODUCTO"]).toLowerCase().includes(filtroProducto.value.toLowerCase())) &&
+          (!filtroPuntaje.value || String(item["PUNTAJE"]).toLowerCase().includes(filtroPuntaje.value.toLowerCase())) &&
+          (!filtroCuenta.value || (item["CUENTA"]).toLowerCase().includes(filtroCuenta.value.toLowerCase())) &&
+          (!filtroTelefono.value || (item["TELÉFONO"]).toLowerCase().includes(filtroTelefono.value.toLowerCase())) &&
+          (!filtroDireccion.value || (item["DIRECCIÓN"]).toLowerCase().includes(filtroDireccion.value.toLowerCase())) &&
+          (!filtroZip.value || (item["ZIP"]).toLowerCase().includes(filtroZip.value.toLowerCase()))
+        );
+      });
+      renderizarTabla(filtrados);
+    }
+
+    // ---- Eliminar ----
     async function eliminarCostumer(id) {
       if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
       const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
       if (res.ok) {
         await cargarCostumers();
-        actualizarGraficasCostumer();
       } else {
         alert("No se pudo eliminar el costumer.");
       }
     }
 
-    // 4. EDITAR COSTUMER
-    function mostrarEditarCostumer(id) {
-      const c = costumers.find(x => x._id === id);
+    // ---- Editar ----
+    function editarCostumer(id) {
+      const c = datos.find(x => x._id === id);
       if (!c) return;
-      costumerEditandoId = id;
-      document.getElementById('editTeam').value = c.equipo || '';
-      document.getElementById('editAgent').value = c.agente || '';
-      document.getElementById('editProducto').value = c.producto || '';
-      document.getElementById('editPuntaje').value = c.puntaje || '';
-      document.getElementById('editCuenta').value = c.cuenta || '';
-      document.getElementById('editTelefono').value = c.telefono || '';
-      document.getElementById('editDireccion').value = c.direccion || '';
-      document.getElementById('editZip').value = c.zip || '';
-      document.getElementById('editId').value = c._id;
-      document.getElementById('modalEditar').classList.add('active');
+      costumerEditando = { ...c };
+      renderizarFormularioEdicion(costumerEditando);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     }
 
-    function cerrarModalEditar() {
-      document.getElementById('modalEditar').classList.remove('active');
-      costumerEditandoId = null;
+    function renderizarFormularioEdicion(c) {
+      editarFormContainer.innerHTML = `
+        <form id="form-editar-costumer" class="editar-form-wrapper">
+          <div class="editar-form-title">Editar Costumer</div>
+          <div class="editar-form-row">
+            <label>Team<input type="text" name="TEAM" value="${c["TEAM"]||''}" required></label>
+            <label>Agente<input type="text" name="AGENTE" value="${c["AGENTE"]||''}" required></label>
+            <label>Producto<input type="text" name="PRODUCTO" value="${c["PRODUCTO"]||''}" required></label>
+            <label>Puntaje<input type="number" step="0.01" name="PUNTAJE" value="${c["PUNTAJE"]||''}" required></label>
+          </div>
+          <div class="editar-form-row">
+            <label>Cuenta<input type="text" name="CUENTA" value="${c["CUENTA"]||''}" required></label>
+            <label>Teléfono<input type="text" name="TELÉFONO" value="${c["TELÉFONO"]||''}" required></label>
+            <label>Dirección<input type="text" name="DIRECCIÓN" value="${c["DIRECCIÓN"]||''}" required></label>
+            <label>ZIP<input type="text" name="ZIP" value="${c["ZIP"]||''}" required></label>
+          </div>
+          <div class="editar-form-buttons">
+            <button type="submit" class="guardar">Guardar</button>
+            <button type="button" class="cancelar" onclick="ocultarFormularioEdicion()">Cancelar</button>
+          </div>
+        </form>
+      `;
+      document.getElementById('form-editar-costumer').addEventListener('submit', guardarEdicionCostumer);
     }
-
-    document.getElementById('formEditarCostumer').onsubmit = async function(e) {
+    function ocultarFormularioEdicion() {
+      editarFormContainer.innerHTML = "";
+      costumerEditando = null;
+    }
+    async function guardarEdicionCostumer(e) {
       e.preventDefault();
-      const id = document.getElementById('editId').value;
-      const body = {
-        equipo: document.getElementById('editTeam').value,
-        agente: document.getElementById('editAgent').value,
-        producto: document.getElementById('editProducto').value,
-        puntaje: parseFloat(document.getElementById('editPuntaje').value),
-        cuenta: document.getElementById('editCuenta').value,
-        telefono: document.getElementById('editTelefono').value,
-        direccion: document.getElementById('editDireccion').value,
-        zip: document.getElementById('editZip').value
-      };
-      const res = await fetch(`/api/costumer/${id}`, {
-        method: "PUT",
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(body)
-      });
-      if(res.ok) {
-        cerrarModalEditar();
-        await cargarCostumers();
-        actualizarGraficasCostumer();
-      } else {
-        alert("No se pudo editar el costumer.");
+      const form = e.target;
+      const formData = new FormData(form);
+      const actualizado = {};
+      for (let [key, value] of formData.entries()) {
+        actualizado[key.toLowerCase()] = value;
       }
-    };
-
-    // 5. GRÁFICAS COSTUMER
-    function iniciarGraficasCostumer() {
-      const ctx1 = document.getElementById('graficaTeam').getContext('2d');
-      graficaTeam = new Chart(ctx1, {
-        type: 'bar',
-        data: { labels: [], datasets: [
-          { label: "Ventas por Equipo", data: [], backgroundColor:'#007bff', borderRadius:6 }
-        ] },
-        options: {
-          plugins: {
-            legend: { position: 'top' }
-          }
+      actualizado.puntaje = parseFloat(actualizado.puntaje || actualizado["puntaje"] || actualizado["PUNTAJE"]);
+      // Ajusta los nombres para que coincidan con tu backend
+      const body = {
+        equipo: actualizado.team,
+        agente: actualizado.agente,
+        producto: actualizado.producto,
+        puntaje: actualizado.puntaje,
+        cuenta: actualizado.cuenta,
+        telefono: actualizado["teléfono"],
+        direccion: actualizado.dirección,
+        zip: actualizado.zip
+      };
+      try {
+        const res = await fetch(`/api/costumer/${costumerEditando._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          alert("Error al guardar los cambios.");
+          return;
         }
-      });
-      const ctx2 = document.getElementById('graficaProducto').getContext('2d');
-      graficaProducto = new Chart(ctx2, {
-        type: 'bar',
-        data: { labels: [], datasets: [
-          { label: "Ventas por Producto", data: [], backgroundColor:'#126de4e5', borderRadius:6 }
-        ] },
-        options: {
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
+        ocultarFormularioEdicion();
+        await cargarCostumers();
+      } catch {
+        alert("Error de red al guardar los cambios.");
+      }
     }
 
-    async function actualizarGraficasCostumer() {
-      const res = await fetch('/api/graficas-costumer');
-      const data = await res.json();
-
-      // Equipo
-      const labelsEquipo = Object.keys(data.ventasPorEquipo || {});
-      const ventasEquipo = Object.values(data.ventasPorEquipo || {});
-      graficaTeam.data.labels = labelsEquipo;
-      graficaTeam.data.datasets[0].data = ventasEquipo;
-      graficaTeam.update();
-      // Producto
-      const labelsProd = Object.keys(data.ventasPorProducto || {});
-      const ventasProd = Object.values(data.ventasPorProducto || {});
-      graficaProducto.data.labels = labelsProd;
-      graficaProducto.data.datasets[0].data = ventasProd;
-      graficaProducto.update();
-      document.getElementById('mensajeSinDatos').style.display = ventasProd.some(v=>v>0) ? 'none' : '';
-    }
+    window.onload = cargarCostumers;
   </script>
 </body>
 </html>
