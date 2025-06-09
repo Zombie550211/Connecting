@@ -27,9 +27,15 @@ if (!MONGO_URL) {
 // Middleware mejorado para autenticación y AJAX/fetch
 function protegerRuta(req, res, next) {
   if (!req.session.usuario) {
-    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+    // Detecta peticiones AJAX, fetch, o JSON y responde JSON
+    if (
+      req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+      (req.headers.accept && req.headers.accept.indexOf('application/json') > -1) ||
+      (req.headers['content-type'] && req.headers['content-type'].indexOf('application/json') > -1)
+    ) {
       return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
     }
+    // Si es navegador, redirige a login
     return res.redirect("/login.html");
   }
   next();
@@ -185,7 +191,6 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
   }
 });
 
-// GET leads
 app.get("/api/leads", protegerRuta, async (req, res) => {
   try {
     let leadsExcel = [];
@@ -286,39 +291,46 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
   }
 });
 
+// === IMPORTAR COSTUMERS - SIEMPRE RESPONDER JSON, MANEJO DE ERRORES ===
 app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
     }
     const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    let mapped = [];
+    try {
+      const workbook = XLSX.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    const mapped = rows
-      .filter(row =>
-        (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
-      )
-      .map(row => ({
-        fecha: row.fecha || new Date().toISOString().slice(0, 10),
-        equipo: row.equipo || row.team || "",
-        agente: row.agente || row.agent || "",
-        telefono: row.telefono || "",
-        producto: row.producto || "",
-        puntaje: Number(row.puntaje) || 0,
-        cuenta: row.cuenta || "",
-        direccion: row.direccion || "",
-        zip: row.zip || ""
-      }));
+      mapped = rows
+        .filter(row =>
+          (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
+        )
+        .map(row => ({
+          fecha: row.fecha || new Date().toISOString().slice(0, 10),
+          equipo: row.equipo || row.team || "",
+          agente: row.agente || row.agent || "",
+          telefono: row.telefono || "",
+          producto: row.producto || "",
+          puntaje: Number(row.puntaje) || 0,
+          cuenta: row.cuenta || "",
+          direccion: row.direccion || "",
+          zip: row.zip || ""
+        }));
 
-    if (mapped.length) {
-      await Costumer.insertMany(mapped);
+      if (mapped.length) {
+        await Costumer.insertMany(mapped);
+      }
+      fs.unlinkSync(filePath);
+      return res.json({ success: true, count: mapped.length });
+    } catch (error) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ success: false, error: "Archivo inválido o corrupto." });
     }
-    fs.unlinkSync(filePath);
-    res.json({ success: true, count: mapped.length });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -360,6 +372,16 @@ app.get('/descargar/costumers', protegerRuta, (req, res) => {
     res.download(filePath, 'Costumer.xlsx');
   } else {
     res.status(404).send('No existe el archivo de costumers.');
+  }
+});
+
+// ELIMINAR TODOS LOS COSTUMERS
+app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
+  try {
+    await Costumer.deleteMany({});
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
