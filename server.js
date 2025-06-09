@@ -21,7 +21,6 @@ if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida. ¡Configúrala en Render!");
 }
 
-// Conexión a MongoDB Atlas
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
@@ -223,7 +222,6 @@ app.get("/api/graficas", (req, res) => {
       datos.forEach(row => {
         const normalized = {};
         Object.keys(row).forEach(key => {
-          // Elimina espacios, pone en minúsculas y quita tildes
           normalized[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
         });
 
