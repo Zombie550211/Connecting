@@ -220,11 +220,18 @@ app.get("/api/graficas", (req, res) => {
       const hoja = workbook.Sheets[nombreHoja];
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
+      // Mapeo de columnas Excel a nombres backend
       datos.forEach(row => {
-        if (!row.team || !row.producto) return;
-        ventasPorEquipo[row.team] = (ventasPorEquipo[row.team] || 0) + 1;
-        puntosPorEquipo[row.team] = Math.round(((puntosPorEquipo[row.team] || 0) + parseFloat(row.puntaje || 0)) * 100) / 100;
-        ventasPorProducto[row.producto] = (ventasPorProducto[row.producto] || 0) + 1;
+        // Si ya está en el formato correcto, úsalo; si no, mapea
+        const team = row.team || row["TEAM"] || "";
+        const producto = row.producto || row["SERVICIO"] || "";
+        const puntaje = row.puntaje || row["PUNTOS"] || 0;
+
+        if (!team || !producto) return;
+
+        ventasPorEquipo[team] = (ventasPorEquipo[team] || 0) + 1;
+        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + parseFloat(puntaje || 0)) * 100) / 100;
+        ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
       });
     });
 
