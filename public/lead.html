@@ -145,6 +145,12 @@
     .charts-filter button:hover {
       background: #0056b3;
     }
+    .no-data-msg {
+      color: #a00;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -230,10 +236,12 @@
       <div class="chart-container">
         <h3>Ventas y Puntaje por Team</h3>
         <canvas id="ventasTeamChart"></canvas>
+        <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
       </div>
       <div class="chart-container">
         <h3>Ventas por Producto</h3>
         <canvas id="productosChart"></canvas>
+        <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
       </div>
     </section>
   </main>
@@ -257,10 +265,6 @@ const agentesPorTeam = {
   "Team Randal": ["Abigail Morales", "Alexander Montecinos", "Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
   "Team Marisol": ["Alessandro Romero", "Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran", "Paola Trejo", "Rodrigo Hernandez", "Tatiana Valdez"]
 };
-
-const ventasPorEquipo = Object.fromEntries(equipos.map(e => [e, 0]));
-const puntosPorEquipo = Object.fromEntries(equipos.map(e => [e, 0]));
-const ventasPorProducto = Object.fromEntries(productos.map(p => [p, 0]));
 
 document.getElementById("team").addEventListener("change", function () {
   const team = this.value;
@@ -377,29 +381,50 @@ function iniciarGraficas() {
   });
 }
 
-// NUEVA FUNCIÓN para cargar gráficas según la fecha seleccionada
+// Nueva función robusta para actualizar las gráficas y mostrar mensaje si no hay datos
 function actualizarGraficas() {
   const fecha = document.getElementById('fechaGraficas').value;
   fetch(`/api/graficas?fecha=${fecha}`)
     .then(res => res.json())
     .then(data => {
-      // Actualizamos los datos de los equipos
+      // Maneja caso de error del backend
+      if (!data || typeof data !== 'object') {
+        mostrarNoData(true, true);
+        return;
+      }
+
+      // Ventas y puntaje por equipo
+      let hayDataTeam = false;
       equipos.forEach((team, i) => {
-        ventasPorEquipo[team] = data.ventasPorEquipo[team] || 0;
-        puntosPorEquipo[team] = data.puntosPorEquipo[team] || 0;
-        ventasTeamChart.data.datasets[0].data[i] = ventasPorEquipo[team];
-        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntosPorEquipo[team];
+        const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
+        const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+        ventasTeamChart.data.datasets[0].data[i] = ventas;
+        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
+        if (ventas > 0 || puntos > 0) hayDataTeam = true;
       });
       ventasTeamChart.update();
+      mostrarNoData(!hayDataTeam, false);
 
-      // Actualizamos los datos de los productos
+      // Ventas por producto
+      let hayDataProd = false;
       productos.forEach((prod, i) => {
-        ventasPorProducto[prod] = data.ventasPorProducto[prod] || 0;
-        productosChart.data.datasets[0].data[i] = ventasPorProducto[prod];
+        const ventas = data.ventasPorProducto && data.ventasPorProducto[prod] ? data.ventasPorProducto[prod] : 0;
+        productosChart.data.datasets[0].data[i] = ventas;
+        if (ventas > 0) hayDataProd = true;
       });
       productosChart.update();
+      mostrarNoData(false, !hayDataProd);
     })
-    .catch(err => console.error("Error al cargar gráficas:", err));
+    .catch(err => {
+      console.error("Error al cargar gráficas:", err);
+      mostrarNoData(true, true);
+    });
+}
+
+// Muestra/oculta mensaje "No hay datos" en cada gráfica
+function mostrarNoData(team, producto) {
+  document.getElementById('no-data-team').style.display = team ? '' : 'none';
+  document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
 }
 
 document.getElementById("crmForm").addEventListener("submit", function (e) {
@@ -408,14 +433,15 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
   const team = document.getElementById("team").value;
   const agent = document.getElementById("agent").value;
   const producto = document.getElementById("producto").value;
-  const puntaje = parseFloat(document.getElementById("puntaje").value);
+  const puntajeVal = document.getElementById("puntaje").value;
+  const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
   const cuenta = document.getElementById("cuenta").value;
   const telefono = document.getElementById("telefono").value;
   const direccion = document.getElementById("direccion").value;
   const zip = document.getElementById("zip").value;
 
   if (
-    team === "Seleccione team" || agent === "Seleccione Agente" ||
+    team === "" || agent === "Seleccione Agente" ||
     producto === "Seleccione Producto" || isNaN(puntaje) ||
     cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
     direccion.trim() === "" || zip.trim() === ""

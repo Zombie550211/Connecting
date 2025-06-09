@@ -199,6 +199,7 @@ app.get("/api/leads", async (req, res) => {
     res.status(500).json({ error: "No se pudieron cargar los leads." });
   }
 });
+
 // ENDPOINT GRAFICAS: AHORA FILTRA POR FECHA SI SE LE PASA ?fecha=YYYY-MM-DD
 app.get("/api/graficas", (req, res) => {
   try {
