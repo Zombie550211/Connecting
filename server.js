@@ -15,6 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
+const COSTUMER_FILE_PATH = path.join(__dirname, "Costumer.xlsx");
 
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
@@ -200,7 +201,7 @@ app.get("/api/leads", async (req, res) => {
   }
 });
 
-// ENDPOINT GRAFICAS: AHORA FILTRA POR FECHA SI SE LE PASA ?fecha=YYYY-MM-DD
+// ENDPOINT GRAFICAS PARA LEADS (por fecha)
 app.get("/api/graficas", (req, res) => {
   try {
     const fechaFiltro = req.query.fecha; // Ejemplo: "2025-06-09"
@@ -421,12 +422,9 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// ... (tu código previo)
-
-// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER
+// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER (EXCEL)
 app.get("/api/graficas-costumer", (req, res) => {
   try {
-    const COSTUMER_FILE_PATH = path.join(__dirname, "costumer.xlsx");
     const fechaFiltro = req.query.fecha;
     if (!fs.existsSync(COSTUMER_FILE_PATH)) {
       return res.json({
@@ -474,4 +472,4 @@ app.get("/api/graficas-costumer", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
-})
+});
