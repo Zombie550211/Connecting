@@ -174,6 +174,11 @@ app.get("/api/leads", async (req, res) => {
         const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
         leadsExcel = leadsExcel.concat(datos);
       });
+
+      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+console.log("Nombre de la hoja:", nombreHoja);
+console.log("Filas leídas:", datos.length);
+console.log("Primeras filas:", datos.slice(0, 5)); // Muestra las primeras 5 filas
       leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     }
 

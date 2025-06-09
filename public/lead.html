@@ -292,3 +292,177 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Cargar las gráficas de la fecha seleccionada
   actualizarGraficas();
+
+  // Opcional: auto-actualización cada 30 segundos con la fecha seleccionada
+  setInterval(actualizarGraficas, 30000);
+});
+
+let ventasTeamChart, productosChart;
+
+function iniciarGraficas() {
+  const ctxTeam = document.getElementById("ventasTeamChart").getContext("2d");
+  ventasTeamChart = new Chart(ctxTeam, {
+    type: 'bar',
+    data: {
+      labels: equipos,
+      datasets: [
+        {
+          label: 'Ventas',
+          data: equipos.map(() => 0),
+          backgroundColor: '#007bff',
+          borderRadius: 6
+        },
+        {
+          label: 'Puntaje',
+          data: equipos.map(() => 0),
+          backgroundColor: '#dc3545',
+          borderRadius: 6
+        }
+      ]
+    },
+    options: {
+      animation: true,
+      responsive: true,
+      plugins: {
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#000',
+          anchor: 'end',
+          align: 'top',
+          font: { weight: 'bold' },
+          formatter: value => value
+        },
+        legend: { position: 'top' }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+        x: { grid: { display: false } }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+  const ctxProducto = document.getElementById("productosChart").getContext("2d");
+  productosChart = new Chart(ctxProducto, {
+    type: 'bar',
+    data: {
+      labels: productos,
+      datasets: [{
+        label: 'Ventas por Producto',
+        data: productos.map(() => 0),
+        backgroundColor: '#007bff',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      animation: true,
+      responsive: true,
+      plugins: {
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#000',
+          anchor: 'end',
+          align: 'top',
+          font: { weight: 'bold' },
+          formatter: value => value
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+        x: { grid: { display: false } }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// NUEVA FUNCIÓN para cargar gráficas según la fecha seleccionada
+function actualizarGraficas() {
+  const fecha = document.getElementById('fechaGraficas').value;
+  fetch(`/api/graficas?fecha=${fecha}`)
+    .then(res => res.json())
+    .then(data => {
+      // Actualizamos los datos de los equipos
+      equipos.forEach((team, i) => {
+        ventasPorEquipo[team] = data.ventasPorEquipo[team] || 0;
+        puntosPorEquipo[team] = data.puntosPorEquipo[team] || 0;
+        ventasTeamChart.data.datasets[0].data[i] = ventasPorEquipo[team];
+        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntosPorEquipo[team];
+      });
+      ventasTeamChart.update();
+
+      // Actualizamos los datos de los productos
+      productos.forEach((prod, i) => {
+        ventasPorProducto[prod] = data.ventasPorProducto[prod] || 0;
+        productosChart.data.datasets[0].data[i] = ventasPorProducto[prod];
+      });
+      productosChart.update();
+    })
+    .catch(err => console.error("Error al cargar gráficas:", err));
+}
+
+document.getElementById("crmForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const team = document.getElementById("team").value;
+  const agent = document.getElementById("agent").value;
+  const producto = document.getElementById("producto").value;
+  const puntaje = parseFloat(document.getElementById("puntaje").value);
+  const cuenta = document.getElementById("cuenta").value;
+  const telefono = document.getElementById("telefono").value;
+  const direccion = document.getElementById("direccion").value;
+  const zip = document.getElementById("zip").value;
+
+  if (
+    team === "Seleccione team" || agent === "Seleccione Agente" ||
+    producto === "Seleccione Producto" || isNaN(puntaje) ||
+    cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
+    direccion.trim() === "" || zip.trim() === ""
+  ) {
+    alert("Por favor, complete todos los campos.");
+    return;
+  }
+
+  fetch("/api/leads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
+  })
+    .then(async res => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error en respuesta:", res.status, errorText);
+        throw new Error("Error al guardar el lead.");
+      }
+      return res.json();
+    })
+    .then(() => {
+      // Después de guardar, refresca las gráficas de la fecha seleccionada
+      actualizarGraficas();
+      document.getElementById("crmForm").reset();
+      alert("Lead guardado exitosamente.");
+    })
+    .catch(error => {
+      console.error("Error al guardar lead:", error);
+      alert("Hubo un error al guardar el lead. Revisa la consola.");
+    });
+});
+</script>
+<script>
+  // Verifica si el usuario inició sesión (simulación, puedes mejorar esto con un token)
+  const loggedIn = sessionStorage.getItem("loggedIn");
+
+  // Si no hay sesión, redirige al login
+  if (!loggedIn) {
+    window.location.href = "login.html";
+  }
+
+  // Si sí hay sesión, habilita navegación
+  document.querySelectorAll('.nav-button').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('disabled');
+  });
+</script>
+</body>
+</html>
