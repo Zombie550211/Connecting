@@ -31,6 +31,11 @@
     .charts-filter button { width: auto; padding: 7px 20px; margin: 0; background: #126de4e5; border: none; color: white; border-radius: 4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
     .charts-filter button:hover { background: #0056b3; }
     .no-data-msg { color: #a00; font-weight: bold; text-align: center; margin-top: 10px;}
+    .import-excel-section { margin:20px 0 40px 0; }
+    .import-excel-section input[type="file"] { margin-bottom:8px; }
+    .import-excel-section .import-status { margin: 6px 0 0 0; font-weight: bold; font-size: 15px;}
+    .import-excel-section .success { color: #0b9023; }
+    .import-excel-section .error { color: #b30606; }
   </style>
 </head>
 <body>
@@ -106,10 +111,26 @@
         </div>
         <button type="submit">Guardar Lead</button>
       </form>
+      <!-- Sección para importar Excel y actualizar gráficas -->
+      <div class="import-excel-section">
+        <form id="form-importar-excel-leads" enctype="multipart/form-data">
+          <input type="file" name="archivo" accept=".xlsx,.xls" required>
+          <button type="submit" style="background:#42a5f5;color:#fff;padding:8px 18px;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
+            Importar Excel (Leads) y actualizar gráficas
+          </button>
+        </form>
+        <div id="import-status-lead" class="import-status"></div>
+      </div>
       <div style="margin:20px 40px;">
         <button id="btn-actualizar-graficas" style="background:#42a5f5;color:#fff;padding:8px 18px;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
         Actualizar gráficas 🔄
          </button>
+      </div>
+      <div>
+        <a href="/descargar/leads" style="margin:12px 40px; display:inline-block; background:#007bff; color:#fff; padding:8px 18px; border-radius:4px; text-decoration:none; font-weight:600;">
+          Descargar Excel Leads
+        </a>
+      </div>
     </section>
     <section class="charts-section">
       <div class="charts-filter">
@@ -355,6 +376,38 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
       alert("Hubo un error al guardar el lead. Revisa la consola.");
     });
 });
+
+// --- Importar Excel y actualizar gráficas (nuevo) ---
+document.getElementById('form-importar-excel-leads').onsubmit = async function(e) {
+  e.preventDefault();
+  const statusDiv = document.getElementById('import-status-lead');
+  statusDiv.textContent = '';
+  statusDiv.className = 'import-status';
+  const formData = new FormData(this);
+  try {
+    const resp = await fetch('/api/leads/import', {
+      method: 'POST',
+      body: formData
+    });
+    const resJson = await resp.json();
+    if (resp.ok && resJson.success) {
+      statusDiv.textContent = `Importación exitosa: ${resJson.count || 0} registros agregados.`;
+      statusDiv.className = 'import-status success';
+      await actualizarGraficas();
+    } else {
+      statusDiv.textContent = "Error al importar: " + (resJson.error || "Error desconocido");
+      statusDiv.className = 'import-status error';
+    }
+  } catch (err) {
+    statusDiv.textContent = "Error de red al importar: " + err.message;
+    statusDiv.className = 'import-status error';
+  }
+};
+
+// --- Botón manual para actualizar gráficas ---
+document.getElementById('btn-actualizar-graficas').onclick = async function() {
+  await actualizarGraficas();
+};
 </script>
 </body>
 </html>

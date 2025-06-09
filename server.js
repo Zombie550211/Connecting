@@ -223,6 +223,28 @@ app.get("/api/graficas-costumer", async (req, res) => {
   }
 });
 
+// ========== ENDPOINTS DE DESCARGA DE EXCEL ==========
+
+// Descargar el excel de leads
+app.get('/descargar/leads', protegerRuta, (req, res) => {
+  const filePath = path.join(__dirname, 'leads.xlsx');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'leads.xlsx');
+  } else {
+    res.status(404).send('No existe el archivo de leads.');
+  }
+});
+
+// Descargar el excel de costumers
+app.get('/descargar/costumers', protegerRuta, (req, res) => {
+  const filePath = path.join(__dirname, 'Costumer.xlsx');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'Costumer.xlsx');
+  } else {
+    res.status(404).send('No existe el archivo de costumers.');
+  }
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
@@ -330,39 +352,31 @@ app.get("/api/leads", async (req, res) => {
 });
 
 // ENDPOINT GRAFICAS PARA LEADS (por fecha)
-app.get("/api/graficas", (req, res) => {
+app.get("/api/graficas", async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
-    if (!fs.existsSync(EXCEL_FILE_PATH)) {
-      return res.json({
-        ventasPorEquipo: {},
-        puntosPorEquipo: {},
-        ventasPorProducto: {}
-      });
+    const query = {};
+
+    if (fechaFiltro) {
+      query.fecha = { $regex: `^${fechaFiltro}` };
     }
-    const workbook = XLSX.readFile(EXCEL_FILE_PATH);
+
+    const leads = await Lead.find(query).lean();
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
     const ventasPorProducto = {};
 
-    workbook.SheetNames.forEach(nombreHoja => {
-      if (fechaFiltro && nombreHoja !== fechaFiltro) return;
+    leads.forEach(row => {
+      const equipo = row.equipo || row.team || "";
+      const producto = row.producto || "";
+      const puntaje = parseFloat(row.puntaje || 0);
 
-      const hoja = workbook.Sheets[nombreHoja];
-      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+      if (!equipo || !producto) return;
 
-      datos.forEach(row => {
-        const equipo = row.equipo || "";
-        const producto = row.producto || "";
-        const puntaje = row.puntaje || 0;
-
-        if (!equipo || !producto) return;
-
-        ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-        puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + parseFloat(puntaje || 0)) * 100) / 100;
-        ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-      });
+      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
+      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
+      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
     });
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });

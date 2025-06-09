@@ -5,50 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Connecting</title>
   <style>
-    /* ... Tus estilos previos ... */
-    /* Añade aquí todos tus estilos existentes */
-    html, body { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f8f9fa;}
-    body { min-height: 100vh; box-sizing: border-box;}
-    nav { width: 220px; background: #1E2A38; color: white; padding: 0; display: flex; flex-direction: column; align-items: stretch; position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.05);}
-    nav h2 { font-size: 24px; font-weight: bold; text-align: center; margin: 32px 0 24px 0; letter-spacing: 1px;}
-    nav button { background: #2A3B4C; color: white; border: none; padding: 12px 24px; text-align: left; font-weight: 600; border-radius: 4px; cursor: pointer; transition: background 0.3s, color 0.3s; margin: 4px 16px; font-size: 16px; outline: none;}
-    nav button:hover, nav button.active { background: #00aaff; color: #fff;}
-    .main-content { margin-left: 220px; min-height: 100vh; padding: 0; background-color: #f8f9fa; display: flex; flex-direction: column;}
-    header { display: flex; justify-content: space-between; align-items: center; background: transparent; padding: 32px 40px 16px 40px; min-height: 80px;}
-    header h1 { color: #003366; font-size: 2.1rem; margin: 0; letter-spacing: 1px; font-weight: 700;}
-    .filters { display: flex; flex-wrap: wrap; gap: 1.1rem; padding: 18px 40px; background-color: #f2f2f2; border-radius: 2px; margin-bottom: 15px; box-sizing: border-box;}
-    .filters label { display: flex; align-items: center; font-weight: 500; font-size: 1rem; color: #222; gap: 6px;}
-    .filters input, .filters select { padding: 7px 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; background-color: white; transition: border-color 0.2s, box-shadow 0.2s; min-width: 110px; margin-left: 4px;}
-    .filters input:focus, .filters select:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);}
-    .table-wrapper { flex: 1; padding: 0 40px 0 40px; box-sizing: border-box; width: 100%;}
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.03);}
-    th { background-color: #003366; color: white; padding: 0.75rem 0.5rem; text-align: left; font-weight: 700; letter-spacing: 0.5px; font-size: 1rem;}
-    td { padding: 0.5rem 0.5rem; font-size: 0.97rem; font-weight: 400; border-bottom: 1px solid #ccc; background-color: white;}
-    tbody tr:nth-child(odd) td { background-color: #ffffff;}
-    tbody tr:nth-child(even) td { background-color: #f5f5f5;}
-    .btn-eliminar { background-color: #add8e6; border: none; color: black; font-size: 16px; padding: 4px 6px; border-radius: 4px; cursor: pointer; margin-left: 2px; transition: background 0.2s;}
-    .btn-eliminar:hover { background-color: #87ceeb;}
-    .btn-editar { background-color: #ffe066; border: none; color: #444; font-size: 16px; padding: 4px 6px; border-radius: 4px; cursor: pointer; margin-right: 2px; transition: background 0.2s;}
-    .btn-editar:hover { background-color: #ffd700;}
-    .editar-form-wrapper { padding: 30px 40px 40px 40px; background: #fffbe6; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin: 20px 40px 0 40px; max-width: 1100px; border: 1px solid #ffe066;}
-    .editar-form-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 16px; color: #665c00;}
-    .editar-form-row { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 14px; align-items: center;}
-    .editar-form-row label { font-weight: 500; min-width: 110px; color: #444; display: flex; flex-direction: column; gap: 3px;}
-    .editar-form-row input, .editar-form-row select { padding: 7px 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; margin-top: 2px;}
-    .editar-form-buttons { margin-top: 24px; display: flex; gap: 14px;}
-    .editar-form-buttons button { font-size: 1rem; padding: 9px 22px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: background 0.2s;}
-    .editar-form-buttons .guardar { background: #007bff; color: #fff;}
-    .editar-form-buttons .guardar:hover { background: #0056b3;}
-    .editar-form-buttons .cancelar { background: #fff; color: #222; border: 1px solid #bbb;}
-    .editar-form-buttons .cancelar:hover { background: #eee;}
-    #alerta-importacion { margin: 24px 40px; padding: 12px 20px; font-size: 1.07rem; font-weight: 600; border-radius: 6px; display: none; box-shadow: 0 1px 5px rgba(0,0,0,0.06);}
-    #alerta-importacion.exito { background: #eafaf1; color: #147a37; border: 1px solid #b6e2cb;}
-    #alerta-importacion.error { background: #fff1f0; color: #c0392b; border: 1px solid #f5b7b1;}
+    /* ... Tu CSS original ... */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+    }
+    body { min-height: 100vh; box-sizing: border-box; }
+    nav {
+      width: 220px; background: #1E2A38; color: white; padding: 0;
+      display: flex; flex-direction: column; align-items: stretch;
+      position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 10;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    }
+    nav h2 {
+      font-size: 24px; font-weight: bold; text-align: center;
+      margin: 32px 0 24px 0; letter-spacing: 1px;
+    }
+    nav button {
+      background: #2A3B4C; color: white; border: none;
+      padding: 12px 24px; text-align: left; font-weight: 600;
+      border-radius: 4px; cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+      margin: 4px 16px; font-size: 16px; outline: none;
+    }
+    nav button:hover, nav button.active {
+      background: #00aaff; color: #fff;
+    }
+    .main-content {
+      margin-left: 220px; min-height: 100vh; padding: 0; background-color: #f8f9fa;
+      display: flex; flex-direction: column;
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: transparent; padding: 32px 40px 16px 40px; min-height: 80px;
+    }
+    header h1 {
+      color: #003366; font-size: 2.1rem; margin: 0; letter-spacing: 1px; font-weight: 700;
+    }
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 1.1rem; padding: 18px 40px;
+      background-color: #f2f2f2; border-radius: 2px; margin-bottom: 15px; box-sizing: border-box;
+    }
+    .filters label {
+      display: flex; align-items: center; font-weight: 500;
+      font-size: 1rem; color: #222; gap: 6px;
+    }
+    .filters input, .filters select {
+      padding: 7px 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px;
+      background-color: white; transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 110px; margin-left: 4px;
+    }
+    .filters input:focus, .filters select:focus {
+      outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+    }
+    .table-wrapper {
+      flex: 1; padding: 0 40px 0 40px; box-sizing: border-box; width: 100%;
+    }
+    table {
+      width: 100%; border-collapse: collapse; background: white;
+      border-radius: 8px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.03);
+    }
+    th {
+      background-color: #003366; color: white; padding: 0.75rem 0.5rem;
+      text-align: left; font-weight: 700; letter-spacing: 0.5px; font-size: 1rem;
+    }
+    td {
+      padding: 0.5rem 0.5rem; font-size: 0.97rem; font-weight: 400;
+      border-bottom: 1px solid #ccc; background-color: white;
+    }
+    tbody tr:nth-child(odd) td { background-color: #ffffff; }
+    tbody tr:nth-child(even) td { background-color: #f5f5f5; }
+    .btn-eliminar {
+      background-color: #add8e6; border: none; color: black; font-size: 16px;
+      padding: 4px 6px; border-radius: 4px; cursor: pointer; margin-left: 2px;
+      transition: background 0.2s;
+    }
+    .btn-eliminar:hover { background-color: #87ceeb; }
+    .btn-editar {
+      background-color: #ffe066; border: none; color: #444; font-size: 16px;
+      padding: 4px 6px; border-radius: 4px; cursor: pointer; margin-right: 2px; transition: background 0.2s;
+    }
+    .btn-editar:hover { background-color: #ffd700; }
+    .editar-form-wrapper {
+      padding: 30px 40px 40px 40px; background: #fffbe6; border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin: 20px 40px 0 40px;
+      max-width: 1100px; border: 1px solid #ffe066;
+    }
+    .editar-form-title {
+      font-size: 1.25rem; font-weight: bold; margin-bottom: 16px; color: #665c00;
+    }
+    .editar-form-row {
+      display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 14px; align-items: center;
+    }
+    .editar-form-row label {
+      font-weight: 500; min-width: 110px; color: #444;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .editar-form-row input, .editar-form-row select {
+      padding: 7px 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; margin-top: 2px;
+    }
+    .editar-form-buttons {
+      margin-top: 24px; display: flex; gap: 14px;
+    }
+    .editar-form-buttons button {
+      font-size: 1rem; padding: 9px 22px; border: none; border-radius: 5px; cursor: pointer;
+      font-weight: 600; transition: background 0.2s;
+    }
+    .editar-form-buttons .guardar { background: #007bff; color: #fff; }
+    .editar-form-buttons .guardar:hover { background: #0056b3; }
+    .editar-form-buttons .cancelar { background: #fff; color: #222; border: 1px solid #bbb; }
+    .editar-form-buttons .cancelar:hover { background: #eee; }
+    #alerta-importacion {
+      margin: 24px 40px;
+      padding: 12px 20px;
+      font-size: 1.07rem;
+      font-weight: 600;
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+    }
+    #alerta-importacion.exito {
+      background: #eafaf1;
+      color: #147a37;
+      border: 1px solid #b6e2cb;
+    }
+    #alerta-importacion.error {
+      background: #fff1f0;
+      color: #c0392b;
+      border: 1px solid #f5b7b1;
+    }
     @media (max-width: 900px) {
-      nav { width: 54px; padding: 0;}
-      .main-content { margin-left: 54px;}
-      nav h2 { font-size: 0; margin: 24px 0 18px 0;}
-      nav button { font-size: 0; padding: 18px 0; margin: 2px 6px;}
+      nav { width: 54px; padding: 0; }
+      .main-content { margin-left: 54px; }
+      nav h2 { font-size: 0; margin: 24px 0 18px 0; }
+      nav button { font-size: 0; padding: 18px 0; margin: 2px 6px; }
       .editar-form-wrapper, .table-wrapper, .filters, header, #alerta-importacion { padding-left: 10px; padding-right: 10px; margin-left: 0; margin-right: 0;}
     }
     @media (max-width: 700px) {
@@ -80,6 +173,9 @@
       <input type="file" name="archivo" accept=".xlsx,.xls" required/>
       <button type="submit">Importar Excel</button>
     </form>
+    <a href="/descargar/leads" style="margin:18px 40px; display:inline-block; background:#42a5f5; color:#fff; padding:8px 18px; border-radius:4px; text-decoration:none; font: weight 200px;;">
+     Descargar Excel Leads
+    </a>
     <!-- Formulario para agregar costumer -->
     <form id="costumerForm" style="margin:24px 40px;">
       <input placeholder="Team" id="team" required>
@@ -102,17 +198,10 @@
       <label>Dirección:<input type="text" id="filtro-direccion"></label>
       <label>ZIP:<input type="text" id="filtro-zip"></label>
     </div>
-    <!-- Botón para eliminar seleccionados -->
-    <div style="margin:18px 40px;">
-      <button id="btn-eliminar-seleccionados" style="background:#ef5350;color:#fff;padding:8px 18px;border:none;border-radius:4px;cursor:pointer;font-weight:600;">
-        Eliminar seleccionados 🗑️
-      </button>
-    </div>
     <div class="table-wrapper">
       <table id="tabla-clientes">
         <thead>
           <tr>
-            <th><input type="checkbox" id="select-todos"></th>
             <th>FECHA</th>
             <th>TEAM</th>
             <th>AGENTE</th>
@@ -134,7 +223,6 @@
     // ---- Estado y referencias ----
     let datos = [];
     let costumerEditando = null;
-    let seleccionados = new Set();
     const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
     const editarFormContainer = document.getElementById("editar-form-container");
 
@@ -204,7 +292,7 @@
       if (!Array.isArray(filas) || filas.length === 0) {
         const row = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 11;
+        td.colSpan = 10;
         td.textContent = "No hay datos para mostrar.";
         td.style.textAlign = "center";
         td.style.padding = "1rem";
@@ -214,12 +302,6 @@
       }
       filas.forEach(fila => {
         const tr = document.createElement("tr");
-
-        // Checkbox
-        const tdCheck = document.createElement("td");
-        tdCheck.innerHTML = `<input type="checkbox" class="select-costumer" data-id="${fila._id}" ${seleccionados.has(fila._id) ? "checked" : ""}>`;
-        tr.appendChild(tdCheck);
-
         ["FECHA", "TEAM", "AGENTE", "PRODUCTO", "PUNTAJE", "CUENTA", "TELÉFONO", "DIRECCIÓN", "ZIP"].forEach(clave => {
           const td = document.createElement("td");
           td.textContent = fila[clave] || "";
@@ -232,19 +314,6 @@
         `;
         tr.appendChild(tdAccion);
         tabla.appendChild(tr);
-      });
-
-      // Listeners para seleccionados
-      document.querySelectorAll(".select-costumer").forEach(cb => {
-        cb.addEventListener("change", function() {
-          if (this.checked) {
-            seleccionados.add(this.dataset.id);
-          } else {
-            seleccionados.delete(this.dataset.id);
-          }
-          document.getElementById("select-todos").checked =
-            document.querySelectorAll(".select-costumer:checked").length === document.querySelectorAll(".select-costumer").length;
-        });
       });
     }
 
@@ -269,47 +338,11 @@
       if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
       const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
       if (res.ok) {
-        seleccionados.delete(id); // por si estaba seleccionado
         await cargarCostumers();
       } else {
         alert("No se pudo eliminar el costumer.");
       }
     }
-
-    // ---- Eliminar seleccionados ----
-    document.getElementById("btn-eliminar-seleccionados").onclick = async function() {
-      if (seleccionados.size === 0) {
-        alert("No hay costumers seleccionados.");
-        return;
-      }
-      if (!confirm("¿Seguro que deseas eliminar los seleccionados?")) return;
-      const ids = Array.from(seleccionados);
-      const res = await fetch('/api/costumer/delete-multiple', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ ids })
-      });
-      if (res.ok) {
-        seleccionados.clear();
-        document.getElementById("select-todos").checked = false;
-        await cargarCostumers();
-      } else {
-        alert("Error al eliminar los seleccionados.");
-      }
-    };
-
-    // Select all checkbox
-    document.getElementById("select-todos").addEventListener("change", function() {
-      const todos = document.querySelectorAll(".select-costumer");
-      todos.forEach(cb => {
-        cb.checked = this.checked;
-        if (this.checked) {
-          seleccionados.add(cb.dataset.id);
-        } else {
-          seleccionados.delete(cb.dataset.id);
-        }
-      });
-    });
 
     // ---- Editar ----
     function editarCostumer(id) {
@@ -365,7 +398,7 @@
         puntaje: actualizado.puntaje,
         cuenta: actualizado.cuenta,
         telefono: actualizado["teléfono"],
-        direccion: actualizado.direccion,
+        direccion: actualizado.dirección,
         zip: actualizado.zip
       };
       try {
