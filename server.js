@@ -172,13 +172,13 @@ app.get("/api/leads", async (req, res) => {
       workbook.SheetNames.forEach(nombreHoja => {
         const hoja = workbook.Sheets[nombreHoja];
         const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+        // Logs de depuración
+        console.log("Nombre de la hoja:", nombreHoja);
+        console.log("Filas leídas:", datos.length);
+        console.log("Primeras filas:", datos.slice(0, 5)); // Muestra las primeras 5 filas
+
         leadsExcel = leadsExcel.concat(datos);
       });
-
-      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-console.log("Nombre de la hoja:", nombreHoja);
-console.log("Filas leídas:", datos.length);
-console.log("Primeras filas:", datos.slice(0, 5)); // Muestra las primeras 5 filas
       leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     }
 
@@ -199,7 +199,6 @@ console.log("Primeras filas:", datos.slice(0, 5)); // Muestra las primeras 5 fil
     res.status(500).json({ error: "No se pudieron cargar los leads." });
   }
 });
-
 // ENDPOINT GRAFICAS: AHORA FILTRA POR FECHA SI SE LE PASA ?fecha=YYYY-MM-DD
 app.get("/api/graficas", (req, res) => {
   try {
@@ -222,6 +221,10 @@ app.get("/api/graficas", (req, res) => {
 
       const hoja = workbook.Sheets[nombreHoja];
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+
+      // Logs para depuración de gráficas
+      console.log("Procesando hoja para gráficas:", nombreHoja);
+      console.log("Filas leídas para gráficas:", datos.length);
 
       // Normaliza claves de cada fila
       datos.forEach(row => {
