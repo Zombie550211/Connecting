@@ -122,14 +122,19 @@ app.post("/api/leads", async (req, res) => {
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
+      console.log("Excel EXISTE, cargado.");
     } else {
       workbook = XLSX.utils.book_new();
+      console.log("Excel NO existe, creado nuevo.");
     }
 
     // Leer datos previos o inicializar array
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
+      console.log("Hoja del día encontrada. Filas previas:", datos.length);
+    } else {
+      console.log("Hoja del día NO encontrada. Se creará nueva.");
     }
     datos.push(nuevoLead);
 
@@ -151,10 +156,15 @@ app.post("/api/leads", async (req, res) => {
     if (!workbook.SheetNames.includes(nombreHoja)) {
       workbook.SheetNames.push(nombreHoja);
     }
-    XLSX.writeFile(workbook, EXCEL_FILE_PATH);
 
-    // LOG extra para ver si se escribió bien
-    console.log(`Lead guardado. Total filas en hoja ${nombreHoja}:`, datos.length);
+    // INTENTA ESCRIBIR EL ARCHIVO
+    try {
+      XLSX.writeFile(workbook, EXCEL_FILE_PATH);
+      console.log(`Lead guardado en Excel. Total filas en hoja ${nombreHoja}:`, datos.length);
+    } catch (err) {
+      console.error("ERROR al intentar escribir el archivo Excel:", err);
+      return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel." });
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -221,24 +231,15 @@ app.get("/api/graficas", (req, res) => {
     workbook.SheetNames.forEach(nombreHoja => {
       if (fechaFiltro && nombreHoja !== fechaFiltro) return;
 
-const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-console.log("Filas leídas para gráficas:", datos.length);
-console.log("Primeras filas:", datos.slice(0, 5));
-
-      // Logs para depuración de gráficas
+      const hoja = workbook.Sheets[nombreHoja];
+      const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
       console.log("Procesando hoja para gráficas:", nombreHoja);
       console.log("Filas leídas para gráficas:", datos.length);
 
-      // Normaliza claves de cada fila
       datos.forEach(row => {
-        const normalized = {};
-        Object.keys(row).forEach(key => {
-          normalized[key.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")] = row[key];
-        });
-
-        const team = normalized.team || "";
-        const producto = normalized.producto || normalized.servicio || "";
-        const puntaje = normalized.puntaje || normalized.puntos || 0;
+        const team = row.team || "";
+        const producto = row.producto || "";
+        const puntaje = row.puntaje || 0;
 
         if (!team || !producto) return;
 
@@ -423,9 +424,7 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER (EXCEL)
-// NUEVO ENDPOINT PARA GRAFICAS DESDE COSTUMER (EXCEL)
-// Lee correctamente encabezados y datos aunque tengan mayúsculas, minúsculas o espacios
+// ENDPOINT GRAFICAS COSTUMER (versión simple/anterior)
 app.get("/api/graficas-costumer", (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
@@ -444,35 +443,20 @@ app.get("/api/graficas-costumer", (req, res) => {
     const ventasPorProducto = {};
 
     workbook.SheetNames.forEach(nombreHoja => {
-      // Solo procesa la hoja si coincide con el filtro
       if (fechaFiltro && nombreHoja !== fechaFiltro) return;
 
       const hoja = workbook.Sheets[nombreHoja];
-      // Lee datos con encabezados tal como están en el archivo
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
-      // DEBUG: muestra cuántas filas se leyeron y los encabezados reales
-      console.log("Procesando hoja para gráficas:", nombreHoja);
-      console.log("Filas leídas para gráficas:", datos.length);
-      if (datos.length > 0) {
-        console.log("Encabezados detectados:", Object.keys(datos[0]));
-      }
-
       datos.forEach(row => {
-        // Lee los campos sin importar mayúsculas/minúsculas/espacios
-        const keys = Object.keys(row).reduce((map, k) => {
-          map[k.trim().toLowerCase()] = k;
-          return map;
-        }, {});
-
-        const team = row[keys['team']] || "";
-        const producto = row[keys['producto']] || row[keys['servicio']] || "";
-        const puntaje = parseFloat(row[keys['puntaje']] || row[keys['puntos']] || 0) || 0;
+        const team = row.team || "";
+        const producto = row.producto || "";
+        const puntaje = row.puntaje || 0;
 
         if (!team || !producto) return;
 
         ventasPorEquipo[team] = (ventasPorEquipo[team] || 0) + 1;
-        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + puntaje) * 100) / 100;
+        puntosPorEquipo[team] = Math.round(((puntosPorEquipo[team] || 0) + parseFloat(puntaje || 0)) * 100) / 100;
         ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
       });
     });
