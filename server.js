@@ -2,7 +2,7 @@ require('dotenv').config();
 
 console.log("DEBUG MONGO_URL:", process.env.MONGO_URL);
 const Lead = require('./models/lead');
-const Costumer = require('./models/costumer'); // <-- IMPORTANTE
+const Costumer = require('./models/costumer');
 
 const express = require("express");
 const session = require("express-session");
@@ -11,6 +11,8 @@ const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,7 +82,6 @@ function inicializarExcelConHojaDelDia() {
     workbook = XLSX.utils.book_new();
   }
 
-  // Encabezados correctos y consistentes
   const encabezados = [
     "fecha",
     "equipo",
@@ -94,7 +95,6 @@ function inicializarExcelConHojaDelDia() {
   ];
 
   if (!workbook.Sheets[nombreHoja]) {
-    // Crear hoja vacía pero con encabezados correctos
     const hojaVacia = XLSX.utils.json_to_sheet([], { header: encabezados });
     XLSX.utils.book_append_sheet(workbook, hojaVacia, nombreHoja);
     XLSX.writeFile(workbook, EXCEL_FILE_PATH);
@@ -109,8 +109,6 @@ inicializarExcelConHojaDelDia();
 // ENDPOINT PARA GUARDAR LEAD
 app.post("/api/leads", async (req, res) => {
   try {
-    console.log("BODY RECIBIDO:", req.body);
-
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
 
     if (!agent || !producto) {
@@ -118,7 +116,6 @@ app.post("/api/leads", async (req, res) => {
     }
 
     const nombreHoja = obtenerNombreHoja();
-    // Nombres de propiedad CONSISTENTES con los encabezados
     const nuevoLead = {
       fecha: new Date().toISOString(),
       equipo: team || '',
@@ -131,30 +128,21 @@ app.post("/api/leads", async (req, res) => {
       zip: zip || ''
     };
 
-    // Guardar en MongoDB
     await Lead.create(nuevoLead);
 
-    // Guardar en Excel
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
-      console.log("Excel EXISTE, cargado.");
     } else {
       workbook = XLSX.utils.book_new();
-      console.log("Excel NO existe, creado nuevo.");
     }
 
-    // Leer datos previos o inicializar array
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
-      console.log("Hoja del día encontrada. Filas previas:", datos.length);
-    } else {
-      console.log("Hoja del día NO encontrada. Se creará nueva.");
     }
     datos.push(nuevoLead);
 
-    // Encabezados consistentes
     const encabezados = [
       "fecha",
       "equipo",
@@ -167,25 +155,20 @@ app.post("/api/leads", async (req, res) => {
       "zip"
     ];
 
-    // Escribe la hoja con encabezados siempre
     const nuevaHoja = XLSX.utils.json_to_sheet(datos, { header: encabezados });
     workbook.Sheets[nombreHoja] = nuevaHoja;
     if (!workbook.SheetNames.includes(nombreHoja)) {
       workbook.SheetNames.push(nombreHoja);
     }
 
-    // INTENTA ESCRIBIR EL ARCHIVO
     try {
       XLSX.writeFile(workbook, EXCEL_FILE_PATH);
-      console.log(`Lead guardado en Excel. Total filas en hoja ${nombreHoja}:`, datos.length);
     } catch (err) {
-      console.error("ERROR al intentar escribir el archivo Excel:", err);
       return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel." });
     }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Error al guardar lead:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -193,24 +176,17 @@ app.post("/api/leads", async (req, res) => {
 // GET leads: Lee leads de Excel y MongoDB, y los regresa en dos arreglos
 app.get("/api/leads", async (req, res) => {
   try {
-    // 1. Leads desde Excel
     let leadsExcel = [];
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
       workbook.SheetNames.forEach(nombreHoja => {
         const hoja = workbook.Sheets[nombreHoja];
         const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-        // Logs de depuración
-        console.log("Nombre de la hoja:", nombreHoja);
-        console.log("Filas leídas:", datos.length);
-        console.log("Primeras filas:", datos.slice(0, 5)); // Muestra las primeras 5 filas
-
         leadsExcel = leadsExcel.concat(datos);
       });
       leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
     }
 
-    // 2. Leads desde MongoDB
     let leadsMongo = [];
     try {
       leadsMongo = await Lead.find().sort({ fecha: -1 }).lean();
@@ -223,7 +199,6 @@ app.get("/api/leads", async (req, res) => {
       leadsMongo
     });
   } catch (error) {
-    console.error("Error al leer leads:", error);
     res.status(500).json({ error: "No se pudieron cargar los leads." });
   }
 });
@@ -231,7 +206,7 @@ app.get("/api/leads", async (req, res) => {
 // ENDPOINT GRAFICAS PARA LEADS (por fecha)
 app.get("/api/graficas", (req, res) => {
   try {
-    const fechaFiltro = req.query.fecha; // Ejemplo: "2025-06-09"
+    const fechaFiltro = req.query.fecha;
     if (!fs.existsSync(EXCEL_FILE_PATH)) {
       return res.json({
         ventasPorEquipo: {},
@@ -250,8 +225,6 @@ app.get("/api/graficas", (req, res) => {
 
       const hoja = workbook.Sheets[nombreHoja];
       const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-      console.log("Procesando hoja para gráficas:", nombreHoja);
-      console.log("Filas leídas para gráficas:", datos.length);
 
       datos.forEach(row => {
         const equipo = row.equipo || "";
@@ -268,7 +241,6 @@ app.get("/api/graficas", (req, res) => {
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
-    console.error("Error al obtener datos para gráficas:", error);
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
@@ -284,10 +256,9 @@ app.delete("/api/leads", async (req, res) => {
   let eliminadoExcel = false;
   let errores = [];
 
-  // Eliminar en MongoDB
   try {
     const resultado = await Lead.deleteOne({
-      fecha: { $regex: `^${fecha}` }, // Por si hay hora en fecha
+      fecha: { $regex: `^${fecha}` },
       teléfono: numero,
       agente: agente
     });
@@ -296,7 +267,6 @@ app.delete("/api/leads", async (req, res) => {
     errores.push("Error MongoDB: " + err.message);
   }
 
-  // Eliminar en Excel
   try {
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -351,7 +321,6 @@ app.put("/api/leads", async (req, res) => {
   let actualizadoExcel = false;
   let errores = [];
 
-  // Actualizar en MongoDB
   try {
     const resultado = await Lead.updateOne(
       {
@@ -378,15 +347,6 @@ app.put("/api/leads", async (req, res) => {
     errores.push("Error MongoDB: " + err.message);
   }
 
-  const multer = require('multer');
-const XLSX = require('xlsx');
-const upload = multer({ dest: 'uploads/' }); // crea un folder 'uploads' si no existe
-
-app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
-  // ...código de importación aquí...
-});
-
-  // Actualizar en Excel
   try {
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       const workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -414,7 +374,6 @@ app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
         });
         if (modificado) {
           cambiado = true;
-          // Asegura encabezados
           const encabezados = [
             "fecha",
             "equipo",
@@ -445,7 +404,6 @@ app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
 
 // === BLOQUE COSTUMER (100% MongoDB) ===
 
-// Crear costumer
 app.post("/api/costumer", async (req, res) => {
   try {
     const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
@@ -466,12 +424,10 @@ app.post("/api/costumer", async (req, res) => {
     await Costumer.create(nuevoCostumer);
     res.json({ success: true });
   } catch (err) {
-    console.error("Error al guardar costumer:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Obtener todos los costumers (puedes agregar filtros si quieres)
 app.get("/api/costumer", async (req, res) => {
   try {
     const { fecha } = req.query;
@@ -480,12 +436,10 @@ app.get("/api/costumer", async (req, res) => {
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     res.json({ costumers });
   } catch (err) {
-    console.error("Error al leer costumers:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Editar costumer (por _id)
 app.put("/api/costumer/:id", async (req, res) => {
   try {
     const costumerId = req.params.id;
@@ -501,7 +455,6 @@ app.put("/api/costumer/:id", async (req, res) => {
   }
 });
 
-// Eliminar costumer (por _id)
 app.delete("/api/costumer/:id", async (req, res) => {
   try {
     const costumerId = req.params.id;
@@ -516,34 +469,34 @@ app.delete("/api/costumer/:id", async (req, res) => {
   }
 });
 
-// Gráficas costumer usando MongoDB
-app.get("/api/graficas-costumer", async (req, res) => {
+// Importar costumer desde Excel
+app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
   try {
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-    if (fechaFiltro) {
-      query.fecha = { $regex: `^${fechaFiltro}` };
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
     }
-    const costumers = await Costumer.find(query).lean();
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-    costumers.forEach(row => {
-      const equipo = row.equipo || "";
-      const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje || 0);
-      if (!equipo || !producto) return;
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      puntosPorEquipo[equipo] = (puntosPorEquipo[equipo] || 0) + puntaje;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-    Object.keys(puntosPorEquipo).forEach(e => {
-      puntosPorEquipo[e] = Math.round(puntosPorEquipo[e] * 100) / 100;
-    });
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    console.error("Error al obtener datos para gráficas costumer desde MongoDB:", error);
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas costumer." });
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const mapped = rows.map(row => ({
+      fecha: row.fecha || new Date().toISOString(),
+      equipo: row.equipo || row.team || "",
+      agente: row.agente || row.agent || "",
+      telefono: row.telefono || "",
+      producto: row.producto || "",
+      puntaje: Number(row.puntaje) || 0,
+      cuenta: row.cuenta || "",
+      direccion: row.direccion || "",
+      zip: row.zip || ""
+    }));
+    if (mapped.length) {
+      await Costumer.insertMany(mapped);
+    }
+    fs.unlinkSync(filePath); // borra archivo temporal
+    res.json({ success: true, count: mapped.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -556,11 +509,10 @@ app.get("/logout", (req, res) => {
 // ENDPOINT GRAFICAS (LEADS) usando MongoDB
 app.get("/api/graficas", async (req, res) => {
   try {
-    const fechaFiltro = req.query.fecha; // ejemplo: "2025-06-09"
+    const fechaFiltro = req.query.fecha;
     const query = {};
 
     if (fechaFiltro) {
-      // Filtrar por fecha (comienza con yyyy-mm-dd)
       query.fecha = { $regex: `^${fechaFiltro}` };
     }
 
@@ -584,7 +536,6 @@ app.get("/api/graficas", async (req, res) => {
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
-    console.error("Error al obtener datos para gráficas desde MongoDB:", error);
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
