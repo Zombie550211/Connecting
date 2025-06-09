@@ -68,43 +68,122 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-function obtenerNombreHoja() {
-  return new Date().toISOString().split("T")[0];
-}
+// === BLOQUE COSTUMER (100% MongoDB) ===
 
-function inicializarExcelConHojaDelDia() {
-  const nombreHoja = obtenerNombreHoja();
-
-  let workbook;
-  if (fs.existsSync(EXCEL_FILE_PATH)) {
-    workbook = XLSX.readFile(EXCEL_FILE_PATH);
-  } else {
-    workbook = XLSX.utils.book_new();
+// Crear costumer
+app.post("/api/costumer", async (req, res) => {
+  try {
+    const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
+    if (!agent || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos" });
+    }
+    const nuevoCostumer = {
+      fecha: new Date().toISOString().slice(0, 10),
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+    await Costumer.create(nuevoCostumer);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
+});
 
-  const encabezados = [
-    "fecha",
-    "equipo",
-    "agente",
-    "teléfono",
-    "producto",
-    "puntaje",
-    "cuenta",
-    "direccion",
-    "zip"
-  ];
-
-  if (!workbook.Sheets[nombreHoja]) {
-    const hojaVacia = XLSX.utils.json_to_sheet([], { header: encabezados });
-    XLSX.utils.book_append_sheet(workbook, hojaVacia, nombreHoja);
-    XLSX.writeFile(workbook, EXCEL_FILE_PATH);
-    console.log(`✔️ Hoja creada para el día: ${nombreHoja} con encabezados correctos`);
-  } else {
-    console.log(`ℹ️ Hoja del día ${nombreHoja} ya existe`);
+// Obtener todos los costumers (puedes agregar filtros si quieres)
+app.get("/api/costumer", async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    const query = {};
+    if (fecha) query.fecha = { $regex: `^${fecha}` };
+    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-}
+});
 
-inicializarExcelConHojaDelDia();
+// Editar costumer (por _id)
+app.put("/api/costumer/:id", async (req, res) => {
+  try {
+    const costumerId = req.params.id;
+    const cambios = req.body;
+    const resultado = await Costumer.findByIdAndUpdate(costumerId, cambios, { new: true });
+    if (resultado) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, error: "No se encontró el costumer para editar" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar costumer (por _id)
+app.delete("/api/costumer/:id", async (req, res) => {
+  try {
+    const costumerId = req.params.id;
+    const resultado = await Costumer.findByIdAndDelete(costumerId);
+    if (resultado) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, error: "No se encontró el costumer para eliminar" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Importar costumer desde Excel con filtro de filas vacías
+app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
+    }
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    // FILTRO de filas vacías: solo importa filas con algún dato relevante
+    const mapped = rows
+      .filter(row =>
+        (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
+      )
+      .map(row => ({
+        fecha: row.fecha || new Date().toISOString().slice(0, 10),
+        equipo: row.equipo || row.team || "",
+        agente: row.agente || row.agent || "",
+        telefono: row.telefono || "",
+        producto: row.producto || "",
+        puntaje: Number(row.puntaje) || 0,
+        cuenta: row.cuenta || "",
+        direccion: row.direccion || "",
+        zip: row.zip || ""
+      }));
+
+    if (mapped.length) {
+      await Costumer.insertMany(mapped);
+    }
+    fs.unlinkSync(filePath); // Borra archivo temporal
+    res.json({ success: true, count: mapped.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login.html");
+  });
+});
+
+// == RESTO DE ENDPOINTS LEADS, GRÁFICAS, ETC. ==
 
 // ENDPOINT PARA GUARDAR LEAD
 app.post("/api/leads", async (req, res) => {
@@ -115,7 +194,6 @@ app.post("/api/leads", async (req, res) => {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
-    const nombreHoja = obtenerNombreHoja();
     const nuevoLead = {
       fecha: new Date().toISOString(),
       equipo: team || '',
@@ -130,6 +208,7 @@ app.post("/api/leads", async (req, res) => {
 
     await Lead.create(nuevoLead);
 
+    // Excel guardado si lo necesitas
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -137,6 +216,7 @@ app.post("/api/leads", async (req, res) => {
       workbook = XLSX.utils.book_new();
     }
 
+    const nombreHoja = new Date().toISOString().split("T")[0];
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
@@ -173,7 +253,7 @@ app.post("/api/leads", async (req, res) => {
   }
 });
 
-// GET leads: Lee leads de Excel y MongoDB, y los regresa en dos arreglos
+// GET leads
 app.get("/api/leads", async (req, res) => {
   try {
     let leadsExcel = [];
@@ -399,144 +479,6 @@ app.put("/api/leads", async (req, res) => {
     return res.json({ success: true });
   } else {
     return res.status(404).json({ success: false, error: errores.join("; ") || "No se encontró el lead para editar" });
-  }
-});
-
-// === BLOQUE COSTUMER (100% MongoDB) ===
-
-app.post("/api/costumer", async (req, res) => {
-  try {
-    const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const nuevoCostumer = {
-      fecha: new Date().toISOString(),
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Costumer.create(nuevoCostumer);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get("/api/costumer", async (req, res) => {
-  try {
-    const { fecha } = req.query;
-    const query = {};
-    if (fecha) query.fecha = { $regex: `^${fecha}` };
-    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    res.json({ costumers });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.put("/api/costumer/:id", async (req, res) => {
-  try {
-    const costumerId = req.params.id;
-    const cambios = req.body;
-    const resultado = await Costumer.findByIdAndUpdate(costumerId, cambios, { new: true });
-    if (resultado) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ success: false, error: "No se encontró el costumer para editar" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.delete("/api/costumer/:id", async (req, res) => {
-  try {
-    const costumerId = req.params.id;
-    const resultado = await Costumer.findByIdAndDelete(costumerId);
-    if (resultado) {
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ success: false, error: "No se encontró el costumer para eliminar" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Importar costumer desde Excel
-app.post('/api/costumer/import', upload.single('archivo'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
-    }
-    const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    const mapped = rows.map(row => ({
-      fecha: row.fecha || new Date().toISOString(),
-      equipo: row.equipo || row.team || "",
-      agente: row.agente || row.agent || "",
-      telefono: row.telefono || "",
-      producto: row.producto || "",
-      puntaje: Number(row.puntaje) || 0,
-      cuenta: row.cuenta || "",
-      direccion: row.direccion || "",
-      zip: row.zip || ""
-    }));
-    if (mapped.length) {
-      await Costumer.insertMany(mapped);
-    }
-    fs.unlinkSync(filePath); // borra archivo temporal
-    res.json({ success: true, count: mapped.length });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login.html");
-  });
-});
-
-// ENDPOINT GRAFICAS (LEADS) usando MongoDB
-app.get("/api/graficas", async (req, res) => {
-  try {
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-
-    if (fechaFiltro) {
-      query.fecha = { $regex: `^${fechaFiltro}` };
-    }
-
-    const leads = await Lead.find(query).lean();
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    leads.forEach(row => {
-      const equipo = row.equipo || row.team || "";
-      const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje || 0);
-
-      if (!equipo || !producto) return;
-
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
 
