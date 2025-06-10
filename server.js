@@ -153,14 +153,18 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
 // ENDPOINTS CRUD Y GRAFICAS DE LEADS
 app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
-    const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
+    // Cambiado: acepta fecha desde el body, si no, usa hoy
+    const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
 
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
+    // Si la fecha viene vacía o null, usa la de hoy
+    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
+
     const nuevoLead = {
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: fechaLead,
       equipo: team || '',
       agente: agent,
       teléfono: telefono || '',
@@ -197,7 +201,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       workbook = XLSX.utils.book_new();
     }
 
-    const nombreHoja = new Date().toISOString().split("T")[0];
+    const nombreHoja = fechaLead;
     let datos = [];
     if (workbook.Sheets[nombreHoja]) {
       datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
@@ -276,12 +280,15 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 // ====================== COSTUMER ENDPOINTS =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const { team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
+    // También puedes permitir fecha opcional aquí si quieres la misma lógica
+    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
+    // Si fecha viene, úsala, si no, hoy
+    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
     const nuevoCostumer = {
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: fechaCostumer,
       equipo: team || '',
       agente: agent,
       telefono: telefono || '',

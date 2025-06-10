@@ -19,7 +19,7 @@
     .form-section h2 { margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #222;}
     .form-group { margin-bottom: 15px;}
     label { display: block; font-weight: 600; margin-bottom: 6px;}
-    select, input[type="text"], input[type="number"], button { width: 100%; padding: 8px 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;}
+    select, input[type="text"], input[type="number"], input[type="date"], button { width: 100%; padding: 8px 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;}
     button { background-color: #126de4e5; border: none; color: white; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
     button:hover { background-color: #0056b3; }
     .charts-section { flex: 1; display: flex; flex-direction: column; gap: 20px; }
@@ -47,6 +47,10 @@
     <section class="form-section">
       <h2>Formulario de Registro</h2>
       <form id="crmForm">
+        <div class="form-group">
+          <label for="fecha-lead">Fecha del Lead</label>
+          <input type="date" id="fecha-lead" name="fecha-lead" />
+        </div>
         <div class="form-group">
           <label for="team">Team</label>
           <select id="team" required>
@@ -173,6 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Selecciona la fecha de hoy por defecto al cargar la página
   const hoy = new Date().toISOString().slice(0,10);
   document.getElementById('fechaGraficas').value = hoy;
+  // NUEVO: selecciona la fecha de hoy por defecto en el formulario
+  document.getElementById('fecha-lead').value = hoy;
 
   iniciarGraficas();
   actualizarGraficas();
@@ -320,6 +326,7 @@ function mostrarNoData(team, producto) {
 document.getElementById("crmForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
+  const fecha = document.getElementById("fecha-lead").value;
   const team = document.getElementById("team").value;
   const agent = document.getElementById("agent").value;
   const producto = document.getElementById("producto").value;
@@ -344,7 +351,7 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: 'include',
-    body: JSON.stringify({ team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
+    body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
   })
     .then(async res => {
       if (res.status === 401) {
@@ -372,6 +379,8 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
     .then(() => {
       actualizarGraficas();
       document.getElementById("crmForm").reset();
+      // Restaurar la fecha de hoy después de resetear el formulario
+      document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
       alert("Lead guardado exitosamente.");
     })
     .catch(error => {
