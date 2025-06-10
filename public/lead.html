@@ -251,8 +251,8 @@ function iniciarGraficas() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           color: '#000',
-          anchor: 'end',
-          align: 'top',
+          anchor: 'end',   // <-- SIEMPRE ARRIBA DE LA BARRA
+          align: 'end',    // <-- SIEMPRE ARRIBA DE LA BARRA
           font: { weight: 'bold' },
           formatter: value => value
         },
