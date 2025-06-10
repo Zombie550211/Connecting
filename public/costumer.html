@@ -36,7 +36,6 @@
       margin-left: 220px; min-height: 100vh; padding: 0; background-color: #f8f9fa;
       display: flex; flex-direction: column;
     }
-    /* NUEVO: Barra de filtros y descarga */
     .filters-download-bar {
       display: flex;
       flex-wrap: wrap;
@@ -208,7 +207,6 @@
     <button onclick="location.href='#'">Reports</button>
   </nav>
   <div class="main-content">
-    <!-- Barra de filtros y descarga en la misma fila -->
     <div class="filters-download-bar">
       <div class="filters-row">
         <label>Fecha desde:
@@ -237,15 +235,13 @@
           <input type="text" id="filtro-zip" placeholder="Buscar ZIP" />
         </label>
       </div>
-      <a href="/descargar/costumers" class="descargar-btn-icono" title="Descargar Excel">
+      <a href="#" class="descargar-btn-icono" title="Descargar Excel" id="descargarExcelBtn">
         <svg viewBox="0 0 28 28">
           <rect x="7" y="20" width="14" height="3" rx="1.5"/>
           <path d="M14 4v11.17l4.59-4.59a1 1 0 1 1 1.41 1.41l-6.3 6.3a1 1 0 0 1-1.41 0l-6.3-6.3a1 1 0 1 1 1.41-1.41L14 15.17V4a1 1 0 1 1 2 0z"/>
         </svg>
       </a>
     </div>
-
-    <!-- Acciones: Importar Excel y Eliminar Todo -->
     <div class="actions-bar">
       <form id="form-importar-excel" enctype="multipart/form-data" style="display:flex;align-items:center;">
         <div class="custom-file-input-wrapper">
@@ -260,7 +256,6 @@
       <button type="button" class="delete-all-btn" id="btn-eliminar-todo">Eliminar Todo</button>
       <div id="import-status-costumer" class="import-status"></div>
     </div>
-
     <div class="tabla-section">
       <table id="tabla-clientes">
         <thead>
@@ -301,7 +296,7 @@
       filtroAgente.appendChild(opt);
     });
 
-    // ---- Estado y referencias ----
+    // Estado y referencias
     let datos = [];
     let costumerEditando = null;
     const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
@@ -310,7 +305,6 @@
     // Referencias de filtro
     const filtroFechaDesde = document.getElementById("filtro-fecha-desde");
     const filtroFechaHasta = document.getElementById("filtro-fecha-hasta");
-    // Ya definidos arriba: filtroTeam, filtroAgente
     const filtroTelefono = document.getElementById("filtro-telefono");
     const filtroDireccion = document.getElementById("filtro-direccion");
     const filtroZip = document.getElementById("filtro-zip");
@@ -319,7 +313,7 @@
       f.addEventListener("input", aplicarFiltros)
     );
 
-    // Input file elegante - muestra el nombre del archivo seleccionado
+    // Input file elegante
     document.querySelector('.custom-file-input').addEventListener('change', function() {
       const fileNameSpan = document.getElementById('file-selected-name');
       if(this.files && this.files.length > 0) {
@@ -329,7 +323,7 @@
       }
     });
 
-    // ---- Importar Excel ----
+    // Importar Excel
     document.getElementById('form-importar-excel').onsubmit = async function(e) {
       e.preventDefault();
       const statusDiv = document.getElementById('import-status-costumer');
@@ -358,7 +352,7 @@
       document.getElementById('file-selected-name').textContent = "Ningún archivo seleccionado";
     };
 
-    // ---- Eliminar todo ----
+    // Eliminar todo
     document.getElementById('btn-eliminar-todo').onclick = async function() {
       if (!confirm("¿Estás seguro de que quieres eliminar TODOS los costumers? Esta acción no se puede deshacer.")) return;
       try {
@@ -374,7 +368,20 @@
       }
     };
 
-    // ---- Cargar desde Mongo ----
+    // Descargar Excel con rango de fechas
+    document.getElementById('descargarExcelBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      const desde = document.getElementById('filtro-fecha-desde').value;
+      const hasta = document.getElementById('filtro-fecha-hasta').value;
+      let url = '/descargar/costumers';
+      const params = [];
+      if (desde) params.push('desde=' + encodeURIComponent(desde));
+      if (hasta) params.push('hasta=' + encodeURIComponent(hasta));
+      if (params.length > 0) url += '?' + params.join('&');
+      window.location.href = url;
+    });
+
+    // Cargar desde Mongo
     async function cargarCostumers() {
       const res = await fetch('/api/costumer');
       const data = await res.json();
@@ -394,7 +401,7 @@
       ocultarFormularioEdicion();
     }
 
-    // ---- Renderizar y filtrar ----
+    // Renderizar y filtrar
     function renderizarTabla(filas) {
       tabla.innerHTML = "";
       if (!Array.isArray(filas) || filas.length === 0) {
@@ -444,7 +451,7 @@
       renderizarTabla(filtrados);
     }
 
-    // ---- Eliminar ----
+    // Eliminar un costumer
     async function eliminarCostumer(id) {
       if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
       const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
@@ -455,9 +462,9 @@
       }
     }
 
-    // ---- Editar ---- (igual que antes, puedes mantenerlo si usas edición in-place)
+    // Editar (placeholder, no implementado)
     function editarCostumer(id) {
-      // ... tu lógica de edición ...
+      alert("Funcionalidad de edición aún no implementada.");
     }
     function ocultarFormularioEdicion() {
       editarFormContainer.innerHTML = "";

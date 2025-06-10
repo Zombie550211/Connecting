@@ -140,7 +140,7 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
   }
 });
 
-// ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS
+// ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS (ARCHIVO ESTATICO)
 app.get('/descargar/leads', protegerRuta, (req, res) => {
   const filePath = path.join(__dirname, 'leads.xlsx');
   if (fs.existsSync(filePath)) {
@@ -150,17 +150,51 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
   }
 });
 
+// ENDPOINT PARA DESCARGAR EL EXCEL DE COSTUMERS (DINÁMICO DESDE MONGO)
+app.get('/descargar/costumers', protegerRuta, async (req, res) => {
+  try {
+    // Si quieres filtrar por fecha, puedes leer query params aquí
+    // const { fecha } = req.query;
+    // let query = {};
+    // if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) query.fecha = { $regex: `^${fecha}` };
+
+    // const costumers = await Costumer.find(query).lean();
+    const costumers = await Costumer.find().lean();
+
+    const excelData = costumers.map(c => ({
+      Fecha: c.fecha || '',
+      Team: c.equipo || '',
+      Agente: c.agente || '',
+      Producto: c.producto || '',
+      Puntaje: c.puntaje || '',
+      Cuenta: c.cuenta || '',
+      Teléfono: c.telefono || '',
+      Dirección: c.direccion || '',
+      ZIP: c.zip || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Costumers');
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Disposition', 'attachment; filename="costumers.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) {
+    res.status(500).send('Error generando Excel');
+  }
+});
+
 // ENDPOINTS CRUD Y GRAFICAS DE LEADS
 app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
-    // Cambiado: acepta fecha desde el body, si no, usa hoy
     const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
 
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
-    // Si la fecha viene vacía o null, usa la de hoy
     const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
 
     const nuevoLead = {
@@ -175,10 +209,8 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       zip: zip || ''
     };
 
-    // Guarda el LEAD
     await Lead.create(nuevoLead);
 
-    // También guarda en COSTUMERS
     const nuevoCostumer = {
       fecha: nuevoLead.fecha,
       equipo: nuevoLead.equipo,
@@ -246,12 +278,10 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     const fechaFiltro = req.query.fecha;
     const query = {};
 
-    // Solo filtra si la fecha tiene formato tipo "2025-06-10"
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
       query.fecha = { $regex: `^${fechaFiltro}` };
     }
 
-    // Solo busca los campos necesarios para las gráficas
     const leads = await Lead.find(query).lean();
 
     const ventasPorEquipo = {};
@@ -280,12 +310,10 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 // ====================== COSTUMER ENDPOINTS =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    // También puedes permitir fecha opcional aquí si quieres la misma lógica
     const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
-    // Si fecha viene, úsala, si no, hoy
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
     const nuevoCostumer = {
       fecha: fechaCostumer,
@@ -389,16 +417,6 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
-  }
-});
-
-// Descargar el excel de costumers
-app.get('/descargar/costumers', protegerRuta, (req, res) => {
-  const filePath = path.join(__dirname, 'Costumer.xlsx');
-  if (fs.existsSync(filePath)) {
-    res.download(filePath, 'Costumer.xlsx');
-  } else {
-    res.status(404).send('No existe el archivo de costumers.');
   }
 });
 
