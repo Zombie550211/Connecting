@@ -10,26 +10,59 @@
     * { box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
     .container { display: flex; min-height: 100vh; }
-    nav { width: 220px; background: #1E2A38; color: white; padding: 20px; display: flex; flex-direction: column; }
-    nav h1 { margin: 0 0 20px; font-size: 1.5em; font-weight: 700; }
-    nav button { background: #2A3B4C; color: white; border: none; padding: 10px; text-align: left; font-weight: 600; border-radius: 4px; cursor: pointer; margin-bottom: 10px; transition: background 0.3s;}
-    nav button:hover { background: #00aaff; }
-    main { flex: 1; padding: 30px; display: flex; gap: 30px; background: white; }
-    .form-section { flex: 1; background: #fff; padding: 20px 25px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
-    .form-section h2 { margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #222;}
-    .form-group { margin-bottom: 15px;}
+    nav {
+      width: 220px;
+      background: #000000ea;
+      color: rgb(245, 245, 245);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    nav h1 {
+      margin: 0 0 20px;
+      font-size: 2em;
+      font-weight: 700;
+    }
+    nav button {
+      width: 100%;
+      background: #000000ea;
+      color: rgb(255, 255, 255);
+      border: none;
+      padding: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 675;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: background 0.2s, color 0.2s;
+    }
+    nav button:hover,
+    nav button.active {
+      background: #8cdeff;
+      color: #fff;
+    }
+    nav button.active {
+      background: #8cdeff;
+      color: #fff;
+    }
+    main { flex: 1; padding: 30px; display: flex; gap: 10px; background: rgb(255, 255, 255); }
+    .form-section { flex: 1; background: #fff; padding: 30px 25px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
+    .form-section h2 { margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #141414;}
+    .form-group { margin-bottom: 8px;}
     label { display: block; font-weight: 600; margin-bottom: 6px;}
     select, input[type="text"], input[type="number"], input[type="date"], button { width: 100%; padding: 8px 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;}
-    button { background-color: #126de4e5; border: none; color: white; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
-    button:hover { background-color: #0056b3; }
+    button[type="submit"] { background-color: #126de4e5; border: none; color: white; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
+    button[type="submit"]:hover { background-color: #0056b3; }
     .charts-section { flex: 1; display: flex; flex-direction: column; gap: 20px; }
     .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
     .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
-    .charts-filter label { font-weight: 600; margin-bottom: 0;}
+    .charts-filter label { font-weight: 50; margin-bottom: 0;}
     .charts-filter input[type="date"] { padding: 6px 10px; border-radius: 4px; border: 1px solid #b4c5d4;}
     .charts-filter button { width: auto; padding: 7px 20px; margin: 0; background: #126de4e5; border: none; color: white; border-radius: 4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
-    .charts-filter button:hover { background: #0056b3; }
+    .charts-filter button:hover { background: #0b0f11; }
     .no-data-msg { color: #a00; font-weight: bold; text-align: center; margin-top: 10px;}
   </style>
 </head>
@@ -38,7 +71,7 @@
   <nav>
     <h1>Connecting</h1>
     <button onclick="location.href='#'">Inicio</button>
-    <button onclick="location.href='lead.html'">Lead</button>
+    <button onclick="location.href='lead.html'" class="active">Lead</button>
     <button onclick="location.href='costumer.html'">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
     <button onclick="logout()">Cerrar sesión</button>
@@ -48,7 +81,7 @@
       <h2>Formulario de Registro</h2>
       <form id="crmForm">
         <div class="form-group">
-          <label for="fecha-lead">Fecha del Lead</label>
+          <label for="fecha-lead">Fecha</label>
           <input type="date" id="fecha-lead" name="fecha-lead" />
         </div>
         <div class="form-group">
@@ -88,7 +121,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="cuenta">Cuenta</label>
+          <label for="cuenta">Cuenta Google</label>
           <select id="cuenta" required>
             <option>Seleccione Cuenta</option>
             <option>Cuenta Alexis</option>
@@ -98,7 +131,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="telefono">Agregue número de teléfono</label>
+          <label for="telefono">Teléfono</label>
           <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
         </div>
         <div class="form-group">
@@ -119,12 +152,10 @@
         <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
       </div>
       <div class="chart-container">
-        <h3>Ventas y Puntaje por Team</h3>
         <canvas id="ventasTeamChart"></canvas>
         <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
       </div>
       <div class="chart-container">
-        <h3>Ventas por Producto</h3>
         <canvas id="productosChart"></canvas>
         <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
       </div>
@@ -251,8 +282,8 @@ function iniciarGraficas() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           color: '#000',
-          anchor: 'end',   // <-- SIEMPRE ARRIBA DE LA BARRA
-          align: 'end',    // <-- SIEMPRE ARRIBA DE LA BARRA
+          anchor: 'end',
+          align: 'end',  // ¡Ajuste para SIEMPRE mostrar arriba!
           font: { weight: 'bold' },
           formatter: value => value
         },
