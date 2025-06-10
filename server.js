@@ -171,7 +171,22 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       zip: zip || ''
     };
 
+    // Guarda el LEAD
     await Lead.create(nuevoLead);
+
+    // También guarda en COSTUMERS
+    const nuevoCostumer = {
+      fecha: nuevoLead.fecha,
+      equipo: nuevoLead.equipo,
+      agente: nuevoLead.agente,
+      telefono: nuevoLead.teléfono,
+      producto: nuevoLead.producto,
+      puntaje: nuevoLead.puntaje,
+      cuenta: nuevoLead.cuenta,
+      direccion: nuevoLead.direccion,
+      zip: nuevoLead.zip
+    };
+    await Costumer.create(nuevoCostumer);
 
     req.session.ultimoLead = Date.now();
 
@@ -216,8 +231,8 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Error real al guardar lead:", err);
-    res.status(500).json({ success: false, error: "Error al guardar el lead: " + err.message });
+    console.error("Error real al guardar lead/costumer:", err);
+    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
   }
 });
 

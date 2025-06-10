@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const costumerSchema = new mongoose.Schema({
-  fecha: { type: String, required: true }, // Siempre string
+  fecha: { type: String, required: true },
   equipo: String,
   agente: String,
   telefono: String,
