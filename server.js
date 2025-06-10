@@ -24,26 +24,47 @@ if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida.");
 }
 
-// Middleware robusto para proteger rutas y detectar correctamente AJAX/fetch
+// CAMBIO: Middleware robusto para proteger rutas, y cerrar sesión si no se ha enviado un lead en 30 minutos
 function protegerRuta(req, res, next) {
-  if (!req.session.usuario) {
-    // Detecta peticiones AJAX/fetch modernas de todas las formas
-    const expectsJson =
-      req.headers['x-requested-with'] === 'XMLHttpRequest' ||
-      (req.headers.accept && req.headers.accept.includes('application/json')) ||
-      (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) ||
-      (req.headers['sec-fetch-mode'] && req.headers['sec-fetch-mode'] === 'cors') ||
-      req.headers['fetch-site'] ||
-      (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
-      req.path.startsWith('/api/');
+  const MAX_INACTIVIDAD = 30 * 60 * 1000; // 30 minutos en milisegundos
+  const ahora = Date.now();
 
-    if (expectsJson) {
-      return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
+  if (req.session.usuario) {
+    if (req.session.ultimoLead) {
+      if (ahora - req.session.ultimoLead > MAX_INACTIVIDAD) {
+        req.session.destroy(() => {
+          const expectsJson =
+            req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+            (req.headers.accept && req.headers.accept.includes('application/json')) ||
+            (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) ||
+            (req.headers['sec-fetch-mode'] && req.headers['sec-fetch-mode'] === 'cors') ||
+            req.headers['fetch-site'] ||
+            (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+            req.path.startsWith('/api/');
+
+          if (expectsJson) {
+            return res.status(401).json({ success: false, error: "Sesión expirada por inactividad (más de 30 minutos sin enviar lead)" });
+          }
+          return res.redirect("/login.html");
+        });
+        return;
+      }
     }
-    // Si es navegador, redirige a login
-    return res.redirect("/login.html");
+    return next();
   }
-  next();
+  const expectsJson =
+    req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+    (req.headers.accept && req.headers.accept.includes('application/json')) ||
+    (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) ||
+    (req.headers['sec-fetch-mode'] && req.headers['sec-fetch-mode'] === 'cors') ||
+    req.headers['fetch-site'] ||
+    (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+    req.path.startsWith('/api/');
+
+  if (expectsJson) {
+    return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
+  }
+  return res.redirect("/login.html");
 }
 
 mongoose.connect(MONGO_URL)
@@ -70,6 +91,7 @@ app.post("/login", (req, res) => {
   const { user, pass } = req.body;
   if (user === "admin" && pass === "1234") {
     req.session.usuario = user;
+    req.session.ultimoLead = Date.now(); // CAMBIO: inicializa el timestamp al loguear
     res.json({ success: true });
   } else {
     res.json({ success: false });
@@ -151,6 +173,9 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     };
 
     await Lead.create(nuevoLead);
+
+    // CAMBIO: cada vez que se guarda un lead, actualiza el timestamp de último lead
+    req.session.ultimoLead = Date.now();
 
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
