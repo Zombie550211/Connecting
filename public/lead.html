@@ -41,6 +41,7 @@
     <button onclick="location.href='lead.html'">Lead</button>
     <button onclick="location.href='costumer.html'">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
+    <button onclick="logout()">Cerrar sesión</button>
   </nav>
   <main>
     <section class="form-section">
@@ -48,7 +49,7 @@
       <form id="crmForm">
         <div class="form-group">
           <label for="team">Team</label>
-          <select id="team">
+          <select id="team" required>
             <option value="">Seleccione team</option>
             <option value="Team Irania">Team Irania</option>
             <option value="Team Pleitez">Team Pleitez</option>
@@ -60,19 +61,19 @@
         </div>
         <div class="form-group">
           <label for="agent">Agente</label>
-          <select id="agent">
+          <select id="agent" required>
             <option>Seleccione Agente</option>
           </select>
         </div>
         <div class="form-group">
           <label for="producto">Producto</label>
-          <select id="producto">
+          <select id="producto" required>
             <option>Seleccione Producto</option>
           </select>
         </div>
         <div class="form-group">
           <label for="puntaje">Puntaje</label>
-          <select id="puntaje">
+          <select id="puntaje" required>
             <option>Seleccione Puntaje</option>
             <option>Sin Puntaje</option>
             <option>0.25</option>
@@ -84,7 +85,7 @@
         </div>
         <div class="form-group">
           <label for="cuenta">Cuenta</label>
-          <select id="cuenta">
+          <select id="cuenta" required>
             <option>Seleccione Cuenta</option>
             <option>Cuenta Alexis</option>
             <option>Cuenta Eduardo</option>
@@ -94,19 +95,18 @@
         </div>
         <div class="form-group">
           <label for="telefono">Agregue número de teléfono</label>
-          <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" />
+          <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
         </div>
         <div class="form-group">
           <label for="direccion">Dirección</label>
-          <input type="text" id="direccion" placeholder="Dirección del cliente" />
+          <input type="text" id="direccion" placeholder="Dirección del cliente" required/>
         </div>
         <div class="form-group">
           <label for="zip">ZIP Code</label>
-          <input type="text" id="zip" placeholder="Código ZIP" />
+          <input type="text" id="zip" placeholder="Código ZIP" required/>
         </div>
         <button type="submit">Guardar Lead</button>
       </form>
-      <!-- Botones de importar, actualizar y descargar ELIMINADOS -->
     </section>
     <section class="charts-section">
       <div class="charts-filter">
@@ -169,13 +169,12 @@ document.addEventListener("DOMContentLoaded", () => {
     opt.textContent = p;
     selectProducto.appendChild(opt);
   });
-  iniciarGraficas();
 
   // Selecciona la fecha de hoy por defecto al cargar la página
   const hoy = new Date().toISOString().slice(0,10);
   document.getElementById('fechaGraficas').value = hoy;
 
-  // Cargar las gráficas de la fecha seleccionada
+  iniciarGraficas();
   actualizarGraficas();
 
   // Opcional: auto-actualización cada 30 segundos con la fecha seleccionada
@@ -262,11 +261,23 @@ function iniciarGraficas() {
   });
 }
 
-// AHORA USA EL ENDPOINT DE MONGODB
 function actualizarGraficas() {
   const fecha = document.getElementById('fechaGraficas').value;
-  fetch(`/api/graficas?fecha=${fecha}`)
-    .then(res => res.json())
+  fetch(`/api/graficas?fecha=${fecha}`, {
+    credentials: 'include'
+  })
+    .then(res => {
+      if (res.status === 401) {
+        alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+        window.location.href = "/login.html";
+        throw new Error("No autorizado. Verifica tu sesión.");
+      }
+      if (res.status === 500) {
+        mostrarNoData(true, true);
+        throw new Error("Error interno del servidor (500).");
+      }
+      return res.json();
+    })
     .then(data => {
       if (!data || typeof data !== 'object') {
         mostrarNoData(true, true);
@@ -332,9 +343,15 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
   fetch("/api/leads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({ team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
   })
     .then(async res => {
+      if (res.status === 401) {
+        alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+        window.location.href = "/login.html";
+        throw new Error("No autorizado.");
+      }
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Error en respuesta:", res.status, errorText);
@@ -352,6 +369,12 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
       alert("Hubo un error al guardar el lead. Revisa la consola.");
     });
 });
+
+// Función para logout seguro
+function logout() {
+  fetch('/logout', { credentials: 'include' })
+    .then(() => window.location.href = '/login.html');
+}
 </script>
 </body>
 </html>

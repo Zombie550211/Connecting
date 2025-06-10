@@ -24,7 +24,7 @@ if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida.");
 }
 
-// CAMBIO: Middleware robusto para proteger rutas, y cerrar sesión si no se ha enviado un lead en 30 minutos
+// Middleware robusto para proteger rutas, cerrar sesión si no se ha enviado un lead en 30 minutos
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000; // 30 minutos en milisegundos
   const ahora = Date.now();
@@ -91,7 +91,7 @@ app.post("/login", (req, res) => {
   const { user, pass } = req.body;
   if (user === "admin" && pass === "1234") {
     req.session.usuario = user;
-    req.session.ultimoLead = Date.now(); // CAMBIO: inicializa el timestamp al loguear
+    req.session.ultimoLead = Date.now();
     res.json({ success: true });
   } else {
     res.json({ success: false });
@@ -106,7 +106,7 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-// === ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS ===
+// ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
@@ -116,11 +116,10 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    // Filtra filas vacías
     const mapped = rows.filter(row =>
       row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
     ).map(row => ({
-      fecha: row.fecha || new Date().toISOString(),
+      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
       equipo: row.equipo || row.team || "",
       agente: row.agente || row.agent || "",
       teléfono: row.telefono || "",
@@ -141,7 +140,7 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
   }
 });
 
-// === ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS ===
+// ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS
 app.get('/descargar/leads', protegerRuta, (req, res) => {
   const filePath = path.join(__dirname, 'leads.xlsx');
   if (fs.existsSync(filePath)) {
@@ -151,7 +150,7 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
   }
 });
 
-// --- ENDPOINTS CRUD Y GRAFICAS DE LEADS ---
+// ENDPOINTS CRUD Y GRAFICAS DE LEADS
 app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
     const { team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
@@ -161,7 +160,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
 
     const nuevoLead = {
-      fecha: new Date().toISOString(),
+      fecha: new Date().toISOString().slice(0, 10), // CLAVE: formato YYYY-MM-DD
       equipo: team || '',
       agente: agent,
       teléfono: telefono || '',
@@ -174,7 +173,6 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
 
     await Lead.create(nuevoLead);
 
-    // CAMBIO: cada vez que se guarda un lead, actualiza el timestamp de último lead
     req.session.ultimoLead = Date.now();
 
     let workbook;
@@ -269,7 +267,7 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     leads.forEach(row => {
       const equipo = row.equipo || row.team || "";
       const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje || 0);
+      const puntaje = parseFloat(row.puntaje) || 0;
 
       if (!equipo || !producto) return;
 
@@ -280,6 +278,7 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
+    console.error("Error en /api/graficas:", error); // Log para debug
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
@@ -338,7 +337,7 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
           (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
         )
         .map(row => ({
-          fecha: row.fecha || new Date().toISOString().slice(0, 10),
+          fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
           equipo: row.equipo || row.team || "",
           agente: row.agente || row.agent || "",
           telefono: row.telefono || "",
@@ -379,7 +378,7 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
     costumers.forEach(row => {
       const equipo = row.equipo || row.team || "";
       const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje || 0);
+      const puntaje = parseFloat(row.puntaje) || 0;
 
       if (!equipo || !producto) return;
 
