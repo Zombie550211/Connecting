@@ -248,18 +248,15 @@ app.get("/api/leads", protegerRuta, async (req, res) => {
   }
 });
 
-// ----------- BLOQUE SUSTITUIDO: ENDPOINT GRAFICAS PARA LEADS (por fecha) -----------
+// ENDPOINT GRAFICAS PARA LEADS (por fecha) - CORREGIDO PARA STRING FECHA
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
     const query = {};
 
     if (fechaFiltro) {
-      // Asumiendo que el campo fecha es tipo Date en el modelo Lead
-      // Si no es así, dime y te paso el filtro para string
-      const desde = new Date(fechaFiltro + "T00:00:00.000Z");
-      const hasta = new Date(fechaFiltro + "T23:59:59.999Z");
-      query.fecha = { $gte: desde, $lte: hasta };
+      // Filtra por fecha como string (ejemplo: "2025-06-07")
+      query.fecha = { $regex: `^${fechaFiltro}` };
     }
 
     const leads = await Lead.find(query).lean();
@@ -286,7 +283,6 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
-// ----------- FIN DEL BLOQUE SUSTITUIDO -----------
 
 // ====================== COSTUMER ENDPOINTS =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
