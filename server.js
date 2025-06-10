@@ -160,7 +160,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
 
     const nuevoLead = {
-      fecha: new Date().toISOString().slice(0, 10), // CLAVE: formato YYYY-MM-DD
+      fecha: new Date().toISOString().slice(0, 10),
       equipo: team || '',
       agente: agent,
       teléfono: telefono || '',
@@ -210,41 +210,14 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     try {
       XLSX.writeFile(workbook, EXCEL_FILE_PATH);
     } catch (err) {
-      return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel." });
+      console.error("Error al escribir el archivo Excel:", err);
+      return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel: " + err.message });
     }
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get("/api/leads", protegerRuta, async (req, res) => {
-  try {
-    let leadsExcel = [];
-    if (fs.existsSync(EXCEL_FILE_PATH)) {
-      const workbook = XLSX.readFile(EXCEL_FILE_PATH);
-      workbook.SheetNames.forEach(nombreHoja => {
-        const hoja = workbook.Sheets[nombreHoja];
-        const datos = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-        leadsExcel = leadsExcel.concat(datos);
-      });
-      leadsExcel.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    }
-
-    let leadsMongo = [];
-    try {
-      leadsMongo = await Lead.find().sort({ fecha: -1 }).lean();
-    } catch (errorMongo) {
-      console.error("Error al leer leads de MongoDB:", errorMongo);
-    }
-
-    res.json({
-      leadsExcel,
-      leadsMongo
-    });
-  } catch (error) {
-    res.status(500).json({ error: "No se pudieron cargar los leads." });
+    console.error("Error real al guardar lead:", err);
+    res.status(500).json({ success: false, error: "Error al guardar el lead: " + err.message });
   }
 });
 
