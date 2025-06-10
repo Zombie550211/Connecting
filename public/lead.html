@@ -352,12 +352,22 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
         window.location.href = "/login.html";
         throw new Error("No autorizado.");
       }
+      // Si la respuesta NO es JSON, no la intentes parsear como JSON.
+      const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Error en respuesta:", res.status, errorText);
+        if (contentType.includes('application/json')) {
+          const errorText = await res.text();
+          console.error("Error en respuesta:", res.status, errorText);
+        } else {
+          console.error("Respuesta inesperada:", res.status, await res.text());
+        }
         throw new Error("Error al guardar el lead.");
       }
-      return res.json();
+      if (contentType.includes('application/json')) {
+        return res.json();
+      } else {
+        throw new Error("Respuesta inesperada del servidor.");
+      }
     })
     .then(() => {
       actualizarGraficas();
