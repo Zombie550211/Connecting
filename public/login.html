@@ -91,15 +91,27 @@
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
 
-      // Login simple: usuario admin, contraseña 1234
-      if (user === "admin" && pass === "1234") {
-        sessionStorage.setItem("loggedIn", "true");
-    window.location.href = "/lead.html"; // <-- RUTA ABSOLUTA
-
-
-      } else {
-        alert("Credenciales incorrectas.");
-      }
+      fetch("/login", {
+        method: "POST",
+        credentials: "include", // ¡IMPORTANTE! Así el servidor crea/enlaza la cookie de sesión
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ user, pass })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Si quieres, puedes usar sessionStorage/localStorage aquí para recordar el login visualmente
+          window.location.href = "/lead.html";
+        } else {
+          alert("Credenciales incorrectas.");
+        }
+      })
+      .catch(err => {
+        console.error("Error al intentar iniciar sesión:", err);
+        alert("Error de red o servidor.");
+      });
     });
   </script>
 </body>
