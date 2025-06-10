@@ -405,6 +405,29 @@ app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   }
 });
 
+// ELIMINAR UN COSTUMER POR ID
+app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Costumer.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// EDITAR/ACTUALIZAR UN COSTUMER POR ID
+app.put('/api/costumer/:id', protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const update = req.body;
+    await Costumer.findByIdAndUpdate(id, update);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
