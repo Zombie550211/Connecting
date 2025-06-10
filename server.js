@@ -24,15 +24,20 @@ if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida.");
 }
 
-// Middleware mejorado para autenticación y AJAX/fetch
+// Middleware robusto para proteger rutas y detectar correctamente AJAX/fetch
 function protegerRuta(req, res, next) {
   if (!req.session.usuario) {
-    // Detecta peticiones AJAX, fetch, o JSON y responde JSON
-    if (
+    // Detecta peticiones AJAX/fetch modernas de todas las formas
+    const expectsJson =
       req.headers['x-requested-with'] === 'XMLHttpRequest' ||
-      (req.headers.accept && req.headers.accept.indexOf('application/json') > -1) ||
-      (req.headers['content-type'] && req.headers['content-type'].indexOf('application/json') > -1)
-    ) {
+      (req.headers.accept && req.headers.accept.includes('application/json')) ||
+      (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) ||
+      (req.headers['sec-fetch-mode'] && req.headers['sec-fetch-mode'] === 'cors') ||
+      req.headers['fetch-site'] ||
+      (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+      req.path.startsWith('/api/');
+
+    if (expectsJson) {
       return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
     }
     // Si es navegador, redirige a login
@@ -291,7 +296,6 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
   }
 });
 
-// === IMPORTAR COSTUMERS - SIEMPRE RESPONDER JSON, MANEJO DE ERRORES ===
 app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
