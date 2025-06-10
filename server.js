@@ -248,17 +248,18 @@ app.get("/api/leads", protegerRuta, async (req, res) => {
   }
 });
 
-// ENDPOINT GRAFICAS PARA LEADS (por fecha) - CORREGIDO PARA STRING FECHA
+// ENDPOINT GRAFICAS PARA LEADS (por fecha) - CORREGIDO, ROBUSTO Y SEGURO
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
     const query = {};
 
-    if (fechaFiltro) {
-      // Filtra por fecha como string (ejemplo: "2025-06-07")
+    // Solo filtra si la fecha tiene formato tipo "2025-06-10"
+    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
       query.fecha = { $regex: `^${fechaFiltro}` };
     }
 
+    // Solo busca los campos necesarios para las gráficas
     const leads = await Lead.find(query).lean();
 
     const ventasPorEquipo = {};
@@ -279,7 +280,7 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
-    console.error("Error en /api/graficas:", error); // Log para debug
+    console.error("Error en /api/graficas:", error.stack || error);
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
@@ -313,7 +314,9 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
     const { fecha } = req.query;
     const query = {};
-    if (fecha) query.fecha = { $regex: `^${fecha}` };
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      query.fecha = { $regex: `^${fecha}` };
+    }
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     res.json({ costumers });
   } catch (err) {
@@ -367,7 +370,7 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
     const query = {};
-    if (fechaFiltro) {
+    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
       query.fecha = { $regex: `^${fechaFiltro}` };
     }
     const costumers = await Costumer.find(query).lean();

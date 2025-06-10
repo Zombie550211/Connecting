@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const leadSchema = new mongoose.Schema({
-  fecha: { type: Date, default: Date.now },
+  fecha: { type: String, required: true},
   team: String,
   agent: String,
   telefono: String,
