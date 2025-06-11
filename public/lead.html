@@ -14,7 +14,7 @@
       width: 220px;
       background: #000000ea;
       color: rgb(245, 245, 245);
-      padding: 28px;
+      padding: 28px 16px 28px 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -47,11 +47,61 @@
       background: #8cdeff;
       color: #fff;
     }
+    /* Import Excel form style */
+    .import-lead-form {
+      margin-bottom:18px;
+      width:100%;
+    }
+    .import-lead-form .import-lead-row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .import-lead-form label {
+      background:#42a5f5;
+      color:#fff;
+      border-radius:4px;
+      padding:7px 18px;
+      font-weight:600;
+      cursor:pointer;
+      margin-bottom:0 !important;
+      font-size:1em;
+    }
+    .import-lead-form input[type="file"] {
+      display:none;
+    }
+    .import-lead-form .file-name {
+      color:#1976d2;
+      font-size:0.98em;
+      max-width:110px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .import-lead-form button[type="submit"] {
+      background:#42a5f5;
+      color:#fff;
+      padding:7px 16px;
+      border:none;
+      border-radius:4px;
+      font-weight:600;
+      cursor:pointer;
+      font-size:1em;
+      transition: background 0.2s;
+    }
+    .import-lead-form button[type="submit"]:hover {
+      background:#1e88e5;
+    }
+    .import-lead-form #import-status-lead {
+      font-size:0.95em;
+      margin-top:5px;
+      min-height:18px;
+    }
     main { flex: 1; padding: 30px; display: flex; gap: 10px; background: rgb(255, 255, 255); }
     .form-section { flex: 1; background: #fff; padding: 30px 25px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);}
     .form-section h2 { margin-top: 0; margin-bottom: 15px; font-weight: 700; color: #141414;}
     .form-group { margin-bottom: 8px;}
-    label { display: block; font-weight: 600; margin-bottom: 6px;}
+    label:not(.import-lead-label) { display: block; font-weight: 600; margin-bottom: 6px;}
     select, input[type="text"], input[type="number"], input[type="date"], button { width: 100%; padding: 8px 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px;}
     button[type="submit"] { background-color: #126de4e5; border: none; color: white; font-weight: 700; cursor: pointer; transition: background-color 0.3s; }
     button[type="submit"]:hover { background-color: #0056b3; }
@@ -64,6 +114,15 @@
     .charts-filter button { width: auto; padding: 7px 20px; margin: 0; background: #126de4e5; border: none; color: white; border-radius: 4px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
     .charts-filter button:hover { background: #0b0f11; }
     .no-data-msg { color: #a00; font-weight: bold; text-align: center; margin-top: 10px;}
+    @media (max-width: 900px) {
+      .container { flex-direction: column;}
+      main { flex-direction: column; }
+      nav { width: 100%; flex-direction: row; align-items: flex-start; padding: 16px 6px;}
+      nav h1 { font-size:1.3em; margin-bottom:0; }
+      nav button, .import-lead-form { width:auto; padding: 10px 8px; margin-bottom:0; font-size:1em;}
+      .import-lead-form { margin-bottom:0; }
+      .import-lead-form .import-lead-row { flex-direction:column; align-items:flex-start; gap:4px;}
+    }
   </style>
 </head>
 <body>
@@ -75,6 +134,19 @@
     <button onclick="location.href='costumer.html'">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
     <button onclick="logout()">Cerrar sesión</button>
+
+    <!-- Importar Excel para Leads -->
+    <form id="form-importar-excel-lead" class="import-lead-form" enctype="multipart/form-data">
+      <div class="import-lead-row">
+        <label class="import-lead-label">
+          Seleccionar archivo
+          <input type="file" name="archivo" id="input-excel-lead" accept=".xlsx,.xls">
+        </label>
+        <span id="file-name-lead" class="file-name">Ningún archivo seleccionado</span>
+        <button type="submit">Importar Excel</button>
+      </div>
+      <div id="import-status-lead"></div>
+    </form>
   </nav>
   <main>
     <section class="form-section">
@@ -177,7 +249,7 @@ const agentesPorTeam = {
   "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
   "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
   "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala","David Quinteros"],
-  "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R"],
+  "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
   "Team Randal": ["Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
   "Team Marisol": ["Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"],
 };
@@ -419,6 +491,41 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
       alert("Hubo un error al guardar el lead. Revisa la consola.");
     });
 });
+
+// --- Importar Leads desde Excel ---
+const inputExcelLead = document.getElementById('input-excel-lead');
+const fileNameLead = document.getElementById('file-name-lead');
+inputExcelLead.addEventListener('change', function() {
+  fileNameLead.textContent = this.files && this.files.length ? this.files[0].name : "Ningún archivo seleccionado";
+});
+document.getElementById('form-importar-excel-lead').onsubmit = async function(e) {
+  e.preventDefault();
+  const statusDiv = document.getElementById('import-status-lead');
+  statusDiv.textContent = '';
+  statusDiv.style.color = "";
+  const formData = new FormData(this);
+  try {
+    const resp = await fetch('/api/leads/import', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+    const resJson = await resp.json();
+    if (resp.ok && resJson.success) {
+      statusDiv.textContent = `Importación exitosa: ${resJson.count || 0} registros agregados.`;
+      statusDiv.style.color = "green";
+      actualizarGraficas();
+    } else {
+      statusDiv.textContent = "Error al importar: " + (resJson.error || "Error desconocido");
+      statusDiv.style.color = "red";
+    }
+  } catch (err) {
+    statusDiv.textContent = "Error de red al importar: " + err.message;
+    statusDiv.style.color = "red";
+  }
+  this.reset();
+  fileNameLead.textContent = "Ningún archivo seleccionado";
+};
 
 // Función para logout seguro
 function logout() {
