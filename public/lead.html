@@ -12,54 +12,91 @@
     .container { display: flex; min-height: 100vh; }
     nav {
       width: 260px;
-      background: #183153;
+      background: #1b3a48; /* color de fondo de sidebar costumer */
       color: #fff;
       min-height: 100vh;
       padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
     }
     .sidebar-logo {
-      width: 110px; height: 110px;
-      background: #fff; border-radius: 50%;
-      margin: 36px auto 16px auto;
-      display: flex; align-items: center; justify-content: center;
+      width: 70px;
+      height: 70px;
+      background: #fff;
+      border-radius: 50%;
+      margin: 22px auto 10px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
     .sidebar-logo img {
-      width: 86px; height: 86px; object-fit: contain;
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
     }
     .sidebar-title {
-      font-size: 2em; font-weight: 700; margin-bottom: 38px; color: #4FC3E3; letter-spacing: 1px;
+      font-size: 1.45em;
+      font-weight: 700;
+      color: #4FC3E3;
+      letter-spacing: 1px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin-bottom: 19px;
+      margin-top: 0px;
+      text-align: center;
     }
-    nav button {
+
+    .sidebar-menu {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+    .sidebar-link {
       width: 90%;
-      background: none;
       border: none;
+      background: transparent;
       color: #fff;
       text-align: left;
-      padding: 18px 0 18px 34px;
-      font-size: 1.22em;
-      font-weight: 600;
-      border-radius: 8px;
-      margin-bottom: 9px;
+      padding: 12px 0 12px 18px;
+      font-size: 1.08em;
+      font-weight: 700;
+      border-radius: 7px;
+      margin-bottom: 0;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.18s, color 0.18s;
+      outline: none;
     }
-    nav button.active,
-    nav button:hover {
-      background: #4FC3E3;
-      color: #183153;
+    .sidebar-link.active,
+    .sidebar-link.selected {
+      background: #58c9ee;
+      color: #204a65;
+    }
+    .sidebar-link:disabled,
+    .sidebar-link.inactive {
+      background: #234050;
+      color: #fff;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    .sidebar-link:not(.active):hover {
+      background: #2e5c6d;
+      color: #fff;
     }
     .sidebar-lema {
-      margin-top: auto;
-      padding: 18px 7px 24px 7px;
-      font-size: 1em;
+      position: absolute;
+      left: 0; right: 0; bottom: 16px;
+      width: 100%;
       text-align: center;
-      font-style: italic;
       color: #4FC3E3;
-      opacity: 0.8;
+      font-size: 1em;
+      padding-bottom: 2px;
+      opacity: 0.9;
+      font-style: italic;
     }
     main { flex: 1; padding: 38px 32px 28px 32px; display: flex; gap: 30px; background: #f4f8fb; }
     .main-content {
@@ -69,6 +106,8 @@
       width: 100%;
       align-items: flex-start;
     }
+    /* ...resto de tus estilos para el contenido... */
+    /* Mantiene el resto igual que antes */
     .form-section {
       background: #fff;
       border-radius: 18px;
@@ -123,7 +162,7 @@
     .form-section button[type="submit"]:hover {
       background: #183153;
     }
-
+    /* ...tu código de charts-section y responsive igual que antes... */
     .charts-section {
       flex: 2;
       display: flex;
@@ -208,11 +247,13 @@
       <img src="https://raw.githubusercontent.com/Zombie550211/chatgpt-prompts-imgs/main/connect-logo.png" alt="Logo Connecting"/>
     </div>
     <div class="sidebar-title">Connecting</div>
-    <button onclick="location.href='#'">Inicio</button>
-    <button onclick="location.href='lead.html'" class="active">Lead</button>
-    <button onclick="location.href='costumer.html'">Costumer</button>
-    <button onclick="location.href='#'">Reports</button>
-    <button onclick="logout()">Cerrar sesión</button>
+    <div class="sidebar-menu">
+      <button class="sidebar-link" onclick="location.href='#'">Inicio</button>
+      <button class="sidebar-link" onclick="location.href='lead.html'">Lead</button>
+      <button class="sidebar-link active" onclick="location.href='costumer.html'">Costumer</button>
+      <button class="sidebar-link inactive" disabled>Reports</button>
+      <button class="sidebar-link" onclick="logout()">Cerrar sesión</button>
+    </div>
     <div class="sidebar-lema">
       "Conectando tu éxito, un cliente a la vez"
     </div>
@@ -479,7 +520,7 @@
               color: '#000',
               anchor: 'end',
               align: 'start',
-              offset: -4,
+              offset: -5,
               font: { weight: 'bold' },
               formatter: value => value
             },
