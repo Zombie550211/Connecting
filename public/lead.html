@@ -47,17 +47,16 @@
       background: #8cdeff;
       color: #fff;
     }
-    /* Import Excel form style */
     .import-lead-form {
       margin-bottom:18px;
       width:100%;
     }
-    .import-lead-form .import-lead-row {
+    .import-lead-row {
       display:flex;
       gap:8px;
       align-items:center;
     }
-    .import-lead-form label {
+    .import-lead-label {
       background:#42a5f5;
       color:#fff;
       border-radius:4px;
@@ -121,7 +120,7 @@
       nav h1 { font-size:1.3em; margin-bottom:0; }
       nav button, .import-lead-form { width:auto; padding: 10px 8px; margin-bottom:0; font-size:1em;}
       .import-lead-form { margin-bottom:0; }
-      .import-lead-form .import-lead-row { flex-direction:column; align-items:flex-start; gap:4px;}
+      .import-lead-row { flex-direction:column; align-items:flex-start; gap:4px;}
     }
   </style>
 </head>
@@ -235,6 +234,7 @@
 </div>
 
 <script>
+// --- ARRAYS ---
 const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
 const productos = [
   "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "5G AT&T",
@@ -244,6 +244,7 @@ const productos = [
   "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
 ];
 
+// --- AGENTES POR TEAM ---
 const agentesPorTeam = {
   "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
   "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
@@ -353,7 +354,7 @@ function iniciarGraficas() {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           color: '#000',
           anchor: 'end',
-          align: 'start', // Siempre arriba
+          align: 'start',
           offset: -8,
           font: { weight: 'bold' },
           formatter: value => value
@@ -374,18 +375,7 @@ function actualizarGraficas() {
   fetch(`/api/graficas?fecha=${fecha}`, {
     credentials: 'include'
   })
-    .then(res => {
-      if (res.status === 401) {
-        alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
-        window.location.href = "/login.html";
-        throw new Error("No autorizado. Verifica tu sesión.");
-      }
-      if (res.status === 500) {
-        mostrarNoData(true, true);
-        throw new Error("Error interno del servidor (500).");
-      }
-      return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
       // Ventas y puntaje por equipo
       let hayDataTeam = false;
@@ -402,7 +392,13 @@ function actualizarGraficas() {
       // Ventas por producto: SIEMPRE usa el array productos como labels.
       productosChart.data.labels = productos;
       productosChart.data.datasets[0].data = productos.map(
-        prod => data.ventasPorProducto && data.ventasPorProducto[prod] ? data.ventasPorProducto[prod] : 0
+        prod => {
+          if (!data.ventasPorProducto) return 0;
+          if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
+          // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
+          const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
+          return key ? data.ventasPorProducto[key] : 0;
+        }
       );
       productosChart.update();
 
@@ -420,6 +416,7 @@ function mostrarNoData(team, producto) {
   document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
 }
 
+// --- Formulario Lead ---
 document.getElementById("crmForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
