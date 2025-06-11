@@ -124,7 +124,6 @@
       background: #183153;
     }
 
-    /* Ajuste: que el panel de gráficas tenga la misma altura que el formulario */
     .charts-section {
       flex: 2;
       display: flex;
@@ -142,7 +141,6 @@
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
     .chart-container canvas { width: 100% !important; height: 320px !important; max-width: 100%; margin: 0 auto; image-rendering: auto; }
     .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
-    /* --- Para que charts-section tenga la altura EXACTA del formulario --- */
     @media (min-width: 1100px) {
       .main-content {
         align-items: flex-start;
@@ -200,7 +198,6 @@
     <div class="sidebar-lema">
       "Conectando tu éxito, un cliente a la vez"
     </div>
-    <!-- Importar Excel eliminado -->
   </nav>
   <main>
     <div class="main-content">
@@ -358,8 +355,27 @@
 
     let ventasTeamChart, productosChart;
 
+    // Para gráficas HiDPI nitidas en retina
+    function setCanvasHiDPIRendering(canvas, width, height) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      return ctx;
+    }
+
     function iniciarGraficas() {
-      const ctxTeam = document.getElementById("ventasTeamChart").getContext("2d");
+      // Tamaño nítido para ambas gráficas
+      const chartWidth = document.querySelector('.chart-container').clientWidth || 1000;
+      const chartHeight = 320;
+
+      // --- GRAFICA 1 ---
+      const canvas1 = document.getElementById("ventasTeamChart");
+      const ctxTeam = setCanvasHiDPIRendering(canvas1, chartWidth, chartHeight);
       ventasTeamChart = new Chart(ctxTeam, {
         type: 'bar',
         data: {
@@ -381,7 +397,7 @@
         },
         options: {
           animation: true,
-          responsive: true,
+          responsive: false, // canvas fijo para HiDPI
           plugins: {
             datalabels: {
               display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
@@ -401,8 +417,9 @@
         plugins: [ChartDataLabels]
       });
 
-      // Gráfica de productos: SIEMPRE usa el array productos como labels
-      const ctxProducto = document.getElementById("productosChart").getContext("2d");
+      // --- GRAFICA 2 ---
+      const canvas2 = document.getElementById("productosChart");
+      const ctxProducto = setCanvasHiDPIRendering(canvas2, chartWidth, chartHeight);
       productosChart = new Chart(ctxProducto, {
         type: 'bar',
         data: {
@@ -416,7 +433,7 @@
         },
         options: {
           animation: true,
-          responsive: true,
+          responsive: false, // canvas fijo para HiDPI
           plugins: {
             datalabels: {
               display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
