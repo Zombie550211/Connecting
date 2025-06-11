@@ -139,7 +139,24 @@
     .charts-section .charts-filter button:hover { background: #126de4; }
     .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
-    .chart-container canvas { width: 100% !important; height: 320px !important; max-width: 100%; margin: 0 auto; image-rendering: auto; }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .chart-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 5;
+      display: block;
+      background: transparent;
+    }
     .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
     @media (min-width: 1100px) {
       .main-content {
@@ -179,6 +196,7 @@
       .charts-section .charts-filter {padding: 7px 2vw;}
       .main-content {flex-direction: column;}
       .form-section, .charts-section {height: auto;}
+      .chart-canvas { aspect-ratio: 16/12; }
     }
   </style>
 </head>
@@ -277,11 +295,11 @@
           <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
         </div>
         <div class="chart-container">
-          <canvas id="ventasTeamChart"></canvas>
+          <canvas id="ventasTeamChart" class="chart-canvas"></canvas>
           <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
         </div>
         <div class="chart-container">
-          <canvas id="productosChart"></canvas>
+          <canvas id="productosChart" class="chart-canvas"></canvas>
           <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
         </div>
       </section>
@@ -355,27 +373,47 @@
 
     let ventasTeamChart, productosChart;
 
-    // Para gráficas HiDPI nitidas en retina
-    function setCanvasHiDPIRendering(canvas, width, height) {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      return ctx;
+    function destroyChart(chart) {
+      if (chart && typeof chart.destroy === 'function') chart.destroy();
     }
 
+    // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
     function iniciarGraficas() {
-      // Tamaño nítido para ambas gráficas
-      const chartWidth = document.querySelector('.chart-container').clientWidth || 1000;
-      const chartHeight = 320;
+      // Limpia si ya existen
+      destroyChart(ventasTeamChart);
+      destroyChart(productosChart);
 
-      // --- GRAFICA 1 ---
-      const canvas1 = document.getElementById("ventasTeamChart");
-      const ctxTeam = setCanvasHiDPIRendering(canvas1, chartWidth, chartHeight);
+      // Calcula dimensiones reales del contenedor
+      const teamCanvas = document.getElementById("ventasTeamChart");
+      const prodCanvas = document.getElementById("productosChart");
+      const teamParent = teamCanvas.parentElement;
+      const prodParent = prodCanvas.parentElement;
+
+      // Usa getBoundingClientRect para obtener tamaño real responsivo
+      const teamRect = teamParent.getBoundingClientRect();
+      const prodRect = prodParent.getBoundingClientRect();
+
+      // Si no hay tamaño (por ejemplo, en display:none), fallback a 1200x400
+      const width1 = Math.max(600, teamRect.width || 1200);
+      const height1 = Math.max(200, teamRect.height || 400);
+      const width2 = Math.max(600, prodRect.width || 1200);
+      const height2 = Math.max(200, prodRect.height || 400);
+
+      // Ajusta el canvas para pantallas retina/4K (HiDPI)
+      function setHiDPICanvas(canvas, width, height) {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        return ctx;
+      }
+
+      // Canvas 1
+      const ctxTeam = setHiDPICanvas(teamCanvas, width1, height1);
       ventasTeamChart = new Chart(ctxTeam, {
         type: 'bar',
         data: {
@@ -397,7 +435,8 @@
         },
         options: {
           animation: true,
-          responsive: false, // canvas fijo para HiDPI
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             datalabels: {
               display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
@@ -417,9 +456,8 @@
         plugins: [ChartDataLabels]
       });
 
-      // --- GRAFICA 2 ---
-      const canvas2 = document.getElementById("productosChart");
-      const ctxProducto = setCanvasHiDPIRendering(canvas2, chartWidth, chartHeight);
+      // Canvas 2
+      const ctxProducto = setHiDPICanvas(prodCanvas, width2, height2);
       productosChart = new Chart(ctxProducto, {
         type: 'bar',
         data: {
@@ -433,7 +471,8 @@
         },
         options: {
           animation: true,
-          responsive: false, // canvas fijo para HiDPI
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             datalabels: {
               display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
@@ -454,6 +493,13 @@
         plugins: [ChartDataLabels]
       });
     }
+
+    // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
+    window.addEventListener('resize', () => {
+      setTimeout(() => {
+        iniciarGraficas();
+      }, 150);
+    });
 
     function actualizarGraficas() {
       const fecha = document.getElementById('fechaGraficas').value;
