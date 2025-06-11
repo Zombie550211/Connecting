@@ -2,46 +2,56 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Connecting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM - Costumer</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f8f9fa;
-    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
+    .container { display: flex; min-height: 100vh; }
     nav {
-      width: 220px; background: #1E2A38; color: white; padding: 0;
-      display: flex; flex-direction: column; align-items: stretch;
-      position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 10;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+      width: 220px;
+      background: #000000ea;
+      color: rgb(245, 245, 245);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    nav h2 {
-      font-size: 24px; font-weight: bold; text-align: center;
-      margin: 32px 0 24px 0; letter-spacing: 1px;
+    nav h1 {
+      margin: 0 0 20px;
+      font-size: 2em;
+      font-weight: 700;
     }
     nav button {
-      background: #2A3B4C; color: white; border: none;
-      padding: 12px 24px; text-align: left; font-weight: 600;
-      border-radius: 4px; cursor: pointer;
-      transition: background 0.3s, color 0.3s;
-      margin: 4px 16px; font-size: 16px; outline: none;
+      width: 100%;
+      background: #000000ea;
+      color: rgb(255, 255, 255);
+      border: none;
+      padding: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 675;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: background 0.2s, color 0.2s;
     }
-    nav button:hover, nav button.active {
-      background: #00aaff; color: #fff;
+    nav button:hover,
+    nav button.active {
+      background: #8cdeff;
+      color: #fff;
     }
-    .main-content {
-      margin-left: 220px; min-height: 100vh; padding: 0; background-color: #f8f9fa;
-      display: flex; flex-direction: column;
+    nav button.active {
+      background: #8cdeff;
+      color: #fff;
     }
+    main { flex: 1; padding: 30px; display: flex; flex-direction: column; background: rgb(255, 255, 255);}
     .filters-download-bar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 40px 0 40px;
+      padding: 24px 0 0 0;
       background-color: #f2f2f2;
       gap: 18px 20px;
       border-radius: 2px;
@@ -99,7 +109,7 @@
       justify-content: flex-start;
       align-items: center;
       gap: 18px;
-      padding: 0 40px 16px 40px;
+      padding: 0 0 16px 0;
       margin-bottom: 4px;
     }
     .custom-file-input-wrapper {
@@ -153,7 +163,7 @@
     }
     .delete-all-btn:hover { background: #b71c1c; }
     .tabla-section {
-      margin: 0 40px 24px 40px;
+      margin: 0 0 24px 0;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgb(0 0 0 / 0.03);
@@ -190,7 +200,8 @@
       .descargar-btn-icono { margin-left: 0; margin-top: 10px;}
     }
     @media (max-width: 700px) {
-      .main-content { margin-left: 0;}
+      .container { flex-direction: column;}
+      main { padding: 10px;}
       nav { position: static; width: 100%; height: auto; box-shadow: none; flex-direction: row; align-items: center; justify-content: space-between;}
       nav button { width: 100%; min-width: 0; padding: 11px 8px; margin: 2px 2px;}
       .tabla-section, .filters-download-bar, .actions-bar { padding-left: 5px; padding-right: 5px; margin-left: 0; margin-right: 0;}
@@ -198,15 +209,16 @@
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
+<div class="container">
   <nav>
-    <h2>Connecting</h2>
+    <h1>Connecting</h1>
     <button onclick="location.href='index.html'">Inicio</button>
     <button onclick="location.href='lead.html'">Lead</button>
-    <button class="active">Costumer</button>
+    <button onclick="location.href='costumer.html'" class="active">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
+    <button onclick="logout()">Cerrar sesión</button>
   </nav>
-  <div class="main-content">
+  <main>
     <div class="filters-download-bar">
       <div class="filters-row">
         <label>Fecha desde:
@@ -276,202 +288,209 @@
       </table>
     </div>
     <div id="editar-form-container"></div>
-  </div>
-  <script>
-    // Opciones ejemplo para selects (puedes cargar dinámicamente)
-    const teams = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-    const agentes = ["Todos", "Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"];
-    const filtroTeam = document.getElementById('filtro-team');
-    teams.forEach(team => {
-      const opt = document.createElement("option");
-      opt.value = team;
-      opt.textContent = team;
-      filtroTeam.appendChild(opt);
-    });
-    const filtroAgente = document.getElementById('filtro-agente');
-    agentes.forEach(agente => {
-      const opt = document.createElement("option");
-      opt.value = agente === "Todos" ? "" : agente;
-      opt.textContent = agente;
-      filtroAgente.appendChild(opt);
-    });
+  </main>
+</div>
+<script>
+  // Sidebar: cerrar sesión
+  function logout() {
+    fetch('/logout', { credentials: 'include' })
+      .then(() => window.location.href = '/login.html');
+  }
 
-    // Estado y referencias
-    let datos = [];
-    let costumerEditando = null;
-    const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
-    const editarFormContainer = document.getElementById("editar-form-container");
+  // Opciones ejemplo para selects (puedes cargar dinámicamente)
+  const teams = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
+  const agentes = ["Todos", "Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"];
+  const filtroTeam = document.getElementById('filtro-team');
+  teams.forEach(team => {
+    const opt = document.createElement("option");
+    opt.value = team;
+    opt.textContent = team;
+    filtroTeam.appendChild(opt);
+  });
+  const filtroAgente = document.getElementById('filtro-agente');
+  agentes.forEach(agente => {
+    const opt = document.createElement("option");
+    opt.value = agente === "Todos" ? "" : agente;
+    opt.textContent = agente;
+    filtroAgente.appendChild(opt);
+  });
 
-    // Referencias de filtro
-    const filtroFechaDesde = document.getElementById("filtro-fecha-desde");
-    const filtroFechaHasta = document.getElementById("filtro-fecha-hasta");
-    const filtroTelefono = document.getElementById("filtro-telefono");
-    const filtroDireccion = document.getElementById("filtro-direccion");
-    const filtroZip = document.getElementById("filtro-zip");
+  // Estado y referencias
+  let datos = [];
+  let costumerEditando = null;
+  const tabla = document.getElementById("tabla-clientes").querySelector("tbody");
+  const editarFormContainer = document.getElementById("editar-form-container");
 
-    [filtroFechaDesde, filtroFechaHasta, filtroTeam, filtroAgente, filtroTelefono, filtroDireccion, filtroZip].forEach(f =>
-      f.addEventListener("input", aplicarFiltros)
-    );
+  // Referencias de filtro
+  const filtroFechaDesde = document.getElementById("filtro-fecha-desde");
+  const filtroFechaHasta = document.getElementById("filtro-fecha-hasta");
+  const filtroTelefono = document.getElementById("filtro-telefono");
+  const filtroDireccion = document.getElementById("filtro-direccion");
+  const filtroZip = document.getElementById("filtro-zip");
 
-    // Input file elegante
-    document.querySelector('.custom-file-input').addEventListener('change', function() {
-      const fileNameSpan = document.getElementById('file-selected-name');
-      if(this.files && this.files.length > 0) {
-        fileNameSpan.textContent = this.files[0].name;
-      } else {
-        fileNameSpan.textContent = "Ningún archivo seleccionado";
-      }
-    });
+  [filtroFechaDesde, filtroFechaHasta, filtroTeam, filtroAgente, filtroTelefono, filtroDireccion, filtroZip].forEach(f =>
+    f.addEventListener("input", aplicarFiltros)
+  );
 
-    // Importar Excel
-    document.getElementById('form-importar-excel').onsubmit = async function(e) {
-      e.preventDefault();
-      const statusDiv = document.getElementById('import-status-costumer');
-      statusDiv.textContent = '';
-      statusDiv.className = 'import-status';
-      const formData = new FormData(this);
-      try {
-        const resp = await fetch('/api/costumer/import', {
-          method: 'POST',
-          body: formData
-        });
-        const resJson = await resp.json();
-        if (resp.ok && resJson.success) {
-          statusDiv.textContent = `Importación exitosa: ${resJson.count || 0} registros agregados.`;
-          statusDiv.className = 'import-status success';
-          await cargarCostumers();
-        } else {
-          statusDiv.textContent = "Error al importar: " + (resJson.error || "Error desconocido");
-          statusDiv.className = 'import-status error';
-        }
-      } catch (err) {
-        statusDiv.textContent = "Error de red al importar: " + err.message;
-        statusDiv.className = 'import-status error';
-      }
-      this.reset();
-      document.getElementById('file-selected-name').textContent = "Ningún archivo seleccionado";
-    };
-
-    // Eliminar todo
-    document.getElementById('btn-eliminar-todo').onclick = async function() {
-      if (!confirm("¿Estás seguro de que quieres eliminar TODOS los costumers? Esta acción no se puede deshacer.")) return;
-      try {
-        const resp = await fetch('/api/costumer/all', { method: 'DELETE' });
-        if (resp.ok) {
-          await cargarCostumers();
-          alert("Todos los costumers han sido eliminados.");
-        } else {
-          alert("No se pudieron eliminar todos los costumers.");
-        }
-      } catch (err) {
-        alert("Error de red al eliminar todos los costumers.");
-      }
-    };
-
-    // Descargar Excel con rango de fechas
-    document.getElementById('descargarExcelBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      const desde = document.getElementById('filtro-fecha-desde').value;
-      const hasta = document.getElementById('filtro-fecha-hasta').value;
-      let url = '/descargar/costumers';
-      const params = [];
-      if (desde) params.push('desde=' + encodeURIComponent(desde));
-      if (hasta) params.push('hasta=' + encodeURIComponent(hasta));
-      if (params.length > 0) url += '?' + params.join('&');
-      window.location.href = url;
-    });
-
-    // Cargar desde Mongo
-    async function cargarCostumers() {
-      const res = await fetch('/api/costumer');
-      const data = await res.json();
-      datos = (data.costumers || []).map(item => ({
-        "_id": item._id,
-        "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
-        "TEAM": item.equipo || "",
-        "AGENTE": item.agente || "",
-        "PRODUCTO": item.producto || "",
-        "PUNTAJE": item.puntaje || "",
-        "CUENTA": item.cuenta || "",
-        "TELÉFONO": item.telefono || "",
-        "DIRECCIÓN": item.direccion || "",
-        "ZIP": item.zip || ""
-      }));
-      aplicarFiltros();
-      ocultarFormularioEdicion();
+  // Input file elegante
+  document.querySelector('.custom-file-input').addEventListener('change', function() {
+    const fileNameSpan = document.getElementById('file-selected-name');
+    if(this.files && this.files.length > 0) {
+      fileNameSpan.textContent = this.files[0].name;
+    } else {
+      fileNameSpan.textContent = "Ningún archivo seleccionado";
     }
+  });
 
-    // Renderizar y filtrar
-    function renderizarTabla(filas) {
-      tabla.innerHTML = "";
-      if (!Array.isArray(filas) || filas.length === 0) {
-        const row = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 10;
-        td.textContent = "No hay datos para mostrar.";
-        td.style.textAlign = "center";
-        td.style.padding = "1rem";
-        row.appendChild(td);
-        tabla.appendChild(row);
-        return;
-      }
-      filas.forEach(fila => {
-        const tr = document.createElement("tr");
-        ["FECHA", "TEAM", "AGENTE", "PRODUCTO", "PUNTAJE", "CUENTA", "TELÉFONO", "DIRECCIÓN", "ZIP"].forEach(clave => {
-          const td = document.createElement("td");
-          td.textContent = fila[clave] || "";
-          tr.appendChild(td);
-        });
-        const tdAccion = document.createElement("td");
-        tdAccion.innerHTML = `
-          <button class="btn-editar" onclick="editarCostumer('${fila._id}')">✏️</button>
-          <button class="btn-eliminar" onclick="eliminarCostumer('${fila._id}')">🗑️</button>
-        `;
-        tr.appendChild(tdAccion);
-        tabla.appendChild(tr);
+  // Importar Excel
+  document.getElementById('form-importar-excel').onsubmit = async function(e) {
+    e.preventDefault();
+    const statusDiv = document.getElementById('import-status-costumer');
+    statusDiv.textContent = '';
+    statusDiv.className = 'import-status';
+    const formData = new FormData(this);
+    try {
+      const resp = await fetch('/api/costumer/import', {
+        method: 'POST',
+        body: formData
       });
-    }
-
-    function aplicarFiltros() {
-      let filtrados = datos.filter(item => {
-        // Fecha
-        let pasaFecha = true;
-        if (filtroFechaDesde.value) pasaFecha = (!item["FECHA"] || item["FECHA"] >= filtroFechaDesde.value);
-        if (filtroFechaHasta.value) pasaFecha = pasaFecha && (!item["FECHA"] || item["FECHA"] <= filtroFechaHasta.value);
-        // Team
-        let pasaTeam = !filtroTeam.value || item["TEAM"] === filtroTeam.value;
-        // Agente
-        let pasaAgente = !filtroAgente.value || item["AGENTE"] === filtroAgente.value;
-        // Teléfono, Dirección, ZIP
-        let pasaTelefono = !filtroTelefono.value || (item["TELÉFONO"] || "").toLowerCase().includes(filtroTelefono.value.toLowerCase());
-        let pasaDireccion = !filtroDireccion.value || (item["DIRECCIÓN"] || "").toLowerCase().includes(filtroDireccion.value.toLowerCase());
-        let pasaZip = !filtroZip.value || (item["ZIP"] || "").toLowerCase().includes(filtroZip.value.toLowerCase());
-        return pasaFecha && pasaTeam && pasaAgente && pasaTelefono && pasaDireccion && pasaZip;
-      });
-      renderizarTabla(filtrados);
-    }
-
-    // Eliminar un costumer
-    async function eliminarCostumer(id) {
-      if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
-      const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
-      if (res.ok) {
+      const resJson = await resp.json();
+      if (resp.ok && resJson.success) {
+        statusDiv.textContent = `Importación exitosa: ${resJson.count || 0} registros agregados.`;
+        statusDiv.className = 'import-status success';
         await cargarCostumers();
       } else {
-        alert("No se pudo eliminar el costumer.");
+        statusDiv.textContent = "Error al importar: " + (resJson.error || "Error desconocido");
+        statusDiv.className = 'import-status error';
       }
+    } catch (err) {
+      statusDiv.textContent = "Error de red al importar: " + err.message;
+      statusDiv.className = 'import-status error';
     }
+    this.reset();
+    document.getElementById('file-selected-name').textContent = "Ningún archivo seleccionado";
+  };
 
-    // Editar (placeholder, no implementado)
-    function editarCostumer(id) {
-      alert("Funcionalidad de edición aún no implementada.");
+  // Eliminar todo
+  document.getElementById('btn-eliminar-todo').onclick = async function() {
+    if (!confirm("¿Estás seguro de que quieres eliminar TODOS los costumers? Esta acción no se puede deshacer.")) return;
+    try {
+      const resp = await fetch('/api/costumer/all', { method: 'DELETE' });
+      if (resp.ok) {
+        await cargarCostumers();
+        alert("Todos los costumers han sido eliminados.");
+      } else {
+        alert("No se pudieron eliminar todos los costumers.");
+      }
+    } catch (err) {
+      alert("Error de red al eliminar todos los costumers.");
     }
-    function ocultarFormularioEdicion() {
-      editarFormContainer.innerHTML = "";
-      costumerEditando = null;
-    }
+  };
 
-    window.onload = cargarCostumers;
-  </script>
+  // Descargar Excel con rango de fechas
+  document.getElementById('descargarExcelBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    const desde = document.getElementById('filtro-fecha-desde').value;
+    const hasta = document.getElementById('filtro-fecha-hasta').value;
+    let url = '/descargar/costumers';
+    const params = [];
+    if (desde) params.push('desde=' + encodeURIComponent(desde));
+    if (hasta) params.push('hasta=' + encodeURIComponent(hasta));
+    if (params.length > 0) url += '?' + params.join('&');
+    window.location.href = url;
+  });
+
+  // Cargar desde Mongo
+  async function cargarCostumers() {
+    const res = await fetch('/api/costumer');
+    const data = await res.json();
+    datos = (data.costumers || []).map(item => ({
+      "_id": item._id,
+      "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
+      "TEAM": item.equipo || "",
+      "AGENTE": item.agente || "",
+      "PRODUCTO": item.producto || "",
+      "PUNTAJE": item.puntaje || "",
+      "CUENTA": item.cuenta || "",
+      "TELÉFONO": item.telefono || "",
+      "DIRECCIÓN": item.direccion || "",
+      "ZIP": item.zip || ""
+    }));
+    aplicarFiltros();
+    ocultarFormularioEdicion();
+  }
+
+  // Renderizar y filtrar
+  function renderizarTabla(filas) {
+    tabla.innerHTML = "";
+    if (!Array.isArray(filas) || filas.length === 0) {
+      const row = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 10;
+      td.textContent = "No hay datos para mostrar.";
+      td.style.textAlign = "center";
+      td.style.padding = "1rem";
+      row.appendChild(td);
+      tabla.appendChild(row);
+      return;
+    }
+    filas.forEach(fila => {
+      const tr = document.createElement("tr");
+      ["FECHA", "TEAM", "AGENTE", "PRODUCTO", "PUNTAJE", "CUENTA", "TELÉFONO", "DIRECCIÓN", "ZIP"].forEach(clave => {
+        const td = document.createElement("td");
+        td.textContent = fila[clave] || "";
+        tr.appendChild(td);
+      });
+      const tdAccion = document.createElement("td");
+      tdAccion.innerHTML = `
+        <button class="btn-editar" onclick="editarCostumer('${fila._id}')">✏️</button>
+        <button class="btn-eliminar" onclick="eliminarCostumer('${fila._id}')">🗑️</button>
+      `;
+      tr.appendChild(tdAccion);
+      tabla.appendChild(tr);
+    });
+  }
+
+  function aplicarFiltros() {
+    let filtrados = datos.filter(item => {
+      // Fecha
+      let pasaFecha = true;
+      if (filtroFechaDesde.value) pasaFecha = (!item["FECHA"] || item["FECHA"] >= filtroFechaDesde.value);
+      if (filtroFechaHasta.value) pasaFecha = pasaFecha && (!item["FECHA"] || item["FECHA"] <= filtroFechaHasta.value);
+      // Team
+      let pasaTeam = !filtroTeam.value || item["TEAM"] === filtroTeam.value;
+      // Agente
+      let pasaAgente = !filtroAgente.value || item["AGENTE"] === filtroAgente.value;
+      // Teléfono, Dirección, ZIP
+      let pasaTelefono = !filtroTelefono.value || (item["TELÉFONO"] || "").toLowerCase().includes(filtroTelefono.value.toLowerCase());
+      let pasaDireccion = !filtroDireccion.value || (item["DIRECCIÓN"] || "").toLowerCase().includes(filtroDireccion.value.toLowerCase());
+      let pasaZip = !filtroZip.value || (item["ZIP"] || "").toLowerCase().includes(filtroZip.value.toLowerCase());
+      return pasaFecha && pasaTeam && pasaAgente && pasaTelefono && pasaDireccion && pasaZip;
+    });
+    renderizarTabla(filtrados);
+  }
+
+  // Eliminar un costumer
+  async function eliminarCostumer(id) {
+    if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
+    const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      await cargarCostumers();
+    } else {
+      alert("No se pudo eliminar el costumer.");
+    }
+  }
+
+  // Editar (placeholder, no implementado)
+  function editarCostumer(id) {
+    alert("Funcionalidad de edición aún no implementada.");
+  }
+  function ocultarFormularioEdicion() {
+    editarFormContainer.innerHTML = "";
+    costumerEditando = null;
+  }
+
+  window.onload = cargarCostumers;
+</script>
 </body>
 </html>

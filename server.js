@@ -150,16 +150,21 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
   }
 });
 
-// ENDPOINT PARA DESCARGAR EL EXCEL DE COSTUMERS (DINÁMICO DESDE MONGO)
+// ENDPOINT PARA DESCARGAR EL EXCEL DE COSTUMERS (DINÁMICO DESDE MONGO, CON FILTRO DE FECHA)
 app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   try {
-    // Si quieres filtrar por fecha, puedes leer query params aquí
-    // const { fecha } = req.query;
-    // let query = {};
-    // if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) query.fecha = { $regex: `^${fecha}` };
+    // Filtrar por fecha (YYYY-MM-DD)
+    const { desde, hasta } = req.query;
+    let query = {};
+    if (desde && hasta) {
+      query.fecha = { $gte: desde, $lte: hasta };
+    } else if (desde) {
+      query.fecha = { $gte: desde };
+    } else if (hasta) {
+      query.fecha = { $lte: hasta };
+    }
 
-    // const costumers = await Costumer.find(query).lean();
-    const costumers = await Costumer.find().lean();
+    const costumers = await Costumer.find(query).lean();
 
     const excelData = costumers.map(c => ({
       Fecha: c.fecha || '',
@@ -272,7 +277,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
   }
 });
 
-// ENDPOINT GRAFICAS PARA LEADS (por fecha) - CORREGIDO, ROBUSTO Y SEGURO
+// ENDPOINT GRAFICAS PARA LEADS (por fecha)
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
