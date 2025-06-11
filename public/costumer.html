@@ -195,6 +195,63 @@
     td {
       font-size: 0.96em;
     }
+    /* Formulario de edición */
+    .editar-form {
+      background: #f3f7fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+      padding: 24px 24px 16px 24px;
+      margin: 18px auto 0 auto;
+      max-width: 550px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid #c9e7f7;
+    }
+    .editar-form label {
+      font-weight: 600;
+      color: #0d3c61;
+      margin-bottom: 4px;
+    }
+    .editar-form input, .editar-form select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #b9d7f6;
+      border-radius: 5px;
+      font-size: 1em;
+      margin-bottom: 8px;
+    }
+    .editar-form button[type="submit"] {
+      background: #42a5f5;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-weight: 700;
+      padding: 9px 0;
+      margin-top: 10px;
+      font-size: 1.07em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .editar-form button[type="submit"]:hover {
+      background: #1565c0;
+    }
+    .editar-form .cancelar-btn {
+      background: #b0b0b0;
+      color: #fff;
+      margin-top: 0;
+      margin-left: 9px;
+      border-radius: 5px;
+      font-weight: 700;
+      padding: 9px 0;
+      border: none;
+      font-size: 1.07em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .editar-form .cancelar-btn:hover {
+      background: #757575;
+    }
     @media (max-width: 1100px) {
       .filters-download-bar, .actions-bar { flex-direction: column; gap: 11px; align-items: flex-start; }
       .descargar-btn-icono { margin-left: 0; margin-top: 10px;}
@@ -205,6 +262,7 @@
       nav { position: static; width: 100%; height: auto; box-shadow: none; flex-direction: row; align-items: center; justify-content: space-between;}
       nav button { width: 100%; min-width: 0; padding: 11px 8px; margin: 2px 2px;}
       .tabla-section, .filters-download-bar, .actions-bar { padding-left: 5px; padding-right: 5px; margin-left: 0; margin-right: 0;}
+      .editar-form { max-width: 98vw; }
     }
   </style>
 </head>
@@ -481,14 +539,97 @@
     }
   }
 
-  // Editar (placeholder, no implementado)
+  // ====== EDICIÓN FUNCIONAL =========
+  // Mostrar formulario de edición
   function editarCostumer(id) {
-    alert("Funcionalidad de edición aún no implementada.");
+    // Buscar los datos del costumer en el array datos
+    const costumer = datos.find(item => item._id === id);
+    if (!costumer) {
+      alert("No se encontró el costumer.");
+      return;
+    }
+    costumerEditando = id;
+    editarFormContainer.innerHTML = `
+      <form id="editar-costumer-form" class="editar-form">
+        <input type="hidden" id="editar-id" value="${costumer._id}">
+        <label>Fecha
+          <input type="date" id="editar-fecha" value="${costumer.FECHA}" required>
+        </label>
+        <label>Team
+          <select id="editar-team" required>
+            ${teams.map(team => `<option value="${team}"${costumer.TEAM === team ? ' selected' : ''}>${team}</option>`).join("")}
+          </select>
+        </label>
+        <label>Agente
+          <input type="text" id="editar-agente" value="${costumer.AGENTE || ""}" required>
+        </label>
+        <label>Producto
+          <input type="text" id="editar-producto" value="${costumer.PRODUCTO || ""}" required>
+        </label>
+        <label>Puntaje
+          <input type="text" id="editar-puntaje" value="${costumer.PUNTAJE || ""}" required>
+        </label>
+        <label>Cuenta
+          <input type="text" id="editar-cuenta" value="${costumer.CUENTA || ""}" required>
+        </label>
+        <label>Teléfono
+          <input type="text" id="editar-telefono" value="${costumer['TELÉFONO'] || ""}" required>
+        </label>
+        <label>Dirección
+          <input type="text" id="editar-direccion" value="${costumer['DIRECCIÓN'] || ""}" required>
+        </label>
+        <label>ZIP
+          <input type="text" id="editar-zip" value="${costumer.ZIP || ""}" required>
+        </label>
+        <div style="display:flex;gap:12px;">
+          <button type="submit">Guardar</button>
+          <button type="button" class="cancelar-btn" onclick="ocultarFormularioEdicion()">Cancelar</button>
+        </div>
+      </form>
+    `;
+    // Scroll hasta el formulario de edición
+    editarFormContainer.scrollIntoView({ behavior: "smooth" });
+
+    document.getElementById('editar-costumer-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editar-id').value;
+      // Recoge los datos editados
+      const costumerEditado = {
+        fecha: document.getElementById('editar-fecha').value,
+        equipo: document.getElementById('editar-team').value,
+        agente: document.getElementById('editar-agente').value,
+        producto: document.getElementById('editar-producto').value,
+        puntaje: document.getElementById('editar-puntaje').value,
+        cuenta: document.getElementById('editar-cuenta').value,
+        telefono: document.getElementById('editar-telefono').value,
+        direccion: document.getElementById('editar-direccion').value,
+        zip: document.getElementById('editar-zip').value
+      };
+      // Actualizar en backend (PUT/PATCH)
+      try {
+        const resp = await fetch(`/api/costumer/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(costumerEditado)
+        });
+        if (resp.ok) {
+          await cargarCostumers();
+          ocultarFormularioEdicion();
+          alert("Costumer actualizado correctamente.");
+        } else {
+          alert("No se pudo actualizar el costumer.");
+        }
+      } catch (err) {
+        alert("Error de red al actualizar costumer.");
+      }
+    };
   }
+  // Ocultar el formulario de edición
   function ocultarFormularioEdicion() {
     editarFormContainer.innerHTML = "";
     costumerEditando = null;
   }
+  // ====== FIN EDICIÓN FUNCIONAL ======
 
   window.onload = cargarCostumers;
 </script>
