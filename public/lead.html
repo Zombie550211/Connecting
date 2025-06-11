@@ -61,65 +61,26 @@
       color: #4FC3E3;
       opacity: 0.8;
     }
-    .import-lead-form {
-      margin-bottom:18px;
-      width:100%;
-    }
-    .import-lead-row {
-      display:flex;
-      gap:8px;
-      align-items:center;
-      margin-bottom: 4px;
-    }
-    .import-lead-label {
-      background:#42a5f5;
-      color:#fff;
-      border-radius:4px;
-      padding:7px 18px;
-      font-weight:600;
-      cursor:pointer;
-      font-size:1em;
-    }
-    .import-lead-form input[type="file"] {
-      display:none;
-    }
-    .import-lead-form .file-name {
-      color:#1976d2;
-      font-size:0.98em;
-      max-width:110px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-    .import-lead-form button[type="submit"] {
-      background:#42a5f5;
-      color:#fff;
-      padding:7px 16px;
-      border:none;
-      border-radius:4px;
-      font-weight:600;
-      cursor:pointer;
-      font-size:1em;
-      transition: background 0.2s;
-    }
-    .import-lead-form button[type="submit"]:hover {
-      background:#1e88e5;
-    }
-    .import-lead-form #import-status-lead {
-      font-size:0.95em;
-      margin-top:5px;
-      min-height:18px;
-    }
     main { flex: 1; padding: 38px 32px 28px 32px; display: flex; gap: 30px; background: #f4f8fb; }
+    .main-content {
+      display: flex;
+      flex-direction: row;
+      gap: 30px;
+      width: 100%;
+      align-items: flex-start;
+    }
     .form-section {
       background: #fff;
       border-radius: 18px;
       box-shadow: 0 4px 24px #0001;
       padding: 42px 38px 36px 38px;
       max-width: 480px;
+      width: 100%;
       margin: 44px auto;
       flex: 1;
       align-self: flex-start;
+      display: flex;
+      flex-direction: column;
     }
     .form-section h2 {
       font-weight: 700;
@@ -162,21 +123,54 @@
     .form-section button[type="submit"]:hover {
       background: #183153;
     }
-    .charts-section { flex: 1; display: flex; flex-direction: column; gap: 22px; }
-    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001;}
+
+    /* Ajuste: que el panel de gráficas tenga la misma altura que el formulario */
+    .charts-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      height: 100%;
+      min-width: 0;
+    }
+    .charts-section .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
+    .charts-section .charts-filter label { font-weight: 600; margin-bottom: 0;}
+    .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
+    .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
+    .charts-section .charts-filter button:hover { background: #126de4; }
+    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
-    .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
-    .charts-filter label { font-weight: 600; margin-bottom: 0;}
-    .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
-    .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
-    .charts-filter button:hover { background: #126de4; }
+    .chart-container canvas { width: 100% !important; height: 320px !important; max-width: 100%; margin: 0 auto; image-rendering: auto; }
     .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
+    /* --- Para que charts-section tenga la altura EXACTA del formulario --- */
+    @media (min-width: 1100px) {
+      .main-content {
+        align-items: flex-start;
+      }
+      .form-section, .charts-section {
+        height: auto;
+      }
+      .charts-section {
+        height: auto;
+        min-height: 0;
+      }
+    }
+    @media (min-width: 900px) {
+      .main-content {
+        align-items: stretch;
+      }
+      .form-section, .charts-section {
+        height: auto;
+      }
+    }
     @media (max-width: 1100px) {
       .container { flex-direction: column;}
       main { flex-direction: column; gap: 13px; padding: 14px 2vw;}
       nav { width: 100vw; flex-direction: row; align-items: flex-start; padding: 15px 4vw;}
       .sidebar-logo {margin: 0 14px 0 0;}
       .form-section, .charts-section {border-radius: 7px;}
+      .main-content {flex-direction: column;}
+      .form-section, .charts-section {height: auto;}
     }
     @media (max-width: 700px) {
       main { padding: 8px 2px; flex-direction: column;}
@@ -184,7 +178,9 @@
       .form-section {padding: 15px 2vw; margin: 16px 2vw;}
       .charts-section {padding: 0;}
       .chart-container {padding: 7px 2vw;}
-      .charts-filter {padding: 7px 2vw;}
+      .charts-section .charts-filter {padding: 7px 2vw;}
+      .main-content {flex-direction: column;}
+      .form-section, .charts-section {height: auto;}
     }
   </style>
 </head>
@@ -204,393 +200,363 @@
     <div class="sidebar-lema">
       "Conectando tu éxito, un cliente a la vez"
     </div>
-    <!-- Importar Excel para Leads -->
-    <form id="form-importar-excel-lead" class="import-lead-form" enctype="multipart/form-data">
-      <div class="import-lead-row">
-        <label class="import-lead-label">
-          Seleccionar archivo
-          <input type="file" name="archivo" id="input-excel-lead" accept=".xlsx,.xls">
-        </label>
-        <span id="file-name-lead" class="file-name">Ningún archivo seleccionado</span>
-        <button type="submit">Importar Excel</button>
-      </div>
-      <div id="import-status-lead"></div>
-    </form>
+    <!-- Importar Excel eliminado -->
   </nav>
   <main>
-    <!-- FORMULARIO -->
-    <section class="form-section">
-      <h2>Formulario de Registro</h2>
-      <form id="crmForm">
-        <div class="form-group">
-          <label for="fecha-lead" style="color: #183153;">Fecha</label>
-          <input type="date" id="fecha-lead" name="fecha-lead" />
+    <div class="main-content">
+      <!-- FORMULARIO -->
+      <section class="form-section" id="form-panel">
+        <h2>Formulario de Registro</h2>
+        <form id="crmForm">
+          <div class="form-group">
+            <label for="fecha-lead" style="color: #183153;">Fecha</label>
+            <input type="date" id="fecha-lead" name="fecha-lead" />
+          </div>
+          <div class="form-group">
+            <label for="team">Team</label>
+            <select id="team" required>
+              <option value="">Seleccione team</option>
+              <option value="Team Irania">Team Irania</option>
+              <option value="Team Pleitez">Team Pleitez</option>
+              <option value="Team Roberto">Team Roberto</option>
+              <option value="Team Lineas">Team Lineas</option>
+              <option value="Team Randal">Team Randal</option>
+              <option value="Team Marisol">Team Marisol</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="agent">Agente</label>
+            <select id="agent" required>
+              <option>Seleccione Agente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="producto">Producto</label>
+            <select id="producto" required>
+              <option>Seleccione Producto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="puntaje">Puntaje</label>
+            <select id="puntaje" required>
+              <option>Seleccione Puntaje</option>
+              <option>Sin Puntaje</option>
+              <option>0.25</option>
+              <option>0.35</option>
+              <option>1.0</option>
+              <option>1.25</option>
+              <option>1.50</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cuenta">Cuenta Google</label>
+            <select id="cuenta" required>
+              <option>Seleccione Cuenta</option>
+              <option>Cuenta Alexis</option>
+              <option>Cuenta Eduardo</option>
+              <option>Cuenta Israel</option>
+              <option>Cuenta Lineas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
+          </div>
+          <div class="form-group">
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" placeholder="Dirección del cliente" required/>
+          </div>
+          <div class="form-group" style="margin-bottom: 26px;">
+            <label for="zip">ZIP Code</label>
+            <input type="text" id="zip" placeholder="Código ZIP" required/>
+          </div>
+          <button type="submit">Guardar Lead</button>
+        </form>
+      </section>
+      <section class="charts-section" id="charts-panel">
+        <div class="charts-filter">
+          <label for="fechaGraficas">Filtrar gráficas por fecha:</label>
+          <input type="date" id="fechaGraficas" />
+          <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
         </div>
-        <div class="form-group">
-          <label for="team">Team</label>
-          <select id="team" required>
-            <option value="">Seleccione team</option>
-            <option value="Team Irania">Team Irania</option>
-            <option value="Team Pleitez">Team Pleitez</option>
-            <option value="Team Roberto">Team Roberto</option>
-            <option value="Team Lineas">Team Lineas</option>
-            <option value="Team Randal">Team Randal</option>
-            <option value="Team Marisol">Team Marisol</option>
-          </select>
+        <div class="chart-container">
+          <canvas id="ventasTeamChart"></canvas>
+          <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
         </div>
-        <div class="form-group">
-          <label for="agent">Agente</label>
-          <select id="agent" required>
-            <option>Seleccione Agente</option>
-          </select>
+        <div class="chart-container">
+          <canvas id="productosChart"></canvas>
+          <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
         </div>
-        <div class="form-group">
-          <label for="producto">Producto</label>
-          <select id="producto" required>
-            <option>Seleccione Producto</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="puntaje">Puntaje</label>
-          <select id="puntaje" required>
-            <option>Seleccione Puntaje</option>
-            <option>Sin Puntaje</option>
-            <option>0.25</option>
-            <option>0.35</option>
-            <option>1.0</option>
-            <option>1.25</option>
-            <option>1.50</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="cuenta">Cuenta Google</label>
-          <select id="cuenta" required>
-            <option>Seleccione Cuenta</option>
-            <option>Cuenta Alexis</option>
-            <option>Cuenta Eduardo</option>
-            <option>Cuenta Israel</option>
-            <option>Cuenta Lineas</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="telefono">Teléfono</label>
-          <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
-        </div>
-        <div class="form-group">
-          <label for="direccion">Dirección</label>
-          <input type="text" id="direccion" placeholder="Dirección del cliente" required/>
-        </div>
-        <div class="form-group" style="margin-bottom: 26px;">
-          <label for="zip">ZIP Code</label>
-          <input type="text" id="zip" placeholder="Código ZIP" required/>
-        </div>
-        <button type="submit">Guardar Lead</button>
-      </form>
-    </section>
-    <section class="charts-section">
-      <div class="charts-filter">
-        <label for="fechaGraficas">Filtrar gráficas por fecha:</label>
-        <input type="date" id="fechaGraficas" />
-        <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
-      </div>
-      <div class="chart-container">
-        <canvas id="ventasTeamChart"></canvas>
-        <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
-      </div>
-      <div class="chart-container">
-        <canvas id="productosChart"></canvas>
-        <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
-</div>
-<script>
-// --- ARRAYS ---
-const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-const productos = [
-  "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "5G AT&T",
-  "2GB SPECTRUM", "1GB SPECTRUM", "500 SPECTRUM", "200 SPECTRUM", "SPECTRUM BUSSINES", "SPECTRUM PREMIER", "SPECTRUM ADVENTAGE",
-  "5GB FRONTIER", "2GB FRONTIER", "1GB FRONTIER", "500 FRONTIER", "200 FRONTIER",
-  "OPTIMO MAS", "MAS LATINO", "MAS ULTRA", "DIRECTV BUSSINES", "HUGHESNET", "OPTIMUM", "VIASAT", "WINDSTREAM",
-  "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
-];
+  <script>
+    // --- ARRAYS ---
+    const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
+    const productos = [
+      "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "5G AT&T",
+      "2GB SPECTRUM", "1GB SPECTRUM", "500 SPECTRUM", "200 SPECTRUM", "SPECTRUM BUSSINES", "SPECTRUM PREMIER", "SPECTRUM ADVENTAGE",
+      "5GB FRONTIER", "2GB FRONTIER", "1GB FRONTIER", "500 FRONTIER", "200 FRONTIER",
+      "OPTIMO MAS", "MAS LATINO", "MAS ULTRA", "DIRECTV BUSSINES", "HUGHESNET", "OPTIMUM", "VIASAT", "WINDSTREAM",
+      "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
+    ];
 
-// --- AGENTES POR TEAM ---
-const agentesPorTeam = {
-  "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
-  "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
-  "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala","David Quinteros"],
-  "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
-  "Team Randal": ["Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
-  "Team Marisol": ["Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"],
-};
+    // --- AGENTES POR TEAM ---
+    const agentesPorTeam = {
+      "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
+      "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
+      "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala","David Quinteros"],
+      "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
+      "Team Randal": ["Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
+      "Team Marisol": ["Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"],
+    };
 
-document.getElementById("team").addEventListener("change", function () {
-  const team = this.value;
-  const selectAgente = document.getElementById("agent");
-  selectAgente.innerHTML = "<option>Seleccione Agente</option>";
-  if (agentesPorTeam[team]) {
-    agentesPorTeam[team].forEach(agente => {
-      const option = document.createElement("option");
-      option.value = agente;
-      option.textContent = agente;
-      selectAgente.appendChild(option);
+    document.getElementById("team").addEventListener("change", function () {
+      const team = this.value;
+      const selectAgente = document.getElementById("agent");
+      selectAgente.innerHTML = "<option>Seleccione Agente</option>";
+      if (agentesPorTeam[team]) {
+        agentesPorTeam[team].forEach(agente => {
+          const option = document.createElement("option");
+          option.value = agente;
+          option.textContent = agente;
+          selectAgente.appendChild(option);
+        });
+      }
     });
-  }
-});
 
-document.addEventListener("DOMContentLoaded", () => {
-  const selectProducto = document.getElementById("producto");
-  productos.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p;
-    opt.textContent = p;
-    selectProducto.appendChild(opt);
-  });
-
-  // Selecciona la fecha de hoy por defecto al cargar la página
-  const hoy = new Date().toISOString().slice(0,10);
-  document.getElementById('fechaGraficas').value = hoy;
-  document.getElementById('fecha-lead').value = hoy;
-
-  iniciarGraficas();
-  actualizarGraficas();
-
-  setInterval(actualizarGraficas, 30000);
-});
-
-let ventasTeamChart, productosChart;
-
-function iniciarGraficas() {
-  const ctxTeam = document.getElementById("ventasTeamChart").getContext("2d");
-  ventasTeamChart = new Chart(ctxTeam, {
-    type: 'bar',
-    data: {
-      labels: equipos,
-      datasets: [
-        {
-          label: 'Ventas',
-          data: equipos.map(() => 0),
-          backgroundColor: '#007bff',
-          borderRadius: 6
-        },
-        {
-          label: 'Puntaje',
-          data: equipos.map(() => 0),
-          backgroundColor: '#dc3545',
-          borderRadius: 6
-        }
-      ]
-    },
-    options: {
-      animation: true,
-      responsive: true,
-      plugins: {
-        datalabels: {
-          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          color: '#000',
-          anchor: 'end',
-          align: 'top',
-          font: { weight: 'bold' },
-          formatter: value => value
-        },
-        legend: { position: 'top' }
-      },
-      scales: {
-        y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-        x: { grid: { display: false } }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-
-  // Gráfica de productos: SIEMPRE usa el array productos como labels
-  const ctxProducto = document.getElementById("productosChart").getContext("2d");
-  productosChart = new Chart(ctxProducto, {
-    type: 'bar',
-    data: {
-      labels: productos,
-      datasets: [{
-        label: 'Ventas por Producto',
-        data: productos.map(() => 0),
-        backgroundColor: '#007bff',
-        borderRadius: 6
-      }]
-    },
-    options: {
-      animation: true,
-      responsive: true,
-      plugins: {
-        datalabels: {
-          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          color: '#000',
-          anchor: 'end',
-          align: 'start',
-          offset: -5,
-          font: { weight: 'bold' },
-          formatter: value => value
-        },
-        legend: { display: false }
-      },
-      scales: {
-        y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-        x: { grid: { display: false } }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-function actualizarGraficas() {
-  const fecha = document.getElementById('fechaGraficas').value;
-  fetch(`/api/graficas?fecha=${fecha}`, {
-    credentials: 'include'
-  })
-    .then(res => res.json())
-    .then(data => {
-      // Ventas y puntaje por equipo
-      let hayDataTeam = false;
-      equipos.forEach((team, i) => {
-        const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
-        const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
-        ventasTeamChart.data.datasets[0].data[i] = ventas;
-        ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
-        if (ventas > 0 || puntos > 0) hayDataTeam = true;
+    document.addEventListener("DOMContentLoaded", () => {
+      const selectProducto = document.getElementById("producto");
+      productos.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        selectProducto.appendChild(opt);
       });
-      ventasTeamChart.update();
-      mostrarNoData(!hayDataTeam, false);
 
-      // Ventas por producto: SIEMPRE usa el array productos como labels.
-      productosChart.data.labels = productos;
-      productosChart.data.datasets[0].data = productos.map(
-        prod => {
-          if (!data.ventasPorProducto) return 0;
-          if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
-          // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
-          const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
-          return key ? data.ventasPorProducto[key] : 0;
-        }
-      );
-      productosChart.update();
+      // Selecciona la fecha de hoy por defecto al cargar la página
+      const hoy = new Date().toISOString().slice(0,10);
+      document.getElementById('fechaGraficas').value = hoy;
+      document.getElementById('fecha-lead').value = hoy;
 
-      let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
-      mostrarNoData(false, !hayDataProd);
-    })
-    .catch(err => {
-      console.error("Error al cargar gráficas:", err);
-      mostrarNoData(true, true);
-    });
-}
-
-function mostrarNoData(team, producto) {
-  document.getElementById('no-data-team').style.display = team ? '' : 'none';
-  document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
-}
-
-// --- Formulario Lead ---
-document.getElementById("crmForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  const fecha = document.getElementById("fecha-lead").value;
-  const team = document.getElementById("team").value;
-  const agent = document.getElementById("agent").value;
-  const producto = document.getElementById("producto").value;
-  const puntajeVal = document.getElementById("puntaje").value;
-  const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
-  const cuenta = document.getElementById("cuenta").value;
-  const telefono = document.getElementById("telefono").value;
-  const direccion = document.getElementById("direccion").value;
-  const zip = document.getElementById("zip").value;
-
-  if (
-    team === "" || agent === "Seleccione Agente" ||
-    producto === "Seleccione Producto" || isNaN(puntaje) ||
-    cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
-    direccion.trim() === "" || zip.trim() === ""
-  ) {
-    alert("Por favor, complete todos los campos.");
-    return;
-  }
-
-  fetch("/api/leads", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: 'include',
-    body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
-  })
-    .then(async res => {
-      if (res.status === 401) {
-        alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
-        window.location.href = "/login.html";
-        throw new Error("No autorizado.");
-      }
-      const contentType = res.headers.get('content-type') || '';
-      if (!res.ok) {
-        if (contentType.includes('application/json')) {
-          const errorText = await res.text();
-          console.error("Error en respuesta:", res.status, errorText);
-        } else {
-          console.error("Respuesta inesperada:", res.status, await res.text());
-        }
-        throw new Error("Error al guardar el lead.");
-      }
-      if (contentType.includes('application/json')) {
-        return res.json();
-      } else {
-        throw new Error("Respuesta inesperada del servidor.");
-      }
-    })
-    .then(() => {
+      iniciarGraficas();
       actualizarGraficas();
-      document.getElementById("crmForm").reset();
-      document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
-      alert("Lead guardado exitosamente.");
-    })
-    .catch(error => {
-      console.error("Error al guardar lead:", error);
-      alert("Hubo un error al guardar el lead. Revisa la consola.");
-    });
-});
+      igualarAlturaGraficas();
 
-// --- Importar Leads desde Excel ---
-const inputExcelLead = document.getElementById('input-excel-lead');
-const fileNameLead = document.getElementById('file-name-lead');
-inputExcelLead.addEventListener('change', function() {
-  fileNameLead.textContent = this.files && this.files.length ? this.files[0].name : "Ningún archivo seleccionado";
-});
-document.getElementById('form-importar-excel-lead').onsubmit = async function(e) {
-  e.preventDefault();
-  const statusDiv = document.getElementById('import-status-lead');
-  statusDiv.textContent = '';
-  statusDiv.style.color = "";
-  const formData = new FormData(this);
-  try {
-    const resp = await fetch('/api/leads/import', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include'
+      setInterval(actualizarGraficas, 30000);
     });
-    const resJson = await resp.json();
-    if (resp.ok && resJson.success) {
-      statusDiv.textContent = `Importación exitosa: ${resJson.count || 0} registros agregados.`;
-      statusDiv.style.color = "green";
-      actualizarGraficas();
-    } else {
-      statusDiv.textContent = "Error al importar: " + (resJson.error || "Error desconocido");
-      statusDiv.style.color = "red";
+
+    // --- AJUSTE: Igualar altura de .charts-section a la de .form-section ---
+    function igualarAlturaGraficas() {
+      const form = document.getElementById('form-panel');
+      const charts = document.getElementById('charts-panel');
+      if (form && charts) {
+        charts.style.height = form.offsetHeight + "px";
+      }
     }
-  } catch (err) {
-    statusDiv.textContent = "Error de red al importar: " + err.message;
-    statusDiv.style.color = "red";
-  }
-  this.reset();
-  fileNameLead.textContent = "Ningún archivo seleccionado";
-};
+    window.addEventListener('resize', igualarAlturaGraficas);
 
-function logout() {
-  fetch('/logout', { credentials: 'include' })
-    .then(() => window.location.href = '/login.html');
-}
-</script>
+    let ventasTeamChart, productosChart;
+
+    function iniciarGraficas() {
+      const ctxTeam = document.getElementById("ventasTeamChart").getContext("2d");
+      ventasTeamChart = new Chart(ctxTeam, {
+        type: 'bar',
+        data: {
+          labels: equipos,
+          datasets: [
+            {
+              label: 'Ventas',
+              data: equipos.map(() => 0),
+              backgroundColor: '#007bff',
+              borderRadius: 6
+            },
+            {
+              label: 'Puntaje',
+              data: equipos.map(() => 0),
+              backgroundColor: '#dc3545',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          animation: true,
+          responsive: true,
+          plugins: {
+            datalabels: {
+              display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+              color: '#000',
+              anchor: 'end',
+              align: 'top',
+              font: { weight: 'bold' },
+              formatter: value => value
+            },
+            legend: { position: 'top' }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      // Gráfica de productos: SIEMPRE usa el array productos como labels
+      const ctxProducto = document.getElementById("productosChart").getContext("2d");
+      productosChart = new Chart(ctxProducto, {
+        type: 'bar',
+        data: {
+          labels: productos,
+          datasets: [{
+            label: 'Ventas por Producto',
+            data: productos.map(() => 0),
+            backgroundColor: '#007bff',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          animation: true,
+          responsive: true,
+          plugins: {
+            datalabels: {
+              display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+              color: '#000',
+              anchor: 'end',
+              align: 'start',
+              offset: -5,
+              font: { weight: 'bold' },
+              formatter: value => value
+            },
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    function actualizarGraficas() {
+      const fecha = document.getElementById('fechaGraficas').value;
+      fetch(`/api/graficas?fecha=${fecha}`, {
+        credentials: 'include'
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Ventas y puntaje por equipo
+          let hayDataTeam = false;
+          equipos.forEach((team, i) => {
+            const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
+            const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+            ventasTeamChart.data.datasets[0].data[i] = ventas;
+            ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
+            if (ventas > 0 || puntos > 0) hayDataTeam = true;
+          });
+          ventasTeamChart.update();
+          mostrarNoData(!hayDataTeam, false);
+
+          // Ventas por producto: SIEMPRE usa el array productos como labels.
+          productosChart.data.labels = productos;
+          productosChart.data.datasets[0].data = productos.map(
+            prod => {
+              if (!data.ventasPorProducto) return 0;
+              if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
+              // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
+              const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
+              return key ? data.ventasPorProducto[key] : 0;
+            }
+          );
+          productosChart.update();
+
+          let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
+          mostrarNoData(false, !hayDataProd);
+
+          igualarAlturaGraficas();
+        })
+        .catch(err => {
+          console.error("Error al cargar gráficas:", err);
+          mostrarNoData(true, true);
+          igualarAlturaGraficas();
+        });
+    }
+
+    function mostrarNoData(team, producto) {
+      document.getElementById('no-data-team').style.display = team ? '' : 'none';
+      document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
+    }
+
+    // --- Formulario Lead ---
+    document.getElementById("crmForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const fecha = document.getElementById("fecha-lead").value;
+      const team = document.getElementById("team").value;
+      const agent = document.getElementById("agent").value;
+      const producto = document.getElementById("producto").value;
+      const puntajeVal = document.getElementById("puntaje").value;
+      const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
+      const cuenta = document.getElementById("cuenta").value;
+      const telefono = document.getElementById("telefono").value;
+      const direccion = document.getElementById("direccion").value;
+      const zip = document.getElementById("zip").value;
+
+      if (
+        team === "" || agent === "Seleccione Agente" ||
+        producto === "Seleccione Producto" || isNaN(puntaje) ||
+        cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
+        direccion.trim() === "" || zip.trim() === ""
+      ) {
+        alert("Por favor, complete todos los campos.");
+        return;
+      }
+
+      fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
+      })
+        .then(async res => {
+          if (res.status === 401) {
+            alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+            window.location.href = "/login.html";
+            throw new Error("No autorizado.");
+          }
+          const contentType = res.headers.get('content-type') || '';
+          if (!res.ok) {
+            if (contentType.includes('application/json')) {
+              const errorText = await res.text();
+              console.error("Error en respuesta:", res.status, errorText);
+            } else {
+              console.error("Respuesta inesperada:", res.status, await res.text());
+            }
+            throw new Error("Error al guardar el lead.");
+          }
+          if (contentType.includes('application/json')) {
+            return res.json();
+          } else {
+            throw new Error("Respuesta inesperada del servidor.");
+          }
+        })
+        .then(() => {
+          actualizarGraficas();
+          document.getElementById("crmForm").reset();
+          document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
+          alert("Lead guardado exitosamente.");
+        })
+        .catch(error => {
+          console.error("Error al guardar lead:", error);
+          alert("Hubo un error al guardar el lead. Revisa la consola.");
+        });
+    });
+
+    function logout() {
+      fetch('/logout', { credentials: 'include' })
+        .then(() => window.location.href = '/login.html');
+    }
+  </script>
+</div>
 </body>
 </html>
