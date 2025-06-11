@@ -134,7 +134,6 @@
     <button onclick="location.href='costumer.html'">Costumer</button>
     <button onclick="location.href='#'">Reports</button>
     <button onclick="logout()">Cerrar sesión</button>
-
     <!-- Importar Excel para Leads -->
     <form id="form-importar-excel-lead" class="import-lead-form" enctype="multipart/form-data">
       <div class="import-lead-row">
@@ -280,13 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Selecciona la fecha de hoy por defecto al cargar la página
   const hoy = new Date().toISOString().slice(0,10);
   document.getElementById('fechaGraficas').value = hoy;
-  // NUEVO: selecciona la fecha de hoy por defecto en el formulario
   document.getElementById('fecha-lead').value = hoy;
 
   iniciarGraficas();
   actualizarGraficas();
 
-  // Opcional: auto-actualización cada 30 segundos con la fecha seleccionada
   setInterval(actualizarGraficas, 30000);
 });
 
@@ -335,6 +332,7 @@ function iniciarGraficas() {
     plugins: [ChartDataLabels]
   });
 
+  // Gráfica de productos: SIEMPRE usa el array productos como labels
   const ctxProducto = document.getElementById("productosChart").getContext("2d");
   productosChart = new Chart(ctxProducto, {
     type: 'bar',
@@ -355,8 +353,8 @@ function iniciarGraficas() {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           color: '#000',
           anchor: 'end',
-          align: 'start', // Cambiado para que siempre se muestre arriba de la barra
-          offset: -4,     // Eleva el número encima de la barra
+          align: 'start', // Siempre arriba
+          offset: -8,
           font: { weight: 'bold' },
           formatter: value => value
         },
@@ -389,11 +387,6 @@ function actualizarGraficas() {
       return res.json();
     })
     .then(data => {
-      if (!data || typeof data !== 'object') {
-        mostrarNoData(true, true);
-        return;
-      }
-
       // Ventas y puntaje por equipo
       let hayDataTeam = false;
       equipos.forEach((team, i) => {
@@ -406,14 +399,14 @@ function actualizarGraficas() {
       ventasTeamChart.update();
       mostrarNoData(!hayDataTeam, false);
 
-      // Ventas por producto
-      let hayDataProd = false;
-      productos.forEach((prod, i) => {
-        const ventas = data.ventasPorProducto && data.ventasPorProducto[prod] ? data.ventasPorProducto[prod] : 0;
-        productosChart.data.datasets[0].data[i] = ventas;
-        if (ventas > 0) hayDataProd = true;
-      });
+      // Ventas por producto: SIEMPRE usa el array productos como labels.
+      productosChart.data.labels = productos;
+      productosChart.data.datasets[0].data = productos.map(
+        prod => data.ventasPorProducto && data.ventasPorProducto[prod] ? data.ventasPorProducto[prod] : 0
+      );
       productosChart.update();
+
+      let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
       mostrarNoData(false, !hayDataProd);
     })
     .catch(err => {
@@ -463,7 +456,6 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
         window.location.href = "/login.html";
         throw new Error("No autorizado.");
       }
-      // Si la respuesta NO es JSON, no la intentes parsear como JSON.
       const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {
         if (contentType.includes('application/json')) {
@@ -483,7 +475,6 @@ document.getElementById("crmForm").addEventListener("submit", function (e) {
     .then(() => {
       actualizarGraficas();
       document.getElementById("crmForm").reset();
-      // Restaurar la fecha de hoy después de resetear el formulario
       document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
       alert("Lead guardado exitosamente.");
     })
@@ -528,7 +519,6 @@ document.getElementById('form-importar-excel-lead').onsubmit = async function(e)
   fileNameLead.textContent = "Ningún archivo seleccionado";
 };
 
-// Función para logout seguro
 function logout() {
   fetch('/logout', { credentials: 'include' })
     .then(() => window.location.href = '/login.html');
