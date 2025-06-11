@@ -12,7 +12,7 @@
     .container { display: flex; min-height: 100vh; }
     nav {
       width: 260px;
-      background: #1b3a48; /* color de fondo de sidebar costumer */
+      background: #1b3a48;
       color: #fff;
       min-height: 100vh;
       padding: 0;
@@ -106,8 +106,6 @@
       width: 100%;
       align-items: flex-start;
     }
-    /* ...resto de tus estilos para el contenido... */
-    /* Mantiene el resto igual que antes */
     .form-section {
       background: #fff;
       border-radius: 18px;
@@ -162,7 +160,6 @@
     .form-section button[type="submit"]:hover {
       background: #183153;
     }
-    /* ...tu código de charts-section y responsive igual que antes... */
     .charts-section {
       flex: 2;
       display: flex;
@@ -249,8 +246,8 @@
     <div class="sidebar-title">Connecting</div>
     <div class="sidebar-menu">
       <button class="sidebar-link" onclick="location.href='#'">Inicio</button>
-      <button class="sidebar-link" onclick="location.href='lead.html'">Lead</button>
-      <button class="sidebar-link active" onclick="location.href='costumer.html'">Costumer</button>
+      <button class="sidebar-link active" onclick="location.href='lead.html'">Lead</button>
+      <button class="sidebar-link" onclick="location.href='costumer.html'">Costumer</button>
       <button class="sidebar-link inactive" disabled>Reports</button>
       <button class="sidebar-link" onclick="logout()">Cerrar sesión</button>
     </div>
