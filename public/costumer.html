@@ -5,47 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CRM - Costumer</title>
   <style>
+    :root {
+      --color-azul-claro: #4FC3E3;
+      --color-azul-medio: #2596b6;
+      --color-azul-oscuro: #1B3A4B;
+      --color-blanco: #FFFFFF;
+      --color-gris-claro: #F4F8FB;
+      --color-negro: #232323;
+      --color-acento: #FFD700;
+    }
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: #333; }
-    .container { display: flex; min-height: 100vh; }
-    nav {
-      width: 220px;
-      background: #000000ea;
-      color: rgb(245, 245, 245);
-      padding: 28px;
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--color-gris-claro);
+      color: var(--color-negro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* SIDEBAR */
+    .sidebar {
+      width: 250px;
+      background: var(--color-azul-oscuro);
+      color: var(--color-blanco);
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding-top: 30px;
+      box-shadow: 2px 0 10px rgba(27,58,75,0.05);
     }
-    nav h1 {
-      margin: 0 0 20px;
-      font-size: 2em;
-      font-weight: 700;
-    }
-    nav button {
-      width: 100%;
-      background: #000000ea;
-      color: rgb(255, 255, 255);
-      border: none;
-      padding: 20px;
+    .sidebar-logo {
+      width: 85px;
+      height: 85px;
       margin-bottom: 12px;
-      text-align: center;
-      font-weight: 675;
-      border-radius: 4px;
+      border-radius: 50%;
+      background: var(--color-blanco);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(79,195,227,0.06);
+    }
+    .sidebar-logo img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      display: block;
+    }
+    .sidebar-title {
+      font-size: 1.7em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 26px;
+      color: var(--color-azul-claro);
+      text-shadow: 0 2px 8px rgba(79,195,227,0.08);
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    .sidebar-nav button {
+      width: 90%;
+      margin: 0 auto;
+      padding: 15px 0;
+      background: none;
+      border: none;
+      color: var(--color-blanco);
+      font-size: 1.14em;
+      font-weight: 600;
+      border-radius: 8px;
+      margin-bottom: 4px;
       cursor: pointer;
-      font-size: 1.2em;
       transition: background 0.2s, color 0.2s;
+      text-align: left;
+      padding-left: 22px;
+      position: relative;
     }
-    nav button:hover,
-    nav button.active {
-      background: #8cdeff;
-      color: #fff;
+    .sidebar-nav button.active,
+    .sidebar-nav button:hover {
+      background: var(--color-azul-claro);
+      color: var(--color-azul-oscuro);
     }
-    nav button.active {
-      background: #8cdeff;
-      color: #fff;
+    .sidebar-lema {
+      margin-top: auto;
+      padding: 20px 10px 28px 10px;
+      font-size: 1em;
+      text-align: center;
+      font-style: italic;
+      color: var(--color-azul-claro);
+      opacity: 0.8;
     }
-    main { flex: 1; padding: 30px; display: flex; flex-direction: column; background: rgb(255, 255, 255);}
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 40px 50px;
+      background: var(--color-gris-claro);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    /* KPI CARDS */
+    .kpi-cards {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 28px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .kpi-card {
+      background: var(--color-gris-claro);
+      border-radius: 16px;
+      box-shadow: 0 3px 18px rgba(27,58,75,0.09);
+      padding: 26px 38px 22px 28px;
+      min-width: 190px;
+      flex: 1 1 210px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      border: 1px solid #e4eef7;
+    }
+    .kpi-label {
+      font-size: 1.02em;
+      color: var(--color-azul-medio);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-size: 2.1em;
+      font-weight: bold;
+      color: var(--color-azul-oscuro);
+    }
+    /* FIN KPI CARDS */
     .filters-download-bar {
       display: flex;
       flex-wrap: wrap;
@@ -78,10 +174,10 @@
       min-width: 135px;
     }
     .filters-row input:focus, .filters-row select:focus {
-      outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+      outline: none; border-color: var(--color-azul-medio); box-shadow: 0 0 0 2px rgba(79, 195, 227, 0.15);
     }
     .descargar-btn-icono {
-      background: #2196f3;
+      background: var(--color-azul-claro);
       border: none;
       border-radius: 6px;
       padding: 8px 13px 8px 13px;
@@ -96,7 +192,7 @@
       box-shadow: 0 2px 6px 0 rgba(33,150,243,0.07);
     }
     .descargar-btn-icono:hover {
-      background: #1565c0;
+      background: var(--color-azul-medio);
     }
     .descargar-btn-icono svg {
       width: 28px;
@@ -125,7 +221,7 @@
     }
     .custom-file-label {
       display: inline-block;
-      background: #42a5f5;
+      background: var(--color-azul-claro);
       color: #fff;
       border-radius: 4px 0 0 4px;
       padding: 7px 18px;
@@ -137,7 +233,7 @@
       vertical-align: middle;
     }
     .custom-file-label:hover {
-      background: #1e88e5;
+      background: var(--color-azul-medio);
     }
     .file-selected-name {
       display: inline-block;
@@ -147,17 +243,25 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       background: #e3f2fd;
-      color: #1976d2;
+      color: var(--color-azul-medio);
       border-radius: 0 4px 4px 0;
       padding: 7px 12px;
       font-size: 1rem;
       margin-left: -4px;
     }
     .import-btn {
-      background: #42a5f5; color: #fff; padding: 7px 20px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: background 0.2s;
+      background: var(--color-azul-claro);
+      color: #fff; 
+      padding: 7px 20px; 
+      border: none; 
+      border-radius: 4px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      font-size: 1rem; 
+      transition: background 0.2s;
       margin-left: 10px;
     }
-    .import-btn:hover { background: #1e88e5; }
+    .import-btn:hover { background: var(--color-azul-medio); }
     .delete-all-btn {
       background: #ff5252; color: #fff; padding: 7px 20px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: background 0.2s;
     }
@@ -182,7 +286,7 @@
       text-align: left;
     }
     th {
-      background: #03396c;
+      background: var(--color-azul-medio);
       color: #fff;
       font-weight: 700;
       font-size: 1em;
@@ -195,88 +299,77 @@
     td {
       font-size: 0.96em;
     }
-    /* Formulario de edición */
-    .editar-form {
-      background: #f3f7fa;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(33,150,243,0.07);
-      padding: 24px 24px 16px 24px;
-      margin: 18px auto 0 auto;
-      max-width: 550px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border: 1px solid #c9e7f7;
-    }
-    .editar-form label {
-      font-weight: 600;
-      color: #0d3c61;
-      margin-bottom: 4px;
-    }
-    .editar-form input, .editar-form select {
-      width: 100%;
-      padding: 7px 10px;
-      border: 1px solid #b9d7f6;
-      border-radius: 5px;
-      font-size: 1em;
-      margin-bottom: 8px;
-    }
-    .editar-form button[type="submit"] {
-      background: #42a5f5;
-      color: #fff;
+    .btn-editar, .btn-eliminar {
+      background: none;
       border: none;
-      border-radius: 5px;
-      font-weight: 700;
-      padding: 9px 0;
-      margin-top: 10px;
-      font-size: 1.07em;
       cursor: pointer;
-      transition: background 0.2s;
+      font-size: 18px;
+      margin-right: 5px;
+      color: var(--color-azul-medio);
+      transition: color 0.2s;
     }
-    .editar-form button[type="submit"]:hover {
-      background: #1565c0;
-    }
-    .editar-form .cancelar-btn {
-      background: #b0b0b0;
-      color: #fff;
-      margin-top: 0;
-      margin-left: 9px;
-      border-radius: 5px;
-      font-weight: 700;
-      padding: 9px 0;
-      border: none;
-      font-size: 1.07em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .editar-form .cancelar-btn:hover {
-      background: #757575;
-    }
+    .btn-editar:hover { color: #FFD600; }
+    .btn-eliminar:hover { color: #ff5252; }
     @media (max-width: 1100px) {
       .filters-download-bar, .actions-bar { flex-direction: column; gap: 11px; align-items: flex-start; }
       .descargar-btn-icono { margin-left: 0; margin-top: 10px;}
+      .kpi-cards { gap: 12px; }
     }
     @media (max-width: 700px) {
-      .container { flex-direction: column;}
-      main { padding: 10px;}
-      nav { position: static; width: 100%; height: auto; box-shadow: none; flex-direction: row; align-items: center; justify-content: space-between;}
-      nav button { width: 100%; min-width: 0; padding: 11px 8px; margin: 2px 2px;}
-      .tabla-section, .filters-download-bar, .actions-bar { padding-left: 5px; padding-right: 5px; margin-left: 0; margin-right: 0;}
-      .editar-form { max-width: 98vw; }
+      .layout { flex-direction: column;}
+      .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
+      .sidebar-logo { margin: 0 12px 0 0; }
+      .sidebar-title { font-size: 1em; margin-bottom: 0;}
+      .sidebar-nav { flex-direction: row; gap: 0; }
+      .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
+      .sidebar-lema { display: none;}
+      .main-content { padding: 12px 2px; }
+      .kpi-card { min-width: 42vw; padding: 13px 7px;}
+      .kpi-cards { flex-direction: column; gap: 7px;}
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <nav>
-    <h1>Connecting</h1>
-    <button onclick="location.href='index.html'">Inicio</button>
-    <button onclick="location.href='lead.html'">Lead</button>
-    <button onclick="location.href='costumer.html'" class="active">Costumer</button>
-    <button onclick="location.href='#'">Reports</button>
-    <button onclick="logout()">Cerrar sesión</button>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://raw.githubusercontent.com/Zombie550211/chatgpt-prompts-imgs/main/connect-logo.png" alt="Logo Connecting"/>
+    </div>
+    <div class="sidebar-title">Connecting</div>
+    <div class="sidebar-nav">
+      <button onclick="location.href='index.html'">Inicio</button>
+      <button onclick="location.href='lead.html'">Lead</button>
+      <button class="active" onclick="location.href='costumer.html'">Costumer</button>
+      <button onclick="location.href='#'">Reports</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="sidebar-lema">
+      "Conectando tu éxito, un cliente a la vez"
+    </div>
   </nav>
-  <main>
+  <main class="main-content">
+    <!-- KPI CARDS -->
+    <div class="kpi-cards">
+      <div class="kpi-card">
+        <div class="kpi-label">Ventas Hoy</div>
+        <div class="kpi-value" id="kpi-ventas-hoy">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Leads Pendientes</div>
+        <div class="kpi-value" id="kpi-leads-pendientes">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Clientes</div>
+        <div class="kpi-value" id="kpi-clientes">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ventas (mes)</div>
+        <div class="kpi-value" id="kpi-ventas-mes">0</div>
+      </div>
+    </div>
+    <!-- FIN KPI CARDS -->
+
     <div class="filters-download-bar">
       <div class="filters-row">
         <label>Fecha desde:
@@ -474,6 +567,16 @@
       "DIRECCIÓN": item.direccion || "",
       "ZIP": item.zip || ""
     }));
+
+    // Actualizar KPIs
+    document.getElementById("kpi-clientes").textContent = datos.length;
+    document.getElementById("kpi-ventas-hoy").textContent = datos.filter(d => d["FECHA"] === (new Date()).toISOString().slice(0,10)).length;
+    document.getElementById("kpi-leads-pendientes").textContent = datos.filter(d => d["PUNTAJE"] === "0" || d["PUNTAJE"] === "Sin Puntaje").length;
+    // Aquí puedes ajustar la lógica según tus datos
+    // Por ejemplo, para ventas del mes:
+    const mes = (new Date()).toISOString().slice(0,7);
+    document.getElementById("kpi-ventas-mes").textContent = datos.filter(d => d["FECHA"].startsWith(mes)).length;
+
     aplicarFiltros();
     ocultarFormularioEdicion();
   }
