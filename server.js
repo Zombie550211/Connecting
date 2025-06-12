@@ -154,7 +154,6 @@ app.get('/descargar/leads', protegerRuta, (req, res) => {
 // ENDPOINT PARA DESCARGAR EL EXCEL DE COSTUMERS (DINÁMICO DESDE MONGO, CON FILTRO DE FECHA)
 app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   try {
-    // Filtrar por fecha (YYYY-MM-DD)
     const { desde, hasta } = req.query;
     let query = {};
     if (desde && hasta) {
@@ -240,7 +239,6 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     const query = {};
 
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      // Para mayor compatibilidad, buscar sólo por el string de la fecha:
       query.fecha = fechaFiltro;
     }
 
@@ -303,8 +301,10 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
       query.fecha = fecha;
     }
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    console.log("Costumers encontrados:", costumers);
     res.json({ costumers });
   } catch (err) {
+    console.error("Error en GET /api/costumer:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -320,7 +320,6 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
       const workbook = XLSX.readFile(filePath);
       const sheetName = workbook.SheetNames[0];
       const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
       mapped = rows
         .filter(row =>
           (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
