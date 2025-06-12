@@ -19,10 +19,6 @@ const PORT = process.env.PORT || 3000;
 const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
 const COSTUMER_FILE_PATH = path.join(__dirname, "Costumer.xlsx");
 
-// =============================================
-// La URI de conexión y el nombre de la base
-// se configuran en el archivo .env (variable MONGO_URL)
-// =============================================
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida.");
@@ -110,6 +106,10 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
+// Helper para normalizar valores (trim y minúsculas)
+const clean = value =>
+  typeof value === "string" ? value.trim().toLowerCase() : (value || '');
+
 // ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
@@ -123,34 +123,25 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     const mapped = rows.filter(row =>
       row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
     ).map(row => ({
-      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-      equipo: row.equipo || row.team || "",
-      agente: row.agente || row.agent || "",
-      telefono: row.telefono || "",
-      producto: row.producto || "",
+      fecha: clean(row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
+      equipo: clean(row.equipo || row.team || ""),
+      agente: clean(row.agente || row.agent || ""),
+      telefono: clean(row.telefono || ""),
+      producto: clean(row.producto || ""),
       puntaje: Number(row.puntaje) || 0,
-      cuenta: row.cuenta || "",
-      direccion: row.direccion || "",
-      zip: row.zip || ""
+      cuenta: clean(row.cuenta || ""),
+      direccion: clean(row.direccion || ""),
+      zip: clean(row.zip || "")
     }));
 
-    // Nueva lógica para evitar duplicados al importar
     let countInsertados = 0;
     for (const lead of mapped) {
-      const existe = await Lead.findOne({
-        fecha: lead.fecha,
-        equipo: lead.equipo,
-        agente: lead.agente,
-        producto: lead.producto,
-        puntaje: lead.puntaje,
-        cuenta: lead.cuenta,
-        telefono: lead.telefono,
-        direccion: lead.direccion,
-        zip: lead.zip
-      });
-      if (!existe) {
+      try {
         await Lead.create(lead);
         countInsertados++;
+      } catch (err) {
+        if (err.code !== 11000) throw err;
+        // si es duplicado, lo ignora
       }
     }
     fs.unlinkSync(filePath);
@@ -224,54 +215,43 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
-    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
-
-    // --- Validación de duplicados aquí ---
-    const existeLead = await Lead.findOne({
-      fecha: fechaLead,
-      equipo: team || '',
-      agente: agent,
-      producto,
-      puntaje: puntaje || 0,
-      cuenta: cuenta || '',
-      telefono: telefono || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    });
-    if (existeLead) {
-      return res.status(409).json({ success: false, error: "Este lead ya existe" });
-    }
-    // --------------------------------------
+    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+      ? fecha
+      : new Date().toISOString().slice(0, 10);
 
     const nuevoLead = {
-      fecha: fechaLead,
-      equipo: team || '',
-      agente: agent,
-      teléfono: telefono || '',
-      producto,
-      puntaje: puntaje || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
+      fecha: clean(fechaLead),
+      equipo: clean(team),
+      agente: clean(agent),
+      telefono: clean(telefono),
+      producto: clean(producto),
+      puntaje: Number(puntaje) || 0,
+      cuenta: clean(cuenta),
+      direccion: clean(direccion),
+      zip: clean(zip)
     };
 
-    await Lead.create(nuevoLead);
+    try {
+      await Lead.create(nuevoLead);
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({ success: false, error: "Este lead ya existe (índice único)" });
+      }
+      throw err;
+    }
 
-    const nuevoCostumer = {
-      fecha: nuevoLead.fecha,
-      equipo: nuevoLead.equipo,
-      agente: nuevoLead.agente,
-      telefono: nuevoLead.teléfono,
-      producto: nuevoLead.producto,
-      puntaje: nuevoLead.puntaje,
-      cuenta: nuevoLead.cuenta,
-      direccion: nuevoLead.direccion,
-      zip: nuevoLead.zip
-    };
-    await Costumer.create(nuevoCostumer);
+    // También guardar en costumer (replicar la lógica de protección)
+    const nuevoCostumer = { ...nuevoLead }; // mismos campos, normalizados
+    try {
+      await Costumer.create(nuevoCostumer);
+    } catch (err) {
+      // Ignora duplicados en costumer
+      if (err.code !== 11000) throw err;
+    }
 
     req.session.ultimoLead = Date.now();
 
+    // Excel
     let workbook;
     if (fs.existsSync(EXCEL_FILE_PATH)) {
       workbook = XLSX.readFile(EXCEL_FILE_PATH);
@@ -290,7 +270,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       "fecha",
       "equipo",
       "agente",
-      "teléfono",
+      "telefono",
       "producto",
       "puntaje",
       "cuenta",
@@ -307,13 +287,11 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     try {
       XLSX.writeFile(workbook, EXCEL_FILE_PATH);
     } catch (err) {
-      console.error("Error al escribir el archivo Excel:", err);
       return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel: " + err.message });
     }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Error real al guardar lead/costumer:", err);
     res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
   }
 });
@@ -350,7 +328,6 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
-    console.error("Error en /api/graficas:", error.stack || error);
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
@@ -364,35 +341,27 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     }
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
 
-    // Validar duplicado para costumer
-    const existeCostumer = await Costumer.findOne({
-      fecha: fechaCostumer,
-      equipo: team || '',
-      agente: agent,
-      producto,
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      telefono: telefono || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    });
-    if (existeCostumer) {
-      return res.status(409).json({ success: false, error: "Este costumer ya existe" });
-    }
-
     const nuevoCostumer = {
-      fecha: fechaCostumer,
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
+      fecha: clean(fechaCostumer),
+      equipo: clean(team),
+      agente: clean(agent),
+      telefono: clean(telefono),
+      producto: clean(producto),
       puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
+      cuenta: clean(cuenta),
+      direccion: clean(direccion),
+      zip: clean(zip)
     };
-    await Costumer.create(nuevoCostumer);
-    res.json({ success: true });
+
+    try {
+      await Costumer.create(nuevoCostumer);
+      res.json({ success: true });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({ success: false, error: "Este costumer ya existe (índice único)" });
+      }
+      throw err;
+    }
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -432,34 +401,24 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
           (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
         )
         .map(row => ({
-          fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-          equipo: row.equipo || row.team || "",
-          agente: row.agente || row.agent || "",
-          telefono: row.telefono || "",
-          producto: row.producto || "",
+          fecha: clean(row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
+          equipo: clean(row.equipo || row.team || ""),
+          agente: clean(row.agente || row.agent || ""),
+          telefono: clean(row.telefono || ""),
+          producto: clean(row.producto || ""),
           puntaje: Number(row.puntaje) || 0,
-          cuenta: row.cuenta || "",
-          direccion: row.direccion || "",
-          zip: row.zip || ""
+          cuenta: clean(row.cuenta || ""),
+          direccion: clean(row.direccion || ""),
+          zip: clean(row.zip || "")
         }));
 
-      // Nueva lógica para evitar duplicados en costumer import
       let countInsertados = 0;
       for (const costumer of mapped) {
-        const existe = await Costumer.findOne({
-          fecha: costumer.fecha,
-          equipo: costumer.equipo,
-          agente: costumer.agente,
-          producto: costumer.producto,
-          puntaje: costumer.puntaje,
-          cuenta: costumer.cuenta,
-          telefono: costumer.telefono,
-          direccion: costumer.direccion,
-          zip: costumer.zip
-        });
-        if (!existe) {
+        try {
           await Costumer.create(costumer);
           countInsertados++;
+        } catch (err) {
+          if (err.code !== 11000) throw err;
         }
       }
       fs.unlinkSync(filePath);
@@ -504,7 +463,6 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
   }
 });
 
-// ELIMINAR TODOS LOS COSTUMERS
 app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   try {
     await Costumer.deleteMany({});
@@ -514,7 +472,6 @@ app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   }
 });
 
-// ELIMINAR UN COSTUMER POR ID
 app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
@@ -525,7 +482,6 @@ app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
   }
 });
 
-// EDITAR/ACTUALIZAR UN COSTUMER POR ID
 app.put('/api/costumer/:id', protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
