@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
-const CostumerSchema = new mongoose.Schema({
-  fecha: { type: Date, required: true },  // <-- cambiar a Date
+const leadSchema = new mongoose.Schema({
+  // tu esquema aquí...
+  fecha: Date,
   equipo: String,
   agente: String,
   telefono: String,
@@ -12,4 +13,5 @@ const CostumerSchema = new mongoose.Schema({
   zip: String,
 });
 
-module.exports = mongoose.model('Costumer', CostumerSchema);
+// Esta línea protege para que el modelo no se redefina si ya existe
+module.exports = mongoose.models.lead  || mongoose.model('Costumer', leadSchema);
