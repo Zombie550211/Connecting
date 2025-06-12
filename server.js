@@ -134,11 +134,27 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
       zip: row.zip || ""
     }));
 
-    if (mapped.length) {
-      await Lead.insertMany(mapped);
+    // Nueva lógica para evitar duplicados al importar
+    let countInsertados = 0;
+    for (const lead of mapped) {
+      const existe = await Lead.findOne({
+        fecha: lead.fecha,
+        equipo: lead.equipo,
+        agente: lead.agente,
+        producto: lead.producto,
+        puntaje: lead.puntaje,
+        cuenta: lead.cuenta,
+        telefono: lead.telefono,
+        direccion: lead.direccion,
+        zip: lead.zip
+      });
+      if (!existe) {
+        await Lead.create(lead);
+        countInsertados++;
+      }
     }
     fs.unlinkSync(filePath);
-    res.json({ success: true, count: mapped.length });
+    res.json({ success: true, count: countInsertados });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -209,6 +225,23 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
 
     const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
+
+    // --- Validación de duplicados aquí ---
+    const existeLead = await Lead.findOne({
+      fecha: fechaLead,
+      equipo: team || '',
+      agente: agent,
+      producto,
+      puntaje: puntaje || 0,
+      cuenta: cuenta || '',
+      telefono: telefono || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    });
+    if (existeLead) {
+      return res.status(409).json({ success: false, error: "Este lead ya existe" });
+    }
+    // --------------------------------------
 
     const nuevoLead = {
       fecha: fechaLead,
@@ -330,6 +363,23 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
+
+    // Validar duplicado para costumer
+    const existeCostumer = await Costumer.findOne({
+      fecha: fechaCostumer,
+      equipo: team || '',
+      agente: agent,
+      producto,
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '',
+      telefono: telefono || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    });
+    if (existeCostumer) {
+      return res.status(409).json({ success: false, error: "Este costumer ya existe" });
+    }
+
     const nuevoCostumer = {
       fecha: fechaCostumer,
       equipo: team || '',
@@ -393,11 +443,27 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
           zip: row.zip || ""
         }));
 
-      if (mapped.length) {
-        await Costumer.insertMany(mapped);
+      // Nueva lógica para evitar duplicados en costumer import
+      let countInsertados = 0;
+      for (const costumer of mapped) {
+        const existe = await Costumer.findOne({
+          fecha: costumer.fecha,
+          equipo: costumer.equipo,
+          agente: costumer.agente,
+          producto: costumer.producto,
+          puntaje: costumer.puntaje,
+          cuenta: costumer.cuenta,
+          telefono: costumer.telefono,
+          direccion: costumer.direccion,
+          zip: costumer.zip
+        });
+        if (!existe) {
+          await Costumer.create(costumer);
+          countInsertados++;
+        }
       }
       fs.unlinkSync(filePath);
-      return res.json({ success: true, count: mapped.length });
+      return res.json({ success: true, count: countInsertados });
     } catch (error) {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       return res.status(400).json({ success: false, error: "Archivo inválido o corrupto." });
