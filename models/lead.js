@@ -1,15 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const leadSchema = new mongoose.Schema({
-  fecha: { type: String, required: true }, // ¡Siempre string!
+const CostumerSchema = new mongoose.Schema({
+  fecha: { type: Date, required: true },  // <-- cambiar a Date
   equipo: String,
   agente: String,
-  teléfono: String,
+  telefono: String,
   producto: String,
   puntaje: Number,
   cuenta: String,
   direccion: String,
-  zip: String
+  zip: String,
 });
 
-module.exports = mongoose.model("Lead", leadSchema);
+module.exports = mongoose.model('Costumer', CostumerSchema);
