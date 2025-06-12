@@ -12,10 +12,7 @@ const LeadSchema = new mongoose.Schema({
   zip: { type: String, default: '' }
 });
 
-// Índice único: impide insertar dos leads con mismos datos clave
-LeadSchema.index(
-  { fecha: 1, equipo: 1, agente: 1, producto: 1, puntaje: 1, cuenta: 1, telefono: 1, direccion: 1, zip: 1 },
-  { unique: true }
-);
+// YA NO hay índice único: se permiten duplicados
+// (Si tienes la línea LeadSchema.index(..., {unique:true}) bórrala o coméntala)
 
 module.exports = mongoose.model('Lead', LeadSchema);
