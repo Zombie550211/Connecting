@@ -106,10 +106,6 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
-// Helper para normalizar valores (trim y minúsculas)
-const clean = value =>
-  typeof value === "string" ? value.trim().toLowerCase() : (value || '');
-
 // ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
@@ -123,29 +119,22 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     const mapped = rows.filter(row =>
       row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
     ).map(row => ({
-      fecha: clean(row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
-      equipo: clean(row.equipo || row.team || ""),
-      agente: clean(row.agente || row.agent || ""),
-      telefono: clean(row.telefono || ""),
-      producto: clean(row.producto || ""),
+      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      equipo: row.equipo || row.team || "",
+      agente: row.agente || row.agent || "",
+      telefono: row.telefono || "",
+      producto: row.producto || "",
       puntaje: Number(row.puntaje) || 0,
-      cuenta: clean(row.cuenta || ""),
-      direccion: clean(row.direccion || ""),
-      zip: clean(row.zip || "")
+      cuenta: row.cuenta || "",
+      direccion: row.direccion || "",
+      zip: row.zip || ""
     }));
 
-    let countInsertados = 0;
-    for (const lead of mapped) {
-      try {
-        await Lead.create(lead);
-        countInsertados++;
-      } catch (err) {
-        if (err.code !== 11000) throw err;
-        // si es duplicado, lo ignora
-      }
+    if (mapped.length) {
+      await Lead.insertMany(mapped);
     }
     fs.unlinkSync(filePath);
-    res.json({ success: true, count: countInsertados });
+    res.json({ success: true, count: mapped.length });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -220,79 +209,25 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       : new Date().toISOString().slice(0, 10);
 
     const nuevoLead = {
-      fecha: clean(fechaLead),
-      equipo: clean(team),
-      agente: clean(agent),
-      telefono: clean(telefono),
-      producto: clean(producto),
-      puntaje: Number(puntaje) || 0,
-      cuenta: clean(cuenta),
-      direccion: clean(direccion),
-      zip: clean(zip)
+      fecha: fechaLead,
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      puntaje: puntaje || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
     };
 
-    try {
-      await Lead.create(nuevoLead);
-    } catch (err) {
-      if (err.code === 11000) {
-        return res.status(409).json({ success: false, error: "Este lead ya existe (índice único)" });
-      }
-      throw err;
-    }
+    await Lead.create(nuevoLead);
 
-    // También guardar en costumer (replicar la lógica de protección)
-    const nuevoCostumer = { ...nuevoLead }; // mismos campos, normalizados
-    try {
-      await Costumer.create(nuevoCostumer);
-    } catch (err) {
-      // Ignora duplicados en costumer
-      if (err.code !== 11000) throw err;
-    }
-
-    req.session.ultimoLead = Date.now();
-
-    // Excel
-    let workbook;
-    if (fs.existsSync(EXCEL_FILE_PATH)) {
-      workbook = XLSX.readFile(EXCEL_FILE_PATH);
-    } else {
-      workbook = XLSX.utils.book_new();
-    }
-
-    const nombreHoja = fechaLead;
-    let datos = [];
-    if (workbook.Sheets[nombreHoja]) {
-      datos = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja], { defval: "" });
-    }
-    datos.push(nuevoLead);
-
-    const encabezados = [
-      "fecha",
-      "equipo",
-      "agente",
-      "telefono",
-      "producto",
-      "puntaje",
-      "cuenta",
-      "direccion",
-      "zip"
-    ];
-
-    const nuevaHoja = XLSX.utils.json_to_sheet(datos, { header: encabezados });
-    workbook.Sheets[nombreHoja] = nuevaHoja;
-    if (!workbook.SheetNames.includes(nombreHoja)) {
-      workbook.SheetNames.push(nombreHoja);
-    }
-
-    try {
-      XLSX.writeFile(workbook, EXCEL_FILE_PATH);
-    } catch (err) {
-      return res.status(500).json({ success: false, error: "No se pudo escribir en el archivo Excel: " + err.message });
-    }
+    // Si quieres, aquí puedes guardar también en Costumer, igual sin validación de duplicados
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
+    console.error("Error real al guardar lead:", err);
+    res.status(500).json({ success: false, error: "Error al guardar el lead: " + err.message });
   }
 });
 
@@ -303,9 +238,8 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     const query = {};
 
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      const desde = fechaFiltro + "T00:00:00.000Z";
-      const hasta = fechaFiltro + "T23:59:59.999Z";
-      query.fecha = { $gte: desde, $lte: hasta };
+      // Para mayor compatibilidad, buscar sólo por el string de la fecha:
+      query.fecha = fechaFiltro;
     }
 
     const leads = await Lead.find(query).lean();
@@ -342,26 +276,18 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
 
     const nuevoCostumer = {
-      fecha: clean(fechaCostumer),
-      equipo: clean(team),
-      agente: clean(agent),
-      telefono: clean(telefono),
-      producto: clean(producto),
+      fecha: fechaCostumer,
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
       puntaje: Number(puntaje) || 0,
-      cuenta: clean(cuenta),
-      direccion: clean(direccion),
-      zip: clean(zip)
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
     };
-
-    try {
-      await Costumer.create(nuevoCostumer);
-      res.json({ success: true });
-    } catch (err) {
-      if (err.code === 11000) {
-        return res.status(409).json({ success: false, error: "Este costumer ya existe (índice único)" });
-      }
-      throw err;
-    }
+    await Costumer.create(nuevoCostumer);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -372,11 +298,8 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     const { fecha } = req.query;
     const query = {};
     if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      const desde = fecha + "T00:00:00.000Z";
-      const hasta = fecha + "T23:59:59.999Z";
-      query.fecha = { $gte: desde, $lte: hasta };
+      query.fecha = fecha;
     }
-
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     res.json({ costumers });
   } catch (err) {
@@ -401,28 +324,22 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
           (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
         )
         .map(row => ({
-          fecha: clean(row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10)),
-          equipo: clean(row.equipo || row.team || ""),
-          agente: clean(row.agente || row.agent || ""),
-          telefono: clean(row.telefono || ""),
-          producto: clean(row.producto || ""),
+          fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          equipo: row.equipo || row.team || "",
+          agente: row.agente || row.agent || "",
+          telefono: row.telefono || "",
+          producto: row.producto || "",
           puntaje: Number(row.puntaje) || 0,
-          cuenta: clean(row.cuenta || ""),
-          direccion: clean(row.direccion || ""),
-          zip: clean(row.zip || "")
+          cuenta: row.cuenta || "",
+          direccion: row.direccion || "",
+          zip: row.zip || ""
         }));
 
-      let countInsertados = 0;
-      for (const costumer of mapped) {
-        try {
-          await Costumer.create(costumer);
-          countInsertados++;
-        } catch (err) {
-          if (err.code !== 11000) throw err;
-        }
+      if (mapped.length) {
+        await Costumer.insertMany(mapped);
       }
       fs.unlinkSync(filePath);
-      return res.json({ success: true, count: countInsertados });
+      return res.json({ success: true, count: mapped.length });
     } catch (error) {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       return res.status(400).json({ success: false, error: "Archivo inválido o corrupto." });
@@ -437,7 +354,7 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
     const fechaFiltro = req.query.fecha;
     const query = {};
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      query.fecha = { $regex: `^${fechaFiltro}` };
+      query.fecha = fechaFiltro;
     }
     const costumers = await Costumer.find(query).lean();
 
@@ -463,6 +380,7 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
   }
 });
 
+// ELIMINAR TODOS LOS COSTUMERS
 app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   try {
     await Costumer.deleteMany({});
@@ -472,6 +390,7 @@ app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   }
 });
 
+// ELIMINAR UN COSTUMER POR ID
 app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
@@ -482,6 +401,7 @@ app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
   }
 });
 
+// EDITAR/ACTUALIZAR UN COSTUMER POR ID
 app.put('/api/costumer/:id', protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
