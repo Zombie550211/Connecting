@@ -19,13 +19,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function cargarGraficasParaFecha(fecha) {
-  // Modifica el endpoint según tu backend (aquí solo usa una fecha)
   fetch(`/api/graficas-costumer?fecha=${fecha}`)
     .then(res => res.json())
     .then(data => {
+      if (!data.success) {
+        console.error("Error al obtener datos:", data.error);
+        return;
+      }
       renderGraficas(data);
+    })
+    .catch(err => {
+      console.error("Error en fetch:", err);
     });
 }
+
 
 function renderGraficas(data) {
   // Datos para Team
