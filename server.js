@@ -19,10 +19,18 @@ const PORT = process.env.PORT || 3000;
 const EXCEL_FILE_PATH = path.join(__dirname, "leads.xlsx");
 const COSTUMER_FILE_PATH = path.join(__dirname, "Costumer.xlsx");
 
+// =============================================
+// La URI de conexión y el nombre de la base
+// se configuran en el archivo .env (variable MONGO_URL)
+// =============================================
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) {
   throw new Error("La variable de entorno MONGO_URL no está definida.");
 }
+
+mongoose.connect(MONGO_URL)
+  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
+  .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
 // Middleware robusto para proteger rutas, cerrar sesión si no se ha enviado un lead en 30 minutos
 function protegerRuta(req, res, next) {
@@ -66,10 +74,6 @@ function protegerRuta(req, res, next) {
   }
   return res.redirect("/login.html");
 }
-
-mongoose.connect(MONGO_URL)
-  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
-  .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -157,16 +161,16 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
     const { desde, hasta } = req.query;
     let query = {};
     if (desde && hasta) {
-  const desdeISO = desde + "T00:00:00.000Z";
-  const hastaISO = hasta + "T23:59:59.999Z";
-  query.fecha = { $gte: desdeISO, $lte: hastaISO };
-} else if (desde) {
-  const desdeISO = desde + "T00:00:00.000Z";
-  query.fecha = { $gte: desdeISO };
-} else if (hasta) {
-  const hastaISO = hasta + "T23:59:59.999Z";
-  query.fecha = { $lte: hastaISO };
-}
+      const desdeISO = desde + "T00:00:00.000Z";
+      const hastaISO = hasta + "T23:59:59.999Z";
+      query.fecha = { $gte: desdeISO, $lte: hastaISO };
+    } else if (desde) {
+      const desdeISO = desde + "T00:00:00.000Z";
+      query.fecha = { $gte: desdeISO };
+    } else if (hasta) {
+      const hastaISO = hasta + "T23:59:59.999Z";
+      query.fecha = { $lte: hastaISO };
+    }
 
     const costumers = await Costumer.find(query).lean();
 
@@ -287,11 +291,11 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     const fechaFiltro = req.query.fecha;
     const query = {};
 
-  if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-  const desde = fechaFiltro + "T00:00:00.000Z";
-  const hasta = fechaFiltro + "T23:59:59.999Z";
-  query.fecha = { $gte: desde, $lte: hasta };
-}
+    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
+      const desde = fechaFiltro + "T00:00:00.000Z";
+      const hasta = fechaFiltro + "T23:59:59.999Z";
+      query.fecha = { $gte: desde, $lte: hasta };
+    }
 
     const leads = await Lead.find(query).lean();
 
@@ -348,11 +352,11 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
     const { fecha } = req.query;
     const query = {};
-   if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-  const desde = fechaFiltro + "T00:00:00.000Z";
-  const hasta = fechaFiltro + "T23:59:59.999Z";
-  query.fecha = { $gte: desde, $lte: hasta };
-}
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const desde = fecha + "T00:00:00.000Z";
+      const hasta = fecha + "T23:59:59.999Z";
+      query.fecha = { $gte: desde, $lte: hasta };
+    }
 
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     res.json({ costumers });
