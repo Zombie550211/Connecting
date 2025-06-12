@@ -132,6 +132,7 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
 
     if (mapped.length) {
       await Lead.insertMany(mapped);
+      await Costumer.insertMany(mapped); // Guardar en costumers también
     }
     fs.unlinkSync(filePath);
     res.json({ success: true, count: mapped.length });
@@ -220,14 +221,15 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       zip: zip || ''
     };
 
+    // Guardar en leads
     await Lead.create(nuevoLead);
 
-    // Si quieres, aquí puedes guardar también en Costumer, igual sin validación de duplicados
+    // Guardar en costumers también
+    await Costumer.create(nuevoLead);
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Error real al guardar lead:", err);
-    res.status(500).json({ success: false, error: "Error al guardar el lead: " + err.message });
+    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
   }
 });
 
