@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM - Reports</title>
+  <style>
+    :root {
+      --color-azul-claro: #4FC3E3;
+      --color-azul-medio: #2596b6;
+      --color-azul-oscuro: #1B3A4B;
+      --color-blanco: #FFFFFF;
+      --color-gris-claro: #F4F8FB;
+      --color-negro: #232323;
+      --color-acento: #FFD700;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--color-gris-claro);
+      color: var(--color-negro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: var(--color-azul-oscuro);
+      color: var(--color-blanco);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+      box-shadow: 2px 0 10px rgba(27,58,75,0.05);
+    }
+    .sidebar-logo {
+      width: 85px;
+      height: 85px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      background: var(--color-blanco);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(79,195,227,0.06);
+    }
+    .sidebar-logo img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      display: block;
+    }
+    .sidebar-title {
+      font-size: 1.7em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 26px;
+      color: var(--color-azul-claro);
+      text-shadow: 0 2px 8px rgba(79,195,227,0.08);
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    .sidebar-nav button {
+      width: 90%;
+      margin: 0 auto;
+      padding: 15px 0;
+      background: none;
+      border: none;
+      color: var(--color-blanco);
+      font-size: 1.14em;
+      font-weight: 600;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      text-align: left;
+      padding-left: 22px;
+      position: relative;
+    }
+    .sidebar-nav button.active,
+    .sidebar-nav button:hover {
+      background: var(--color-azul-claro);
+      color: var(--color-azul-oscuro);
+    }
+    .sidebar-lema {
+      margin-top: auto;
+      padding: 20px 10px 28px 10px;
+      font-size: 1em;
+      text-align: center;
+      font-style: italic;
+      color: var(--color-azul-claro);
+      opacity: 0.8;
+    }
+    .main-content {
+      flex: 1;
+      padding: 40px 50px;
+      background: var(--color-gris-claro);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .reports-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 3px 18px rgba(27,58,75,0.09);
+      padding: 32px 44px;
+      max-width: 900px;
+      margin: 30px auto 0 auto;
+    }
+    .reports-container h1 {
+      color: var(--color-azul-oscuro);
+      font-size: 2.2em;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .reports-container p {
+      color: #444;
+      font-size: 1.17em;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    @media (max-width: 700px) {
+      .main-content { padding: 12px 2px; }
+      .reports-container { padding: 16px 4vw; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+     <img src="logo connecting.png" />
+    </div>
+    <div class="sidebar-title">Connecting</div>
+    <div class="sidebar-nav">
+      <button onclick="location.href='index.html'">Inicio</button>
+      <button onclick="location.href='lead.html'">Lead</button>
+      <button onclick="location.href='costumer.html'">Costumer</button>
+      <button class="active" onclick="location.href='reports.html'">Reports</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="sidebar-lema">
+      "Conectando tu éxito, un cliente a la vez"
+    </div>
+  </nav>
+  <main class="main-content">
+    <div class="reports-container">
+      <h1>Reportes del Sistema</h1>
+      <p>
+        Aquí podrás consultar reportes avanzados, descargar archivos y analizar el desempeño de tus equipos y productos.<br>
+        (Personaliza este apartado según tus necesidades).
+      </p>
+      <!-- Aquí puedes agregar tablas, gráficos, descargas, etc. -->
+    </div>
+  </main>
+</div>
+<script>
+function logout() {
+  fetch('/logout').then(() => location.href = 'login.html');
+}
+</script>
+</body>
+</html>
