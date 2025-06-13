@@ -9,21 +9,25 @@
     :root {
       --color-azul-oscuro: #204052;
       --color-azul-claro: #4FC3E3;
+      --color-azul-medio: #2596b6;
       --color-blanco: #fff;
       --color-sidebar-activo: #4FC3E3;
       --color-sidebar-texto: #fff;
+      --gris-fondo: #F4F8FB;
+      --gris-titulos: #ebf3fa;
+      --gris-celda: #f3f7fa;
+      --gris-celda2: #eaf3f7;
+      --amarillo: #FFFAE0;
+      --verde-celda: #e4f7ec;
       --verde: #44d06c;
-      --verde-pastel: #c5f8d2;
-      --amarillo: #ffe59e;
-      --gris-celda: #e0f0ec;
-      --gris-celda2: #cde9e4;
       --rojo: #f06a6a;
-      --fondo: #284940;
-      --fondo-gris: #F4F8FB;
+      --borde-celda: #d0e2f0;
+      --borde-celda2: #e0f0ec;
+      --borde-gris: #c3d7e6;
     }
     body {
       margin: 0;
-      background: var(--fondo-gris);
+      background: var(--gris-fondo);
       font-family: 'Segoe UI', 'Roboto', 'Montserrat', sans-serif;
     }
     .layout {
@@ -67,7 +71,7 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
-      background: var(--fondo-gris);
+      background: var(--gris-fondo);
     }
     .reports-container {
       background: #fff;
@@ -97,50 +101,53 @@
       border-radius: 8px;
       overflow-x: auto;
       min-width: 950px;
-      background: var(--fondo);
+      background: var(--gris-fondo);
       box-shadow: 0 1px 8px rgba(0,0,0,0.09);
       flex: 1 1 900px;
     }
     table {
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       width: 100%;
-      background: var(--fondo);
+      background: var(--gris-fondo);
       color: #222;
       font-size: 1.01em;
       min-width: 1100px;
     }
     th, td {
-      padding: 7px 10px;
+      padding: 9px 10px;
       text-align: center;
-      border: 1px solid #9db1a6;
+      border-bottom: 1px solid var(--borde-gris);
+      border-right: 1px solid var(--borde-gris);
       font-family: inherit;
       font-size: 1em;
+      transition: background 0.19s;
     }
     th {
-      background: #397d54;
+      background: var(--gris-titulos);
       font-weight: 700;
-      color: #fff;
+      color: #204052;
       text-transform: uppercase;
-      font-size: 0.95em;
+      font-size: 0.97em;
       letter-spacing: .5px;
       position: sticky;
       top: 0;
       z-index: 2;
-      border-bottom: 2.5px solid #214e65;
+      border-bottom: 2.5px solid var(--color-azul-claro);
     }
     tr:last-child td { border-bottom: none; }
     td.gris-celda, th.gris-celda { background: var(--gris-celda);}
     td.gris-celda2, th.gris-celda2 { background: var(--gris-celda2);}
     td.amarillo, th.amarillo { background: var(--amarillo);}
-    td.verde-celda, th.verde-celda { background: var(--verde-pastel);}
-    td.verde, th.verde { background: var(--verde); color: #173344; font-weight: bold;}
-    td.rojo, th.rojo { background: var(--rojo); color: #fff; font-weight: bold;}
-    tbody tr:nth-child(even) { background: #285e4b; }
-    tbody tr:nth-child(odd) { background: #24463e; }
-    tr.fila-totales th, tr.fila-totales td { font-weight:bold; color: var(--color-blanco); background: #29556d;}
-    td:focus { outline: 2px solid #4FC3E3;}
+    td.verde-celda, th.verde-celda { background: var(--verde-celda);}
+    td.verde, th.verde { background: #d7fbe2; color: #1b6b34; font-weight: bold;}
+    td.rojo, th.rojo { background: #fdeaea; color: #c60000; font-weight: bold;}
+    tr.fila-totales th, tr.fila-totales td { font-weight:bold; color: var(--color-blanco); background: var(--color-azul-medio);}
+    td:focus { outline: 2px solid var(--color-azul-claro);}
     td[contenteditable="true"] { cursor: pointer; }
-    td.selected-cell { outline: 2px solid #4FC3E3 !important; }
+    td.selected-cell { outline: 2px solid var(--color-azul-claro) !important; }
+    tbody tr:nth-child(even) { background: #f8fbfd; }
+    tbody tr:nth-child(odd) { background: #eef6fa; }
     @media (max-width: 1300px) {
       .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 26px;}
       .tabla-excel-editable, .grafica-reporte { min-width: 0; }
@@ -343,15 +350,15 @@ function dibujarGrafica() {
         {
           label: "Total del día",
           data: totalDia,
-          backgroundColor: "#44d06c",
-          borderColor: "#388e3c",
+          backgroundColor: "#4FC3E3",      // azul claro
+          borderColor: "#204052",          // azul oscuro
           borderWidth: 2
         },
         {
           label: "Valor Venta",
           data: valorVenta,
-          backgroundColor: "#50aaff",
-          borderColor: "#2161d6",
+          backgroundColor: "#2596b6",      // azul medio
+          borderColor: "#204052",          // azul oscuro
           borderWidth: 2
         },
       ]
@@ -363,8 +370,8 @@ function dibujarGrafica() {
       },
       responsive: true,
       scales: {
-        x: { stacked: false, ticks: { color: "#173344" }},
-        y: { beginAtZero: true, ticks: { color: "#173344" }}
+        x: { stacked: false, ticks: { color: "#204052" }},
+        y: { beginAtZero: true, ticks: { color: "#204052" }}
       }
     }
   });
