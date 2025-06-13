@@ -451,14 +451,127 @@
             <th>ACCIÓN</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="bodyTablaCostumers"></tbody>
       </table>
     </div>
     <div id="editar-form-container"></div>
   </main>
 </div>
 <script>
-  // ... (todo tu JS igual que el original) ...
+let datosCostumers = [];
+
+async function cargarCostumers() {
+  try {
+    const res = await fetch('/api/costumer');
+    const data = await res.json();
+    if (!data.costumers) {
+      console.error("No se recibieron costumers del backend:", data);
+      return;
+    }
+    datosCostumers = data.costumers.map(item => ({
+      "_id": item._id,
+      "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
+      "TEAM": item.equipo || "",
+      "AGENTE": item.agente || "",
+      "PRODUCTO": item.producto || "",
+      "PUNTAJE": item.puntaje || "",
+      "CUENTA": item.cuenta || "",
+      "TELÉFONO": item.telefono || "",
+      "DIRECCIÓN": item.direccion || "",
+      "ZIP": item.zip || ""
+    }));
+    renderizarTablaCostumers(datosCostumers);
+    llenarFiltroTeam(datosCostumers);
+    llenarFiltroAgente(datosCostumers, document.getElementById("filtro-team").value);
+  } catch (err) {
+    console.error("Error cargando costumers:", err);
+  }
+}
+
+function renderizarTablaCostumers(filas) {
+  const tbody = document.getElementById("bodyTablaCostumers");
+  tbody.innerHTML = "";
+  if (!filas.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    return;
+  }
+  filas.forEach(fila => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fila.FECHA}</td>
+      <td>${fila.TEAM}</td>
+      <td>${fila.AGENTE}</td>
+      <td>${fila.PRODUCTO}</td>
+      <td>${fila.PUNTAJE}</td>
+      <td>${fila.CUENTA}</td>
+      <td>${fila["TELÉFONO"]}</td>
+      <td>${fila["DIRECCIÓN"]}</td>
+      <td>${fila.ZIP}</td>
+      <td></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function llenarFiltroTeam(datos) {
+  const teamSet = new Set(datos.map(d => d.TEAM).filter(Boolean));
+  const teamSelect = document.getElementById("filtro-team");
+  teamSelect.innerHTML = `<option value="">Todos</option>` + [...teamSet].map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function llenarFiltroAgente(datos, team) {
+  let agentes;
+  if (team) {
+    agentes = datos.filter(d => d.TEAM === team).map(d => d.AGENTE).filter(Boolean);
+  } else {
+    agentes = datos.map(d => d.AGENTE).filter(Boolean);
+  }
+  const agenteSet = new Set(agentes);
+  const agenteSelect = document.getElementById("filtro-agente");
+  agenteSelect.innerHTML = `<option value="">Todos</option>` + [...agenteSet].map(a => `<option value="${a}">${a}</option>`).join('');
+}
+
+function aplicarFiltros() {
+  let filtrados = [...datosCostumers];
+  const desde = document.getElementById("filtro-fecha-desde").value;
+  const hasta = document.getElementById("filtro-fecha-hasta").value;
+  const team = document.getElementById("filtro-team").value;
+  const agente = document.getElementById("filtro-agente").value;
+  const telefono = document.getElementById("filtro-telefono").value.trim();
+  const direccion = document.getElementById("filtro-direccion").value.trim();
+  const zip = document.getElementById("filtro-zip").value.trim();
+
+  if (desde) filtrados = filtrados.filter(f => f.FECHA >= desde);
+  if (hasta) filtrados = filtrados.filter(f => f.FECHA <= hasta);
+  if (team) filtrados = filtrados.filter(f => f.TEAM === team);
+  if (agente) filtrados = filtrados.filter(f => f.AGENTE === agente);
+  if (telefono) filtrados = filtrados.filter(f => f["TELÉFONO"].includes(telefono));
+  if (direccion) filtrados = filtrados.filter(f => f["DIRECCIÓN"].toLowerCase().includes(direccion.toLowerCase()));
+  if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
+
+  renderizarTablaCostumers(filtrados);
+  llenarFiltroAgente(datosCostumers, team);
+}
+
+// Eventos para filtros
+document.getElementById("filtro-team").addEventListener("change", () => {
+  aplicarFiltros();
+  const team = document.getElementById("filtro-team").value;
+  llenarFiltroAgente(datosCostumers, team);
+});
+document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
+document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
+
+// Cargar datos al comenzar
+cargarCostumers();
+
+function logout() {
+  fetch('/logout').then(() => location.href = 'login.html');
+}
 </script>
 </body>
 </html>
