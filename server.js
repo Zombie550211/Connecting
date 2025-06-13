@@ -119,7 +119,9 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     const mapped = rows.filter(row =>
       row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
     ).map(row => ({
-      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      fecha: row.fecha
+        ? row.fecha.toString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
       equipo: row.equipo || row.team || "",
       agente: row.agente || row.agent || "",
       telefono: row.telefono || "",
@@ -157,15 +159,11 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
     const { desde, hasta } = req.query;
     let query = {};
     if (desde && hasta) {
-      const desdeISO = desde + "T00:00:00.000Z";
-      const hastaISO = hasta + "T23:59:59.999Z";
-      query.fecha = { $gte: desdeISO, $lte: hastaISO };
+      query.fecha = { $gte: desde, $lte: hasta };
     } else if (desde) {
-      const desdeISO = desde + "T00:00:00.000Z";
-      query.fecha = { $gte: desdeISO };
+      query.fecha = { $gte: desde };
     } else if (hasta) {
-      const hastaISO = hasta + "T23:59:59.999Z";
-      query.fecha = { $lte: hastaISO };
+      query.fecha = { $lte: hasta };
     }
 
     const costumers = await Costumer.find(query).lean();
@@ -204,6 +202,7 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
+    // Siempre guardar fecha como string YYYY-MM-DD
     const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
       ? fecha
       : new Date().toISOString().slice(0, 10);
@@ -238,6 +237,7 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
     const fechaFiltro = req.query.fecha;
     const query = {};
 
+    // Acepta ISO string y Date, pero lo recomendable es solo YYYY-MM-DD string
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
       query.fecha = fechaFiltro;
     }
@@ -273,6 +273,7 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
+    // Siempre guardar fecha como string YYYY-MM-DD
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
 
     const nuevoCostumer = {
@@ -301,10 +302,8 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
       query.fecha = fecha;
     }
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    console.log("Costumers encontrados:", costumers);
     res.json({ costumers });
   } catch (err) {
-    console.error("Error en GET /api/costumer:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -325,7 +324,9 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
           (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
         )
         .map(row => ({
-          fecha: row.fecha ? row.fecha.toString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          fecha: row.fecha
+            ? row.fecha.toString().slice(0, 10)
+            : new Date().toISOString().slice(0, 10),
           equipo: row.equipo || row.team || "",
           agente: row.agente || row.agent || "",
           telefono: row.telefono || "",
@@ -418,6 +419,32 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
   });
+});
+
+// ==== MIGRACIÓN DE FECHAS A STRING YYYY-MM-DD ====
+app.post('/api/migrar-fechas-a-string', async (req, res) => {
+  try {
+    let leadsModificados = 0;
+    let costumersModificados = 0;
+
+    const leads = await Lead.find({ fecha: { $type: 'date' } });
+    for (const lead of leads) {
+      const nuevaFecha = lead.fecha.toISOString().slice(0, 10);
+      lead.fecha = nuevaFecha;
+      await lead.save();
+      leadsModificados++;
+    }
+    const costumers = await Costumer.find({ fecha: { $type: 'date' } });
+    for (const c of costumers) {
+      const nuevaFecha = c.fecha.toISOString().slice(0, 10);
+      c.fecha = nuevaFecha;
+      await c.save();
+      costumersModificados++;
+    }
+    res.json({ success: true, leadsModificados, costumersModificados });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
