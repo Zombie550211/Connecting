@@ -564,7 +564,10 @@ function renderizarTablaCostumers(filas) {
       <td>${fila["TELÉFONO"]}</td>
       <td>${fila["DIRECCIÓN"]}</td>
       <td>${fila.ZIP}</td>
-      <td></td>
+      <td>
+        <button class="btn-editar" title="Editar" onclick="mostrarFormEditar('${fila._id}')">&#9998;</button>
+        <button class="btn-eliminar" title="Eliminar" onclick="eliminarCostumer('${fila._id}')">&#128465;</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -586,7 +589,6 @@ function llenarFiltroAgente(team) {
   const agenteSelect = document.getElementById("filtro-agente");
   let agentes = [];
   if (!team) {
-    // todos los agentes de todos los teams
     agentes = Object.values(TEAMS).flat();
   } else {
     agentes = TEAMS[team] || [];
@@ -616,6 +618,96 @@ function aplicarFiltros() {
   renderizarTablaCostumers(filtrados);
 }
 
+// ---- ELIMINAR COSTUMER ----
+async function eliminarCostumer(id) {
+  if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
+  try {
+    const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) {
+      cargarCostumers();
+    } else {
+      alert("Error eliminando costumer: " + (data.error || ''));
+    }
+  } catch (e) {
+    alert("Error eliminando costumer: " + e.message);
+  }
+}
+
+// ---- EDITAR COSTUMER ----
+function mostrarFormEditar(id) {
+  const costumer = datosCostumers.find(c => c._id === id);
+  if (!costumer) return alert("No se encontró el costumer");
+
+  // Genera formulario (simple, puedes mejorar el aspecto)
+  const cont = document.getElementById("editar-form-container");
+  cont.innerHTML = `
+    <form id="edit-costumer-form" style="background:#fff;border:1px solid #eee;padding:18px;margin:18px 0;border-radius:8px;">
+      <h3>Editar Costumer</h3>
+      <input type="hidden" name="_id" value="${costumer._id}">
+      <label>Fecha: <input type="date" name="fecha" value="${costumer.FECHA}" required></label><br>
+      <label>Team: <select name="equipo" required>${
+        Object.keys(TEAMS).map(t => `<option value="${t}"${costumer.TEAM===t?' selected':''}>${t}</option>`).join('')
+      }</select></label><br>
+      <label>Agente: <select name="agente" required>${
+        (TEAMS[costumer.TEAM]||[]).map(a=>`<option value="${a}"${costumer.AGENTE===a?' selected':''}>${a}</option>`).join('')
+      }</select></label><br>
+      <label>Producto: <input type="text" name="producto" value="${costumer.PRODUCTO}" required></label><br>
+      <label>Puntaje: <input type="number" name="puntaje" step="0.01" value="${costumer.PUNTAJE}" required></label><br>
+      <label>Cuenta: <input type="text" name="cuenta" value="${costumer.CUENTA}" ></label><br>
+      <label>Teléfono: <input type="text" name="telefono" value="${costumer["TELÉFONO"]}" ></label><br>
+      <label>Dirección: <input type="text" name="direccion" value="${costumer["DIRECCIÓN"]}" ></label><br>
+      <label>ZIP: <input type="text" name="zip" value="${costumer.ZIP}" ></label><br>
+      <button type="submit">Guardar</button>
+      <button type="button" onclick="cerrarFormEditar()">Cancelar</button>
+    </form>
+    <script>
+      document.querySelector('select[name="equipo"]').onchange = function() {
+        let team = this.value;
+        let agenteSel = document.querySelector('select[name="agente"]');
+        agenteSel.innerHTML = (window.TEAMS[team]||[]).map(a=>'<option value="'+a+'">'+a+'</option>').join('');
+      }
+    <\/script>
+  `;
+  cont.scrollIntoView({behavior:'smooth'});
+  document.getElementById("edit-costumer-form").onsubmit = async function(e){
+    e.preventDefault();
+    const f = e.target;
+    const id = f._id.value;
+    const datos = {
+      fecha: f.fecha.value,
+      equipo: f.equipo.value,
+      agente: f.agente.value,
+      producto: f.producto.value,
+      puntaje: f.puntaje.value,
+      cuenta: f.cuenta.value,
+      telefono: f.telefono.value,
+      direccion: f.direccion.value,
+      zip: f.zip.value
+    };
+    try {
+      const res = await fetch(`/api/costumer/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      });
+      const data = await res.json();
+      if (data.success) {
+        cerrarFormEditar();
+        cargarCostumers();
+      } else {
+        alert("Error al editar: " + (data.error||''));
+      }
+    } catch(e) {
+      alert("Error al editar: " + e.message);
+    }
+  };
+}
+
+function cerrarFormEditar() {
+  document.getElementById("editar-form-container").innerHTML = "";
+}
+
 // Eventos de los filtros
 document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
 document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
@@ -630,6 +722,7 @@ cargarCostumers();
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
+window.TEAMS = TEAMS;
 </script>
 </body>
 </html>
