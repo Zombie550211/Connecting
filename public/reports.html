@@ -1,129 +1,89 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>CRM - Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
+      --color-azul-oscuro: #204052;
       --color-azul-claro: #4FC3E3;
-      --color-azul-medio: #2596b6;
-      --color-azul-oscuro: #1B3A4B;
-      --color-blanco: #FFFFFF;
-      --color-gris-claro: #F4F8FB;
-      --color-negro: #232323;
-      --color-acento: #FFD700;
+      --color-blanco: #fff;
+      --color-sidebar-activo: #4FC3E3;
+      --color-sidebar-texto: #fff;
       --verde: #44d06c;
-      --rojo: #f06a6a;
       --verde-pastel: #c5f8d2;
       --amarillo: #ffe59e;
+      --gris-celda: #e0f0ec;
+      --gris-celda2: #cde9e4;
+      --rojo: #f06a6a;
+      --fondo: #284940;
+      --fondo-gris: #F4F8FB;
     }
-    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background: var(--color-gris-claro);
-      color: var(--color-negro);
+      background: var(--fondo-gris);
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', sans-serif;
     }
     .layout {
       display: flex;
       min-height: 100vh;
     }
     .sidebar {
-      width: 250px;
+      width: 240px;
       background: var(--color-azul-oscuro);
-      color: var(--color-blanco);
+      color: var(--color-sidebar-texto);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 30px;
       box-shadow: 2px 0 10px rgba(27,58,75,0.05);
     }
-    .sidebar-logo {
-      width: 85px;
-      height: 85px;
-      margin-bottom: 12px;
-      border-radius: 50%;
-      background: var(--color-blanco);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(79,195,227,0.06);
-    }
-    .sidebar-logo img {
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      display: block;
-    }
+    .sidebar-logo { width: 85px; height: 85px; margin-bottom: 12px; border-radius: 50%; background: var(--color-blanco); display: flex; align-items: center; justify-content: center;}
+    .sidebar-logo img { width: 72px; height: 72px; }
     .sidebar-title {
       font-size: 1.7em;
       font-weight: 700;
       letter-spacing: 1px;
       margin-bottom: 26px;
       color: var(--color-azul-claro);
-      text-shadow: 0 2px 8px rgba(79,195,227,0.08);
     }
-    .sidebar-nav {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
+    .sidebar-nav { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
     .sidebar-nav button {
-      width: 90%;
-      margin: 0 auto;
-      padding: 15px 0;
-      background: none;
-      border: none;
-      color: var(--color-blanco);
-      font-size: 1.14em;
-      font-weight: 600;
-      border-radius: 8px;
-      margin-bottom: 4px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-      text-align: left;
-      padding-left: 22px;
-      position: relative;
+      width: 90%; margin: 0 auto; padding: 15px 0; background: none; border: none; color: var(--color-sidebar-texto); font-size: 1.14em;
+      font-weight: 600; border-radius: 8px; margin-bottom: 4px; cursor: pointer; transition: background 0.2s;
+      text-align: left; padding-left: 22px;
     }
-    .sidebar-nav button.active,
-    .sidebar-nav button:hover {
-      background: var(--color-azul-claro);
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--color-sidebar-activo);
       color: var(--color-azul-oscuro);
     }
-    .sidebar-lema {
-      margin-top: auto;
-      padding: 20px 10px 28px 10px;
-      font-size: 1em;
-      text-align: center;
-      font-style: italic;
-      color: var(--color-azul-claro);
-      opacity: 0.8;
-    }
+    .sidebar-lema { margin-top: auto; padding: 20px 10px 28px 10px; font-size: 1em; text-align: center; font-style: italic; color: var(--color-azul-claro); opacity: 0.8; }
     .main-content {
       flex: 1;
-      padding: 40px 50px;
-      background: var(--color-gris-claro);
+      padding: 30px 16px 40px 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       gap: 24px;
+      background: var(--fondo-gris);
     }
     .reports-container {
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 3px 18px rgba(27,58,75,0.09);
-      padding: 32px 44px;
-      max-width: 1100px;
-      margin: 30px auto 0 auto;
+      padding: 24px 12px 24px 12px;
+      max-width: 1280px;
+      margin: 16px auto 0 auto;
     }
     .reports-container h1 {
       color: var(--color-azul-oscuro);
-      font-size: 2.2em;
+      font-size: 2.1em;
       margin-bottom: 18px;
       text-align: center;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
     .tabla-grafica-wrap {
       display: flex;
@@ -133,63 +93,83 @@
       align-items: flex-start;
       margin-top: 18px;
     }
-    .tabla-reportes {
+    .tabla-excel-editable {
       border-radius: 8px;
-      overflow: auto;
-      min-width: 480px;
-      background: #173344;
+      overflow-x: auto;
+      min-width: 950px;
+      background: var(--fondo);
       box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      flex: 1 1 900px;
     }
     table {
       border-collapse: collapse;
       width: 100%;
-      background: #173344;
-      color: #fff;
-      font-size: 1.06em;
+      background: var(--fondo);
+      color: #222;
+      font-size: 1.01em;
+      min-width: 1100px;
     }
     th, td {
-      padding: 7px 16px;
+      padding: 7px 10px;
       text-align: center;
-      border-bottom: 1px solid #29556d;
+      border: 1px solid #9db1a6;
+      font-family: inherit;
+      font-size: 1em;
     }
     th {
-      background: #29556d;
+      background: #397d54;
       font-weight: 700;
-      color: #f7f7f7;
+      color: #fff;
       text-transform: uppercase;
-      font-size: 0.98em;
-      letter-spacing: 1px;
+      font-size: 0.95em;
+      letter-spacing: .5px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 2.5px solid #214e65;
     }
     tr:last-child td { border-bottom: none; }
-    .totales {
-      background: #214e65;
-      font-weight: bold;
-      color: var(--color-acento);
-      font-size: 1.13em;
+    td.gris-celda, th.gris-celda { background: var(--gris-celda);}
+    td.gris-celda2, th.gris-celda2 { background: var(--gris-celda2);}
+    td.amarillo, th.amarillo { background: var(--amarillo);}
+    td.verde-celda, th.verde-celda { background: var(--verde-pastel);}
+    td.verde, th.verde { background: var(--verde); color: #173344; font-weight: bold;}
+    td.rojo, th.rojo { background: var(--rojo); color: #fff; font-weight: bold;}
+    tbody tr:nth-child(even) { background: #285e4b; }
+    tbody tr:nth-child(odd) { background: #24463e; }
+    tr.fila-totales th, tr.fila-totales td { font-weight:bold; color: var(--color-blanco); background: #29556d;}
+    td:focus { outline: 2px solid #4FC3E3;}
+    td[contenteditable="true"] { cursor: pointer; }
+    td.selected-cell { outline: 2px solid #4FC3E3 !important; }
+    @media (max-width: 1300px) {
+      .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 26px;}
+      .tabla-excel-editable, .grafica-reporte { min-width: 0; }
     }
-    .verde { background: var(--verde); color: #173344 !important; }
-    .rojo { background: var(--rojo); color: #fff !important; }
-    .verde-pastel { background: var(--verde-pastel); color: #173344 !important; }
-    .amarillo { background: var(--amarillo); color: #173344 !important; }
+    @media (max-width: 700px) {
+      .main-content { padding: 6px 2px; }
+      .reports-container { padding: 10px 0; }
+      table { font-size: 0.83em; }
+    }
     .grafica-reporte {
-      min-width: 370px;
-      max-width: 500px;
+      min-width: 350px;
+      max-width: 440px;
       background: #fff;
       border-radius: 12px;
-      padding: 14px 24px 24px 24px;
+      padding: 14px 11px 22px 11px;
       box-shadow: 0 1px 8px rgba(0,0,0,0.05);
       margin-left: auto;
       margin-right: auto;
       margin-top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
-    @media (max-width: 1100px) {
-      .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 26px;}
-      .grafica-reporte, .tabla-reportes { min-width: 0; }
-    }
-    @media (max-width: 700px) {
-      .main-content { padding: 12px 2px; }
-      .reports-container { padding: 10px 2vw; }
-      .tabla-grafica-wrap { gap: 14px; }
+    .grafica-reporte h3 {
+      color: var(--color-azul-oscuro);
+      font-size: 1.13em;
+      margin-bottom: 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -217,180 +197,180 @@
       <h1>Reportes del Sistema</h1>
       <div class="tabla-grafica-wrap">
         <!-- TABLA -->
-        <div class="tabla-reportes">
-          <table>
+        <div class="tabla-excel-editable">
+          <table id="tablaExcel">
             <thead>
               <tr>
-                <th>FECHA</th>
+                <th class="gris-celda">FECHA</th>
+                <th>ALEXIS</th>
+                <th class="amarillo">VENTAS POR DÍA</th>
+                <th class="amarillo">VALOR DE VENTA</th>
+                <th class="amarillo">CUENTA ALTERNA</th>
+                <th class="amarillo">VENTAS POR DÍA</th>
+                <th class="amarillo">VALOR DE VENTA</th>
+                <th class="gris-celda2">LINEAS</th>
+                <th class="gris-celda2">VENTAS POR DÍA</th>
+                <th class="gris-celda2">VALOR DE VENTA</th>
                 <th>TOTAL DEL DÍA</th>
                 <th>TOTAL VENTAS</th>
-                <th>VALOR VENTA</th>
-                <th>PUNTOS</th>
-                <th>CPA PUNTOS</th>
+                <th class="verde-celda">VALOR VENTA</th>
+                <th class="verde-celda">PUNTOS</th>
+                <th class="verde-celda">CPA PUNTOS</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>1/05/2025</td>
-                <td>$972,02</td>
-                <td>21</td>
-                <td class="verde-pastel">$46,29</td>
-                <td>17,25</td>
-                <td class="verde-pastel">$56,35</td>
-              </tr>
-              <tr>
-                <td>2/05/2025</td>
-                <td>$1.792,75</td>
-                <td>33</td>
-                <td class="verde-pastel">$54,33</td>
-                <td>22,15</td>
-                <td class="rojo">$80,94</td>
-              </tr>
-              <tr>
-                <td>3/05/2025</td>
-                <td>$1.808,87</td>
-                <td>36</td>
-                <td class="verde-pastel">$54,36</td>
-                <td>25,00</td>
-                <td class="verde-pastel">$72,35</td>
-              </tr>
-              <tr>
-                <td>4/05/2025</td>
-                <td>$2.129,48</td>
-                <td>36</td>
-                <td class="verde-pastel">$46,29</td>
-                <td>30,67</td>
-                <td class="verde-pastel">$69,44</td>
-              </tr>
-              <tr>
-                <td>5/05/2025</td>
-                <td>$1.397,14</td>
-                <td>33</td>
-                <td class="verde-pastel">$42,34</td>
-                <td>24,45</td>
-                <td class="verde-pastel">$56,45</td>
-              </tr>
-              <tr>
-                <td>6/05/2025</td>
-                <td>$1.898,97</td>
-                <td>37</td>
-                <td class="verde-pastel">$51,13</td>
-                <td>23,10</td>
-                <td class="rojo">$82,78</td>
-              </tr>
-              <tr>
-                <td>7/05/2025</td>
-                <td>$1.960,91</td>
-                <td>39</td>
-                <td class="verde-pastel">$50,28</td>
-                <td>29,95</td>
-                <td class="verde-pastel">$65,47</td>
-              </tr>
-              <tr>
-                <td>8/05/2025</td>
-                <td>$1.498,74</td>
-                <td>25</td>
-                <td class="verde-pastel">$59,95</td>
-                <td>25,65</td>
-                <td class="verde-pastel">$63,37</td>
-              </tr>
-              <tr>
-                <td>9/05/2025</td>
-                <td>$1.531,33</td>
-                <td>35</td>
-                <td class="verde-pastel">$43,75</td>
-                <td>25,00</td>
-                <td class="rojo">$67,32</td>
-              </tr>
-              <tr>
-                <td>10/05/2025</td>
-                <td>$2.028,13</td>
-                <td>43</td>
-                <td class="verde-pastel">$47,17</td>
-                <td>33,85</td>
-                <td class="verde-pastel">$59,92</td>
-              </tr>
-              <tr>
-                <td>11/05/2025</td>
-                <td>$1.715,79</td>
-                <td>41</td>
-                <td class="verde-pastel">$41,85</td>
-                <td>37,15</td>
-                <td class="rojo">$76,24</td>
-              </tr>
-              <tr>
-                <td>12/05/2025</td>
-                <td>$1.673,87</td>
-                <td>31</td>
-                <td class="verde-pastel">$54,00</td>
-                <td>24,65</td>
-                <td class="verde-pastel">$67,60</td>
-              </tr>
-              <tr class="totales">
-                <td>TOTALES</td>
-                <td>$20.595,20</td>
-                <td>406</td>
-                <td>$50,73</td>
-                <td>304,65</td>
-                <td>$67,60</td>
-              </tr>
+            <tbody id="excelBody">
+              <!-- Las filas se generan con JS -->
             </tbody>
           </table>
         </div>
         <!-- GRAFICA -->
         <div class="grafica-reporte">
-          <canvas id="graficaGastosMes" width="440" height="320"></canvas>
+          <h3>Gastos por mes</h3>
+          <canvas id="graficaGastosMes" width="390" height="340"></canvas>
         </div>
       </div>
     </div>
   </main>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// === SIDEBAR LOGOUT ===
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
 
-// Datos de ejemplo para la gráfica (puedes reemplazar por datos dinámicos)
-const gastosMensuales = [1250, 1700, 1400, 2000, 1800, 2100, 1750, 1980, 1550, 2200, 1860, 2050];
-
-const ctx = document.getElementById('graficaGastosMes').getContext('2d');
-const meses = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+// === DATOS DE EJEMPLO PARA LA TABLA ===
+const tablaDatos = [
+  // FECHA      ALEXIS   VENTASD  VALORV   CUENTAALT VENTASD VALORV  LINEAS VENTASD VALORV   TOTALDIA  TOTVENTAS VALORV  PUNTOS  CPA
+  ["1/05/2025", "$1.493,31", "", "", "$31,16", "2", "$15,58", "", "", "", "$972,02", "21", "$46,29", "17,25", "$56,35"],
+  ["2/05/2025", "$1.398,83", "", "", "", "", "", "", "", "", "$1.792,75", "33", "$54,33", "22,15", "$80,94"],
+  ["3/05/2025", "$1.340,88", "", "", "", "", "", "", "", "", "$1.808,87", "39", "$46,38", "25,00", "$72,35"],
+  ["4/05/2025", "$1.233,07", "", "", "", "", "", "", "", "", "$2.129,48", "46", "$46,29", "36,40", "$58,50"],
+  ["5/05/2025", "$1.515,55", "", "", "", "", "", "", "", "", "$1.397,14", "34", "$42,34", "24,75", "$56,45"],
+  ["6/05/2025", "$1.419,46", "", "", "", "", "", "", "", "", "$1.898,97", "37", "$51,32", "23,10", "$82,78"],
+  ["7/05/2025", "$1.578,10", "", "", "", "", "", "", "", "", "$1.960,91", "39", "$50,28", "29,95", "$65,47"],
+  ["8/05/2025", "$1.399,54", "", "", "", "", "", "", "", "", "$1.498,74", "25", "$59,95", "23,65", "$63,37"],
+  ["9/05/2025", "$1.173,82", "", "", "", "", "", "", "", "", "$2.081,02", "35", "$59,46", "25,05", "$83,07"],
+  ["10/05/2025", "$1.166,02", "", "", "", "", "", "", "", "", "$2.028,13", "43", "$47,17", "33,85", "$59,92"],
+  ["11/05/2025", "$708,56", "", "", "", "", "", "", "", "", "$1.353,30", "24", "$56,39", "17,75", "$76,24"],
+  ["12/05/2025", "$1.571,42", "", "", "", "", "", "", "", "", "$1.673,87", "31", "$54,00", "24,65", "$67,91"]
 ];
-const grafica = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: meses,
-    datasets: [{
-      label: "Gastos por mes",
-      data: gastosMensuales,
-      backgroundColor: "rgba(38,182,242,0.7)",
-      borderColor: "rgb(21, 101, 192)",
-      borderWidth: 2
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      title: {
-        display: true,
-        text: 'Gastos por mes del año'
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: "#173344" }
-      },
-      x: {
-        ticks: { color: "#173344" }
-      }
-    }
+
+// === GENERAR TABLA ===
+const excelBody = document.getElementById("excelBody");
+function renderTabla() {
+  excelBody.innerHTML = "";
+  tablaDatos.forEach((row, i) => {
+    const tr = document.createElement("tr");
+    row.forEach((value, j) => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      if (i !== tablaDatos.length-1) td.contentEditable = (j !== 0 && j !== 10); // FECHA y TOTAL DEL DÍA solo lectura, el resto editable
+      // Clases de color por columna
+      if(j === 0) td.classList.add("gris-celda");
+      if(j >= 2 && j <= 6) td.classList.add("amarillo");
+      if(j >= 7 && j <= 9) td.classList.add("gris-celda2");
+      if(j >= 12 && j <= 14) td.classList.add("verde-celda");
+      if(j === 13 && value && parseFloat(value.replace(',','.')) > 30) td.classList.add("rojo");
+      if(j === 14 && value && value.startsWith("$") && parseFloat(value.replace("$","").replace(',','.')) > 70) td.classList.add("rojo");
+      tr.appendChild(td);
+    });
+    excelBody.appendChild(tr);
+  });
+}
+renderTabla();
+
+function parseNumber(str) {
+  // Convierte "$1.234,56" o "1,234.56" a número
+  if (!str) return 0;
+  if (typeof str === "number") return str;
+  str = str.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
+  let num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
+function updateTotalDia(rowIdx) {
+  // Suma Alexis (1), Cuenta Alterna (4), Lineas (7)
+  const alexis = parseNumber(tablaDatos[rowIdx][1]);
+  const cuentaAlterna = parseNumber(tablaDatos[rowIdx][4]);
+  const lineas = parseNumber(tablaDatos[rowIdx][7]);
+  const suma = alexis + cuentaAlterna + lineas;
+  // Formatea el resultado como dinero
+  tablaDatos[rowIdx][10] = suma > 0 ? "$" + suma.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "";
+}
+
+excelBody.addEventListener('blur', function(e){
+  const td = e.target;
+  const tr = td.parentElement;
+  if (!tr || td.cellIndex === undefined) return;
+  const rowIndex = Array.from(excelBody.children).indexOf(tr);
+  const colIndex = td.cellIndex;
+  tablaDatos[rowIndex][colIndex] = td.textContent;
+
+  // Si editaste Alexis, Cuenta Alterna o Lineas, actualiza Total del Día
+  if ([1,4,7].includes(colIndex)) {
+    updateTotalDia(rowIndex);
+    renderTabla();
+  }
+
+  actualizarGrafica();
+}, true);
+
+excelBody.addEventListener('keydown', function(e){
+  if(e.key==="Enter"){
+    e.preventDefault();
+    const td = e.target;
+    td.blur();
   }
 });
+
+// === GRAFICA ===
+function obtenerDatosGrafica() {
+  // Total del día (col 10) y Valor Venta (col 12)
+  const totalDia = tablaDatos.map(row => parseNumber(row[10]));
+  const valorVenta = tablaDatos.map(row => parseNumber(row[12]));
+  const etiquetas = tablaDatos.map(row => row[0]);
+  return { etiquetas, totalDia, valorVenta };
+}
+let grafica;
+function dibujarGrafica() {
+  const { etiquetas, totalDia, valorVenta } = obtenerDatosGrafica();
+  if (grafica) grafica.destroy();
+  grafica = new Chart(document.getElementById('graficaGastosMes').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        {
+          label: "Total del día",
+          data: totalDia,
+          backgroundColor: "#44d06c",
+          borderColor: "#388e3c",
+          borderWidth: 2
+        },
+        {
+          label: "Valor Venta",
+          data: valorVenta,
+          backgroundColor: "#50aaff",
+          borderColor: "#2161d6",
+          borderWidth: 2
+        },
+      ]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Total del día y Valor venta por fecha' }
+      },
+      responsive: true,
+      scales: {
+        x: { stacked: false, ticks: { color: "#173344" }},
+        y: { beginAtZero: true, ticks: { color: "#173344" }}
+      }
+    }
+  });
+}
+function actualizarGrafica() { dibujarGrafica(); }
+dibujarGrafica();
 </script>
 </body>
 </html>
