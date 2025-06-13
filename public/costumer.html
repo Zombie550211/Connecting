@@ -149,12 +149,12 @@
       align-items: center;
       justify-content: space-between;
       padding: 24px 0 0 0;
-      background: transparent; /* Sin fondo hueso */
+      background: transparent;
       gap: 18px 20px;
       border-radius: 0;
       margin-bottom: 16px;
       box-sizing: border-box;
-      box-shadow: none; /* Sin sombra */
+      box-shadow: none;
     }
     .filters-row {
       display: flex;
@@ -192,7 +192,8 @@
       border-color: var(--color-azul-medio);
       box-shadow: 0 0 0 2px rgba(79, 195, 227, 0.19);
       background: var(--color-blanco);
-    }    .descargar-btn-icono {
+    }
+    .descargar-btn-icono {
       background: var(--color-azul-claro);
       border: none;
       border-radius: 6px;
@@ -267,13 +268,13 @@
     }
     .import-btn {
       background: var(--color-azul-claro);
-      color: #fff; 
-      padding: 7px 20px; 
-      border: none; 
-      border-radius: 4px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      font-size: 1rem; 
+      color: #fff;
+      padding: 7px 20px;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
       transition: background 0.2s;
       margin-left: 10px;
     }
@@ -458,6 +459,63 @@
   </main>
 </div>
 <script>
+// Teams y agentes FIJOS
+const TEAMS = {
+  "Team Pleitez": [
+    "Diego Mejia",
+    "Fabricio Panameño",
+    "Luis Chavarria",
+    "Mauricio Rivera",
+    "Steven Varela"
+  ],
+  "Team Irania": [
+    "Irania Serrano",
+    "Irvin Cruz",
+    "Josue Renderos",
+    "Julissa Rubio",
+    "Miguel Nunez",
+    "Pamela Urrutia",
+    "Roxana Martinez",
+    "Giselle Diaz"
+  ],
+  "Team Lineas": [
+    "Jocelyn R Lineas",
+    "Jonathan Figueroa",
+    "Lineas-Carlos",
+    "Lineas-Cristian R",
+    "Lineas-Diego.O",
+    "Lineas-Edward",
+    "Lineas-Kenia",
+    "Lineas-Luis G",
+    "Lineas-Oscar R"
+  ],
+  "Team Marisol": [
+    "Fernanda Castillo",
+    "Katerine Gomez",
+    "Kimberly Iglesias",
+    "Marisol Beltran"
+  ],
+  "Team Randal": [
+    "Abigail Morales",
+    "Alexander Montecinos",
+    "Anderson Guzman",
+    "Carlos Grande",
+    "Guadalupe Santana",
+    "Julio Chavez",
+    "Priscila Hernandez",
+    "Randal Martinez"
+  ],
+  "Team Roberto": [
+    "Daniela Bonilla",
+    "Francisco Aguilar",
+    "Ingrid Garcia",
+    "Lisbeth Cortez",
+    "Nelson Ceren",
+    "Roberto Velasquez",
+    "Tatiana Ayala"
+  ]
+};
+
 let datosCostumers = [];
 
 async function cargarCostumers() {
@@ -481,8 +539,7 @@ async function cargarCostumers() {
       "ZIP": item.zip || ""
     }));
     renderizarTablaCostumers(datosCostumers);
-    llenarFiltroTeam(datosCostumers);
-    llenarFiltroAgente(datosCostumers, document.getElementById("filtro-team").value);
+    llenarFiltroTeamYAgente();
   } catch (err) {
     console.error("Error cargando costumers:", err);
   }
@@ -513,22 +570,29 @@ function renderizarTablaCostumers(filas) {
   });
 }
 
-function llenarFiltroTeam(datos) {
-  const teamSet = new Set(datos.map(d => d.TEAM).filter(Boolean));
+// Llena los filtros de Team y Agente FIJOS
+function llenarFiltroTeamYAgente() {
   const teamSelect = document.getElementById("filtro-team");
-  teamSelect.innerHTML = `<option value="">Todos</option>` + [...teamSet].map(t => `<option value="${t}">${t}</option>`).join('');
+  teamSelect.innerHTML = `<option value="">Todos</option>` +
+    Object.keys(TEAMS).map(t => `<option value="${t}">${t}</option>`).join('');
+  teamSelect.onchange = function() {
+    llenarFiltroAgente(this.value);
+    aplicarFiltros();
+  };
+  llenarFiltroAgente(teamSelect.value);
 }
 
-function llenarFiltroAgente(datos, team) {
-  let agentes;
-  if (team) {
-    agentes = datos.filter(d => d.TEAM === team).map(d => d.AGENTE).filter(Boolean);
-  } else {
-    agentes = datos.map(d => d.AGENTE).filter(Boolean);
-  }
-  const agenteSet = new Set(agentes);
+function llenarFiltroAgente(team) {
   const agenteSelect = document.getElementById("filtro-agente");
-  agenteSelect.innerHTML = `<option value="">Todos</option>` + [...agenteSet].map(a => `<option value="${a}">${a}</option>`).join('');
+  let agentes = [];
+  if (!team) {
+    // todos los agentes de todos los teams
+    agentes = Object.values(TEAMS).flat();
+  } else {
+    agentes = TEAMS[team] || [];
+  }
+  agenteSelect.innerHTML = `<option value="">Todos</option>` +
+    agentes.map(a => `<option value="${a}">${a}</option>`).join('');
 }
 
 function aplicarFiltros() {
@@ -550,15 +614,9 @@ function aplicarFiltros() {
   if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
 
   renderizarTablaCostumers(filtrados);
-  llenarFiltroAgente(datosCostumers, team);
 }
 
-// Eventos para filtros
-document.getElementById("filtro-team").addEventListener("change", () => {
-  aplicarFiltros();
-  const team = document.getElementById("filtro-team").value;
-  llenarFiltroAgente(datosCostumers, team);
-});
+// Eventos de los filtros
 document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
 document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarFiltros);
@@ -566,7 +624,7 @@ document.getElementById("filtro-telefono").addEventListener("input", aplicarFilt
 document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
 
-// Cargar datos al comenzar
+// Inicial
 cargarCostumers();
 
 function logout() {
