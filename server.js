@@ -428,6 +428,27 @@ app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   }
 });
 
+// NUEVO: ENDPOINT PARA LA GRAFICA (totales por día del mes)
+app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res) => {
+  const { ano, mes } = req.params;
+  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
+  const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+
+  // columna 10 es TOTAL DEL DIA (índice 9)
+  const diasEnMes = new Date(parseInt(ano), parseInt(mes), 0).getDate();
+  const totalesPorDia = Array(diasEnMes).fill(0);
+
+  data.forEach(fila => {
+    const dia = parseInt(fila.fecha.split('/')[0], 10) - 1;
+    const totalDia = Number(fila.campos[9]) || 0; // columna 10 (índice 9)
+    if (!isNaN(dia) && dia >= 0 && dia < totalesPorDia.length) {
+      totalesPorDia[dia] = totalDia;
+    }
+  });
+
+  res.json({ ok: true, totalesPorDia });
+});
+
 // ELIMINAR TODOS LOS COSTUMERS
 app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
   try {
