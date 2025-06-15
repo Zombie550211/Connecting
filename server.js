@@ -12,7 +12,10 @@ const upload = multer({ dest: 'uploads/' });
 
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
-const Reporte = require('./models/reporte');
+const Reporte = require('./models/Facturacion');
+
+// === Facturacion model integration ===
+const Facturacion = require('./models/Facturacion')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -389,6 +392,39 @@ app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
+  }
+});
+
+// =========== INTEGRACIÓN DE FACTURACIÓN (tabla de facturación) ===========
+
+// GUARDAR/ACTUALIZAR UNA FILA DE FACTURACION (por fecha)
+app.post('/api/facturacion', protegerRuta, async (req, res) => {
+  const { fecha, campos } = req.body;
+  if (!fecha || !Array.isArray(campos) || campos.length !== 14) {
+    return res.status(400).json({ ok: false, error: "Datos incompletos" });
+  }
+  try {
+    const doc = await Facturacion.findOneAndUpdate(
+      { fecha },
+      { $set: { campos } },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true, doc });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// OBTENER TODA LA FACTURACION DE UN MES/AÑO
+app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
+  const { ano, mes } = req.params;
+  // fechas formato DD/MM/YYYY
+  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
+  try {
+    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    res.json({ ok: true, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
