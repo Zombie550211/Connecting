@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <link rel="stylesheet" href="reports-table-colors.css">
   <style>
     :root {
       --color-azul-oscuro: #204052;
@@ -41,14 +42,37 @@
       background: var(--color-azul-claro); color: var(--color-azul-oscuro);
     }
     .sidebar-lema { margin-top: auto; padding: 20px 10px 28px 10px; font-size: 1em; text-align: center; font-style: italic; color: var(--color-azul-claro); opacity: 0.8; }
-    .main-content { flex: 1; min-width: 0; min-height: 100vh; padding: 38px 0 40px 0; display: flex; flex-direction: column; background: var(--gris-fondo); }
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 10vh;
+      padding: 0; /* Quitado padding superior */
+      display: flex;
+      flex-direction: column;
+      background: var(--gris-fondo);
+    }
     .reports-container {
-      background: #fff; border-radius: 18px; box-shadow: 0 3px 18px rgba(27,58,75,0.09);
-      padding: 32px 32px 32px 32px; margin: 0 auto;
-      width: 97vw; min-height: 90vh; max-width: 2000px; display: flex; flex-direction: column; align-items: stretch; box-sizing: border-box;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 18px rgba(27,58,75,0.09);
+      padding: 0 32px 42px 32px; /* Quitado padding superior */
+      margin: 0 auto;
+      width: 95vw;
+      min-height: 100vh;
+      max-width: 2200px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      box-sizing: border-box;
     }
     .reports-container h1 {
-      color: var(--color-azul-oscuro); font-size: 2.25em; margin-bottom: 20px; text-align: center; font-weight: 700; letter-spacing: .5px;
+      color: var(--color-azul-oscuro);
+      font-size: 2.25em;
+      margin-top: 18px; /* Mucho menos espacio arriba */
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: .5px;
     }
     .filtros-reportes {
       margin-bottom: 18px; display: flex; gap: 24px; align-items: center; justify-content: flex-start; font-size: 1.09em;
@@ -61,7 +85,7 @@
       padding: 7px 18px;
       background: var(--color-azul-claro);
       color: #fff;
-      font-weight: 700;
+      font-weight: 500;
       font-size: 1.06em;
       border: none;
       border-radius: 7px;
@@ -73,47 +97,100 @@
       background: #2596b6;
     }
     .tabla-grafica-wrap {
-      display: flex; flex-direction: row; gap: 36px; justify-content: stretch; align-items: flex-start;
-      width: 100%; flex: 1 1 0; min-height: 0; height: 72vh; box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      gap: 32px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      width: 100%;
+      flex: 1 1 0;
+      min-height: 0;
+      height: 74vh;
+      box-sizing: border-box;
     }
     .tabla-excel-editable {
-      border-radius: 10px; overflow-x: auto; overflow-y: auto; background: var(--gris-fondo);
-      box-shadow: 0 1px 8px rgba(0,0,0,0.09); flex: 3 1 0; min-width: 400px; max-width: 100vw; height: 100%; max-height: 100%; margin: 0;
-      display: flex; flex-direction: column;
+      border-radius: 12px;
+      overflow-x: auto;
+      overflow-y: auto;
+      background: var(--gris-fondo);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      flex: 6 1 0;
+      min-width: 680px;
+      max-width: 100vw;
+      height: 100%;
+      max-height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
     .grafica-reporte {
-      background: #fff; border-radius: 14px; padding: 24px 16px 22px 16px;
-      box-shadow: 0 1px 8px rgba(0,0,0,0.05); margin: 0;
-      display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-      height: 100%; min-width: 350px; max-width: 700px; width: 32vw; overflow-x: auto; box-sizing: border-box;
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 18px 22px 18px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      height: 100%;
+      min-width: 380px;
+      max-width: 520px;
+      width: 27vw;
+      overflow-x: auto;
+      box-sizing: border-box;
     }
     .grafica-reporte h3 {
       color: var(--color-azul-oscuro); font-size: 1.14em; margin-bottom: 22px; text-align: left; width: 100%; letter-spacing: 0.5px; font-weight: 700;
     }
     .grafica-scroll-x {
-      width: 100%; min-width: 900px; max-width: 1200px; height: 100%;
-      overflow-x: auto; overflow-y: visible; padding-bottom: 8px;
+      width: 100%;
+      min-width: 280px;
+      max-width: 100%;
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     table {
-      border-collapse: separate; border-spacing: 0; width: 100%; background: var(--gris-fondo); color: #222; font-size: 1.04em; min-width: 1100px;
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      background: var(--gris-fondo);
+      color: #222;
+      font-size: 1.04em;
+      min-width: 1100px;
+      table-layout: fixed;
     }
     th, td {
-      padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--borde-gris); border-right: 1px solid var(--borde-gris);
-      font-family: inherit; font-size: 1em; transition: background 0.19s;
+      padding: 7px 6px;
+      text-align: center;
+      border-bottom: 1px solid var(--borde-gris);
+      border-right: 1px solid var(--borde-gris);
+      font-family: inherit;
+      font-size: 1em;
+      transition: background 0.19s;
+      min-width: 80px;
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     th {
-      background: var(--gris-titulos); font-weight: 700; color: #204052; text-transform: uppercase; font-size: 0.97em; letter-spacing: .5px;
-      position: sticky; top: 0; z-index: 2; border-bottom: 2.5px solid var(--color-azul-claro);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 2.5px solid var(--color-azul-claro);
     }
-    td.gris-celda, th.gris-celda { background: var(--gris-celda);}
-    td.gris-celda2, th.gris-celda2 { background: var(--gris-celda2);}
-    td.amarillo, th.amarillo { background: var(--amarillo);}
-    td.verde-celda, th.verde-celda { background: var(--verde-celda);}
     td:focus { outline: 2px solid var(--color-azul-claro);}
     td[contenteditable="true"] { cursor: pointer; }
     .grafica-scroll-x::-webkit-scrollbar { height: 8px; }
     .grafica-scroll-x::-webkit-scrollbar-thumb { background: #e4f7fc; border-radius: 6px; }
-    @media (max-width: 900px) {
+    @media (max-width: 1200px) {
       .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 20px;}
       .tabla-excel-editable, .grafica-reporte { min-width: 0; width: 100%;}
       .grafica-reporte { align-items: center; }
@@ -179,7 +256,7 @@
         <div class="grafica-reporte">
           <h3>Total de gastos por mes</h3>
           <div class="grafica-scroll-x">
-            <canvas id="graficaGastosMes" width="1200" height="400"></canvas>
+            <canvas id="graficaGastosMes" width="420" height="260"></canvas>
           </div>
         </div>
       </div>
@@ -391,7 +468,7 @@ function actualizarGrafica() {
         title: { display: false },
         datalabels: { display: true }
       },
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       layout: { padding: { top: 30 } },
       scales: {

@@ -12,6 +12,7 @@ const upload = multer({ dest: 'uploads/' });
 
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
+const Reporte = require('./models/reporte');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -398,6 +399,36 @@ app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ENDPOINT PARA GUARDAR REPORTE MENSUAL DE GASTOS/VENTAS
+app.post("/api/reportes", protegerRuta, async (req, res) => {
+  try {
+    const { ano, mes, datos } = req.body;
+    if (!ano || !mes || !Array.isArray(datos)) {
+      return res.status(400).json({ success: false, message: "Datos incompletos" });
+    }
+    // Upsert: si ya existe el reporte ese año/mes, lo actualiza, si no, lo crea nuevo
+    await Reporte.findOneAndUpdate(
+      { ano, mes },
+      { $set: { datos } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.get("/api/reportes", protegerRuta, async (req, res) => {
+  try {
+    const { ano, mes } = req.query;
+    if (!ano || !mes) return res.status(400).json({success:false, message: "Falta año o mes"});
+    const reporte = await Reporte.findOne({ ano: Number(ano), mes: Number(mes) });
+    res.json({ success: true, datos: reporte ? reporte.datos : [] });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 });
 
