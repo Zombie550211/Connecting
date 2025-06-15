@@ -114,6 +114,10 @@ app.get("/costumer.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "costumer.html"));
 });
 
+app.get("/Facturacion.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
+});
+
 // ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
@@ -148,16 +152,6 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     res.json({ success: true, count: mapped.length });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ENDPOINT PARA DESCARGAR EL EXCEL DE LEADS (ARCHIVO ESTATICO)
-app.get('/descargar/leads', protegerRuta, (req, res) => {
-  const filePath = path.join(__dirname, 'leads.xlsx');
-  if (fs.existsSync(filePath)) {
-    res.download(filePath, 'leads.xlsx');
-  } else {
-    res.status(404).send('No existe el archivo de leads.');
   }
 });
 
@@ -201,7 +195,7 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   }
 });
 
-// ENDPOINTS CRUD Y GRAFICAS DE LEADS
+// ====================== ENDPOINTS CRUD Y GRAFICAS DE LEADS ==================
 app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
     const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
@@ -236,41 +230,6 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
-  }
-});
-
-// ENDPOINT GRAFICAS PARA LEADS (por fecha)
-app.get("/api/graficas", protegerRuta, async (req, res) => {
-  try {
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-
-    // Acepta ISO string y Date, pero lo recomendable es solo YYYY-MM-DD string
-    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      query.fecha = fechaFiltro;
-    }
-
-    const leads = await Lead.find(query).lean();
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    leads.forEach(row => {
-      const equipo = row.equipo || row.team || "";
-      const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje) || 0;
-
-      if (!equipo || !producto) return;
-
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
 
@@ -313,80 +272,6 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     res.json({ costumers });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
-    }
-    const filePath = req.file.path;
-    let mapped = [];
-    try {
-      const workbook = XLSX.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-      mapped = rows
-        .filter(row =>
-          (row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip)
-        )
-        .map(row => ({
-          fecha: row.fecha
-            ? row.fecha.toString().slice(0, 10)
-            : getFechaLocalHoy(),
-          equipo: row.equipo || row.team || "",
-          agente: row.agente || row.agent || "",
-          telefono: row.telefono || "",
-          producto: row.producto || "",
-          puntaje: Number(row.puntaje) || 0,
-          cuenta: row.cuenta || "",
-          direccion: row.direccion || "",
-          zip: row.zip || ""
-        }));
-
-      if (mapped.length) {
-        await Costumer.insertMany(mapped);
-      }
-      fs.unlinkSync(filePath);
-      return res.json({ success: true, count: mapped.length });
-    } catch (error) {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      return res.status(400).json({ success: false, error: "Archivo inválido o corrupto." });
-    }
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get("/api/graficas-costumer", protegerRuta, async (req, res) => {
-  try {
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      query.fecha = fechaFiltro;
-    }
-    const costumers = await Costumer.find(query).lean();
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    costumers.forEach(row => {
-      const equipo = row.equipo || row.team || "";
-      const producto = row.producto || "";
-      const puntaje = parseFloat(row.puntaje) || 0;
-
-      if (!equipo || !producto) return;
-
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
 
@@ -451,36 +336,6 @@ app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ENDPOINT PARA GUARDAR REPORTE MENSUAL DE GASTOS/VENTAS
-app.post("/api/reportes", protegerRuta, async (req, res) => {
-  try {
-    const { ano, mes, datos } = req.body;
-    if (!ano || !mes || !Array.isArray(datos)) {
-      return res.status(400).json({ success: false, message: "Datos incompletos" });
-    }
-    // Upsert: si ya existe el reporte ese año/mes, lo actualiza, si no, lo crea nuevo
-    await Reporte.findOneAndUpdate(
-      { ano, mes },
-      { $set: { datos } },
-      { upsert: true, new: true }
-    );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.get("/api/reportes", protegerRuta, async (req, res) => {
-  try {
-    const { ano, mes } = req.query;
-    if (!ano || !mes) return res.status(400).json({success:false, message: "Falta año o mes"});
-    const reporte = await Reporte.findOne({ ano: Number(ano), mes: Number(mes) });
-    res.json({ success: true, datos: reporte ? reporte.datos : [] });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
   }
 });
 
