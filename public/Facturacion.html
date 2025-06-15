@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Facturación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Tipografía moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --azul-oscuro: #1e293b;
+      --azul-acento: #28b5e8;
+      --sidebar-accent: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      min-height: 100vh;
+      background: var(--gris-bg);
+      font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif;
+      color: var(--azul-oscuro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100vw;
+      background: var(--gris-bg);
+    }
+    /* --- SIDEBAR --- */
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      width: 180px;
+      min-width: 180px;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* No white background, no border-radius, no box-shadow */
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: #222;
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: #222;
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 40px 50px;
+      background: var(--gris-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    /* --- FILTROS Y TITULO --- */
+    .header-reportes {
+      background: #fff;
+      width: 100%;
+      padding: 30px 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      border-bottom: 1.5px solid var(--gris-borde);
+      box-shadow: 0 4px 12px 0 rgba(40,181,232,0.07);
+      margin-bottom: 0;
+    }
+    .filtros-reportes {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 1.09em;
+      margin-left: 34px;
+      margin-bottom: 2px;
+    }
+    .filtros-reportes label {
+      font-weight: 600;
+      color: var(--azul-oscuro);
+      margin-right: 3px;
+    }
+    .filtros-reportes select {
+      padding: 4.5px 14px;
+      font-size: 1em;
+      border-radius: 7px;
+      border: 1.2px solid var(--gris-borde);
+      background: #fafcfd;
+      color: var(--azul-oscuro);
+      font-family: inherit;
+      transition: border var(--trans);
+      font-weight: 500;
+      box-shadow: 0 1px 3px 0 rgba(40,181,232,0.03);
+    }
+    .filtros-reportes select:focus {
+      outline: none;
+      border-color: var(--azul-acento);
+    }
+    .titulo-reportes {
+      text-align: center;
+      margin: 0 0 8px 0;
+      font-weight: 700;
+      font-size: 2.0em;
+      color: var(--azul-oscuro);
+      letter-spacing: .5px;
+      font-family: inherit;
+      text-shadow: 0 2px 8px rgba(40,181,232,.09);
+    }
+
+    /* --- TABLA --- */
+    .tabla-excel-editable {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      margin: 18px 28px 0 28px;
+      width: calc(100% - 56px);
+      border: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      height: 490px; /* Para mostrar solo el bloque de 16 días */
+      overflow-y: auto;
+      transition: box-shadow var(--trans);
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      background: #fff;
+      color: var(--azul-oscuro);
+      font-size: 1em;
+      table-layout: fixed;
+      border: none;
+    }
+    th, td {
+      border: 1.5px solid var(--gris-borde);
+      text-align: center;
+      min-width: 70px;
+      max-width: 120px;
+      height: 32px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: inherit;
+      background: #fff;
+      font-size: .99em;
+      font-weight: 400;
+      padding: 0;
+      white-space: nowrap;
+      transition: background var(--trans);
+    }
+    th {
+      background: var(--gris-titulo);
+      font-weight: 700;
+      font-size: 0.97em;
+      height: 38px;
+      white-space: pre-line;
+      line-height: 1.12;
+      color: #111 !important; /* BLACK header */
+      border-bottom: 2.5px solid var(--azul-acento);
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      box-shadow: 0 2px 6px rgba(40,181,232,.03);
+    }
+    tr:nth-child(even) td {
+      background: var(--azul-celda);
+    }
+    tr:hover td {
+      background: #d9f7fb;
+      transition: background var(--trans);
+    }
+    td[contenteditable="true"] {
+      background: #fff;
+      cursor: pointer;
+      transition: background var(--trans);
+    }
+    td:focus {
+      outline: 2px solid var(--azul-acento);
+    }
+    th {
+      padding: 2px 1px;
+      font-size: 0.98em;
+      white-space: pre-line;
+    }
+
+    /* --- PAGINACION TABLA --- */
+    .tabla-paginacion {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin: 10px 40px 0 0;
+    }
+    .tabla-paginacion button {
+      padding: 5px 17px;
+      border-radius: 10px;
+      background: var(--azul-acento);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      font-size: 1.07em;
+      cursor: pointer;
+      transition: background var(--trans), box-shadow var(--trans);
+      box-shadow: 0 1px 4px rgba(40,181,232,.08);
+    }
+    .tabla-paginacion button:active {
+      background: #209dd5;
+    }
+    .tabla-paginacion button:disabled {
+      background: #b7e8f5;
+      color: #eee;
+      cursor: default;
+    }
+
+    /* --- GRAFICA --- */
+    .grafica-reporte {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      margin: 18px 28px;
+      width: calc(100% - 56px);
+      padding: 26px 0 18px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+    .grafica-scroll-x {
+      width: 100%;
+      min-width: 300px;
+      max-width: 100%;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .grafica-reporte h3 {
+      color: var(--azul-oscuro);
+      font-size: 1.15em;
+      margin-bottom: 10px;
+      text-align: left;
+      width: 100%;
+      font-weight: 700;
+      letter-spacing: .3px;
+      padding-left: 18px;
+    }
+    @media (max-width: 1300px) {
+      .tabla-excel-editable, .grafica-reporte { width: 99vw; min-width: 0; margin-left:0; margin-right:0; }
+      th, td { min-width: 54px; font-size: 0.9em;}
+      .tabla-paginacion {margin-right:10px;}
+    }
+    @media (max-width: 900px) {
+      .sidebar { min-width: 80px; width: 80px; }
+      .sidebar-title, .sidebar-lema, .sidebar-nav button { display: none; }
+      .tabla-excel-editable, .grafica-reporte { margin-left:0; margin-right:0; width:99vw;}
+      .header-reportes, .titulo-reportes { font-size:1.1em;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+     <img src="logo connecting.png" alt="Logo Connecting" />
+    </div>
+    <div class="sidebar-title">Connecting</div>
+    <div class="sidebar-nav">
+      <button onclick="location.href='index.html'">Inicio</button>
+      <button onclick="location.href='lead.html'">Lead</button>
+      <button onclick="location.href='costumer.html'">Costumer</button>
+      <button class="active" onclick="location.href='reports.html'">Facturación</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="sidebar-lema">
+      "Conectando tu éxito, un cliente a la vez"
+    </div>
+  </nav>
+  <main class="main-content">
+    <div class="central-container">
+      <div class="header-reportes">
+        <div class="filtros-reportes">
+          <label for="filtroMes">Mes:</label>
+          <select id="filtroMes">
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <label for="filtroAno">Año:</label>
+          <select id="filtroAno"></select>
+        </div>
+        <div class="titulo-reportes">Facturación</div>
+      </div>
+      <div class="tabla-excel-editable">
+        <table id="tablaExcel">
+          <thead>
+            <tr>
+              <th>FECHA</th>
+              <th>ALEXIS</th>
+              <th>VENTAS<br>POR DIA</th>
+              <th>VALOR<br>DE VENTA</th>
+              <th>CUENTA ALTERNA</th>
+              <th>VENTAS<br>POR DIA</th>
+              <th>VALOR<br>DE VENTA</th>
+              <th>LINEAS</th>
+              <th>VENTAS<br>POR DIA</th>
+              <th>VALOR<br>DE VENTA</th>
+              <th>TOTAL<br>DEL DIA</th>
+              <th>TOTAL<br>VENTAS</th>
+              <th>VALOR<br>VENTA</th>
+              <th>PUNTOS</th>
+              <th>CPA<br>PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody id="excelBody"></tbody>
+        </table>
+      </div>
+      <div class="tabla-paginacion">
+        <button onclick="prevBlock()" id="btnUp">&#8593; Arriba</button>
+        <button onclick="nextBlock()" id="btnDown">Abajo &#8595;</button>
+      </div>
+      <div class="grafica-reporte">
+        <h3>Total de gastos por mes</h3>
+        <div class="grafica-scroll-x">
+          <canvas id="graficaGastosMes" width="1200" height="260"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+function logout() {
+  fetch('/logout').then(() => location.href = 'login.html');
+}
+const filtroMes = document.getElementById("filtroMes");
+const filtroAno = document.getElementById("filtroAno");
+const excelBody = document.getElementById("excelBody");
+const btnUp = document.getElementById('btnUp');
+const btnDown = document.getElementById('btnDown');
+
+// Llenar select de años
+(function(){
+  const yearNow = (new Date()).getFullYear();
+  let anos = '';
+  for (let y = yearNow - 2; y <= yearNow + 1; y++) {
+    anos += `<option value="${y}">${y}</option>`;
+  }
+  filtroAno.innerHTML = anos;
+  filtroMes.value = (new Date()).getMonth() + 1;
+  filtroAno.value = yearNow;
+})();
+
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+let currentBlock = 0;
+let currentMonth = parseInt(filtroMes.value, 10);
+let currentYear = parseInt(filtroAno.value, 10);
+
+function renderTablaDias(mes, ano, block=0) {
+  excelBody.innerHTML = "";
+  const numDias = daysInMonth(ano, mes);
+  const start = block * 16;
+  const end = Math.min(start + 16, numDias);
+  for (let i = start; i < end; i++) {
+    const tr = document.createElement("tr");
+    for (let c = 0; c < 15; c++) {
+      const td = document.createElement("td");
+      if (c === 0) {
+        td.textContent = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
+        td.contentEditable = false;
+      } else {
+        td.contentEditable = true;
+      }
+      tr.appendChild(td);
+    }
+    excelBody.appendChild(tr);
+  }
+  // Botones de paginación habilitar/deshabilitar
+  btnUp.disabled = (block === 0);
+  btnDown.disabled = ((block + 1) * 16 >= numDias);
+}
+function updateTableByFilters() {
+  currentBlock = 0;
+  currentMonth = parseInt(filtroMes.value, 10);
+  currentYear = parseInt(filtroAno.value, 10);
+  renderTablaDias(currentMonth, currentYear, currentBlock);
+}
+filtroMes.addEventListener('change', updateTableByFilters);
+filtroAno.addEventListener('change', updateTableByFilters);
+
+function nextBlock() {
+  const numDias = daysInMonth(currentYear, currentMonth);
+  if ((currentBlock + 1) * 16 < numDias) {
+    currentBlock++;
+    renderTablaDias(currentMonth, currentYear, currentBlock);
+  }
+}
+function prevBlock() {
+  if (currentBlock > 0) {
+    currentBlock--;
+    renderTablaDias(currentMonth, currentYear, currentBlock);
+  }
+}
+
+renderTablaDias(currentMonth, currentYear, currentBlock);
+
+/* --- Ejemplo de gráfica Chart.js empresarial --- */
+window.addEventListener('DOMContentLoaded', ()=>{
+  if (!window.Chart) return;
+  let grafica;
+  function actualizarGrafica() {
+    if (grafica) grafica.destroy();
+    const ctx = document.getElementById('graficaGastosMes').getContext('2d');
+    grafica = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+        datasets: [{
+          label: "",
+          data: [150, 210, 300, 120, 90, 180, 220, 250, 170, 200, 140, 190],
+          backgroundColor: "rgba(40,181,232,0.70)",
+          borderColor: "#1e293b",
+          borderWidth: 2,
+          borderRadius: 8,
+          datalabels: {
+            anchor: 'end',
+            align: 'start',
+            color: '#23485d',
+            font: { weight: 'bold', size: 16 },
+            formatter: v => v === 0 ? "" : "$" + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          }
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          title: { display: false },
+          datalabels: { display: true }
+        },
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        scales: {
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { display: true, color: "#204052", font: { weight: "bold", size: 15 } }
+          },
+          y: {
+            grid: { display: false, drawBorder: false },
+            ticks: { display: false }
+          }
+        }
+      },
+      plugins: [window.ChartDataLabels || {}]
+    });
+  }
+  actualizarGrafica();
+});
+</script>
+<!-- Chart.js y plugin datalabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+</body>
+</html>
