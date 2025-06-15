@@ -386,6 +386,29 @@
       letter-spacing: .3px;
       padding-left: 18px;
     }
+    .facturacion-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 18px 30px 0 0;
+      gap: 16px;
+    }
+    #btnGuardarFacturacion {
+      background: #22b3ec;
+      color: #fff;
+      padding: 9px 35px;
+      font-size: 1.1em;
+      border-radius: 7px;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(30,41,59,0.10);
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      transition: background 0.18s;
+    }
+    #btnGuardarFacturacion:hover {
+      background: #1ea1d8;
+    }
     @media (max-width: 1300px) {
       .tabla-excel-editable, .grafica-reporte { width: 99vw; min-width: 0; margin-left:0; margin-right:0; }
       th, td { min-width: 54px; font-size: 0.9em;}
@@ -477,6 +500,10 @@
         <h3>Total de gastos por mes</h3>
         <div class="grafica-scroll-x">
           <canvas id="graficaGastosMes" width="1200" height="260"></canvas>
+        </div>
+        <!-- BOTÓN GUARDAR (INTEGRADO) -->
+        <div class="facturacion-toolbar">
+          <button id="btnGuardarFacturacion">Guardar</button>
         </div>
       </div>
     </div>
@@ -624,60 +651,98 @@ function renderTablaCompleta(mes, ano) {
   }
 }
 
-/* --- Ejemplo de gráfica Chart.js empresarial --- */
-window.addEventListener('DOMContentLoaded', ()=>{
-  if (!window.Chart) return;
-  let grafica;
-  function actualizarGrafica() {
-    if (grafica) grafica.destroy();
-    const ctx = document.getElementById('graficaGastosMes').getContext('2d');
-    grafica = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
-        datasets: [{
-          label: "",
-          data: [150, 210, 300, 120, 90, 180, 220, 250, 170, 200, 140, 190],
-          backgroundColor: "rgba(40,181,232,0.70)",
-          borderColor: "#1e293b",
-          borderWidth: 2,
-          borderRadius: 8,
-          datalabels: {
-            anchor: 'end',
-            align: 'start',
-            color: '#23485d',
-            font: { weight: 'bold', size: 16 },
-            formatter: v => v === 0 ? "" : "$" + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          }
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: false },
-          title: { display: false },
-          datalabels: { display: true }
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { top: 20 } },
-        scales: {
-          x: {
-            grid: { display: false, drawBorder: false },
-            ticks: { display: true, color: "#204052", font: { weight: "bold", size: 15 } }
-          },
-          y: {
-            grid: { display: false, drawBorder: false },
-            ticks: { display: false }
-          }
+/* --- Gráfica Chart.js GASTOS POR MES --- */
+let grafica;
+async function actualizarGrafica() {
+  // Pide los totales del mes seleccionado
+  const mes = parseInt(filtroMes.value, 10);
+  const ano = parseInt(filtroAno.value, 10);
+  const resp = await fetch(`/api/facturacion/estadistica/${ano}/${String(mes).padStart(2, '0')}`);
+  const { totalesPorDia } = await resp.json();
+  // suma total del mes actual
+  const totalMes = totalesPorDia.reduce((a,b) => a + b, 0);
+  // Actualiza la gráfica: solo una barra (total del mes)
+  if (grafica) grafica.destroy();
+  const ctx = document.getElementById('graficaGastosMes').getContext('2d');
+  grafica = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["Total del mes"],
+      datasets: [{
+        label: "",
+        data: [totalMes],
+        backgroundColor: "rgba(40,181,232,0.70)",
+        borderColor: "#1e293b",
+        borderWidth: 2,
+        borderRadius: 8,
+        datalabels: {
+          anchor: 'end',
+          align: 'start',
+          color: '#23485d',
+          font: { weight: 'bold', size: 16 },
+          formatter: v => v === 0 ? "" : "$" + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         }
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        title: { display: false },
+        datalabels: { display: true }
       },
-      plugins: [window.ChartDataLabels || {}]
-    });
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
+      scales: {
+        x: {
+          grid: { display: false, drawBorder: false },
+          ticks: { display: true, color: "#204052", font: { weight: "bold", size: 15 } }
+        },
+        y: {
+          grid: { display: false, drawBorder: false },
+          ticks: { display: false }
+        }
+      }
+    },
+    plugins: [window.ChartDataLabels || {}]
+  });
+}
+
+// ------------------ GUARDAR TODO -------------------
+document.getElementById('btnGuardarFacturacion').addEventListener('click', guardarTodoFacturacion);
+
+async function guardarTodoFacturacion() {
+  const filas = Array.from(document.querySelectorAll('#excelBody tr'));
+  let guardados = 0, errores = 0;
+  for (const tr of filas) {
+    const tds = Array.from(tr.children);
+    const fecha = tds[0].textContent.trim();
+    const campos = tds.slice(1).map(td => td.textContent.trim());
+    // Solo guardar si algún campo tiene dato
+    if (campos.some(val => val !== "")) {
+      const res = await fetch('/api/facturacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha, campos })
+      });
+      const data = await res.json();
+      if (data.ok) guardados++;
+      else errores++;
+    }
   }
+  await actualizarGrafica();
+  alert(`Guardados: ${guardados}. Errores: ${errores}`);
+}
+
+// Refresca tabla y gráfica al cambiar mes/año
+filtroMes.addEventListener('change', actualizarGrafica);
+filtroAno.addEventListener('change', actualizarGrafica);
+
+window.addEventListener('DOMContentLoaded', () => {
   actualizarGrafica();
 });
+
 </script>
-<!-- Chart.js y plugin datalabels -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 </body>
