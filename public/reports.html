@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CRM - Reports</title>
+  <title>Connecting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -25,34 +25,30 @@
       --borde-celda2: #e0f0ec;
       --borde-gris: #c3d7e6;
     }
-    body {
+    html, body {
+      width: 100vw;
+      min-height: 100vh;
       margin: 0;
+      padding: 0;
+      overflow-x: hidden;
       background: var(--gris-fondo);
       font-family: 'Segoe UI', 'Roboto', 'Montserrat', sans-serif;
     }
     .layout {
       display: flex;
       min-height: 100vh;
+      width: 100vw;
+      box-sizing: border-box;
     }
     .sidebar {
-      width: 240px;
-      background: var(--color-azul-oscuro);
-      color: var(--color-sidebar-texto);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 30px;
-      box-shadow: 2px 0 10px rgba(27,58,75,0.05);
+      width: 240px; min-width: 240px;
+      background: var(--color-azul-oscuro); color: var(--color-sidebar-texto);
+      display: flex; flex-direction: column; align-items: center; padding-top: 30px; box-shadow: 2px 0 10px rgba(27,58,75,0.05);
+      height: 100vh;
     }
     .sidebar-logo { width: 85px; height: 85px; margin-bottom: 12px; border-radius: 50%; background: var(--color-blanco); display: flex; align-items: center; justify-content: center;}
     .sidebar-logo img { width: 72px; height: 72px; }
-    .sidebar-title {
-      font-size: 1.7em;
-      font-weight: 700;
-      letter-spacing: 1px;
-      margin-bottom: 26px;
-      color: var(--color-azul-claro);
-    }
+    .sidebar-title { font-size: 1.7em; font-weight: 700; letter-spacing: 1px; margin-bottom: 26px; color: var(--color-azul-claro);}
     .sidebar-nav { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
     .sidebar-nav button {
       width: 90%; margin: 0 auto; padding: 15px 0; background: none; border: none; color: var(--color-sidebar-texto); font-size: 1.14em;
@@ -60,80 +56,100 @@
       text-align: left; padding-left: 22px;
     }
     .sidebar-nav button.active, .sidebar-nav button:hover {
-      background: var(--color-sidebar-activo);
-      color: var(--color-azul-oscuro);
+      background: var(--color-sidebar-activo); color: var(--color-azul-oscuro);
     }
     .sidebar-lema { margin-top: auto; padding: 20px 10px 28px 10px; font-size: 1em; text-align: center; font-style: italic; color: var(--color-azul-claro); opacity: 0.8; }
     .main-content {
       flex: 1;
-      padding: 30px 16px 40px 16px;
+      min-width: 0;
       min-height: 100vh;
+      padding: 30px 0 40px 0;
       display: flex;
       flex-direction: column;
-      gap: 24px;
       background: var(--gris-fondo);
+      box-sizing: border-box;
     }
     .reports-container {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 3px 18px rgba(27,58,75,0.09);
-      padding: 24px 12px 24px 12px;
-      max-width: 1280px;
-      margin: 16px auto 0 auto;
+      background: #fff; border-radius: 16px; box-shadow: 0 3px 18px rgba(27,58,75,0.09);
+      padding: 24px 24px 24px 24px;
+      margin: 0 0 0 0;
+      width: 98%;
+      height: 90vh;
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      box-sizing: border-box;
+      justify-content: flex-start;
     }
-    .reports-container h1 {
-      color: var(--color-azul-oscuro);
-      font-size: 2.1em;
-      margin-bottom: 18px;
-      text-align: center;
-      font-weight: 700;
-      letter-spacing: 1px;
+    .reports-container h1 { color: var(--color-azul-oscuro); font-size: 2.1em; margin-bottom: 18px; text-align: center; font-weight: 700; letter-spacing: 1px;}
+    .filtros-reportes {
+      margin-bottom: 18px; display: flex; gap: 12px; align-items: center; justify-content: flex-start;
+    }
+    .filtros-reportes label { font-weight: 600; color: #204052; }
+    .filtros-reportes select, .filtros-reportes input[type="number"] {
+      border: 1px solid #b6c6cd; border-radius: 6px; padding: 5px 10px; font-size: 1em; background: #f8fbfd; color: #204052;
     }
     .tabla-grafica-wrap {
       display: flex;
-      flex-wrap: wrap;
-      gap: 36px;
-      justify-content: space-between;
+      flex-direction: row;
+      gap: 32px;
+      justify-content: stretch;
       align-items: flex-start;
-      margin-top: 18px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      flex: 1 1 0;
     }
     .tabla-excel-editable {
       border-radius: 8px;
       overflow-x: auto;
-      min-width: 950px;
+      overflow-y: auto;
       background: var(--gris-fondo);
       box-shadow: 0 1px 8px rgba(0,0,0,0.09);
-      flex: 1 1 900px;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      max-height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .grafica-reporte {
+      min-width: 480px;
+      max-width: 700px;
+      width: 40vw;
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 18px 22px 18px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      height: 100%;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .grafica-reporte h3 {
+      color: var(--color-azul-oscuro);
+      font-size: 1.13em;
+      margin-bottom: 10px;
+      text-align: left;
+      width: 100%;
     }
     table {
-      border-collapse: separate;
-      border-spacing: 0;
-      width: 100%;
-      background: var(--gris-fondo);
-      color: #222;
-      font-size: 1.01em;
-      min-width: 1100px;
+      border-collapse: separate; border-spacing: 0; width: 100%; background: var(--gris-fondo); color: #222; font-size: 1.01em; min-width: 1100px;
     }
     th, td {
-      padding: 9px 10px;
-      text-align: center;
-      border-bottom: 1px solid var(--borde-gris);
-      border-right: 1px solid var(--borde-gris);
-      font-family: inherit;
-      font-size: 1em;
-      transition: background 0.19s;
+      padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--borde-gris); border-right: 1px solid var(--borde-gris);
+      font-family: inherit; font-size: 1em; transition: background 0.19s;
     }
     th {
-      background: var(--gris-titulos);
-      font-weight: 700;
-      color: #204052;
-      text-transform: uppercase;
-      font-size: 0.97em;
-      letter-spacing: .5px;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      border-bottom: 2.5px solid var(--color-azul-claro);
+      background: var(--gris-titulos); font-weight: 700; color: #204052; text-transform: uppercase; font-size: 0.97em; letter-spacing: .5px;
+      position: sticky; top: 0; z-index: 2; border-bottom: 2.5px solid var(--color-azul-claro);
     }
     tr:last-child td { border-bottom: none; }
     td.gris-celda, th.gris-celda { background: var(--gris-celda);}
@@ -148,35 +164,33 @@
     td.selected-cell { outline: 2px solid var(--color-azul-claro) !important; }
     tbody tr:nth-child(even) { background: #f8fbfd; }
     tbody tr:nth-child(odd) { background: #eef6fa; }
+    td input[type="date"] {
+      border: 1px solid #b6c6cd;
+      border-radius: 5px;
+      padding: 3px 5px;
+      font-size: 1em;
+      color: #204052;
+      background: #f8fbfd;
+    }
     @media (max-width: 1300px) {
-      .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 26px;}
-      .tabla-excel-editable, .grafica-reporte { min-width: 0; }
+      .reports-container { max-width: 99vw; }
+      .tabla-grafica-wrap { flex-direction: column; height: auto; }
+      .tabla-excel-editable, .grafica-reporte { width: 100%; min-width: 0; max-width: 100%; }
+      .grafica-reporte { align-items: center; min-width: 0; }
+    }
+    @media (max-width: 900px) {
+      .tabla-grafica-wrap { flex-direction: column; align-items: stretch; gap: 20px;}
+      .tabla-excel-editable, .grafica-reporte { min-width: 0; width: 100%;}
+      .grafica-reporte { align-items: center; }
+      .reports-container { padding: 6px 0; }
     }
     @media (max-width: 700px) {
       .main-content { padding: 6px 2px; }
-      .reports-container { padding: 10px 0; }
+      .reports-container { padding: 4px 0; }
       table { font-size: 0.83em; }
-    }
-    .grafica-reporte {
-      min-width: 350px;
-      max-width: 440px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 11px 22px 11px;
-      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-    }
-    .grafica-reporte h3 {
-      color: var(--color-azul-oscuro);
-      font-size: 1.13em;
-      margin-bottom: 10px;
-      text-align: center;
+      .tabla-excel-editable { max-height: 300px; }
+      .tabla-grafica-wrap { flex-direction: column; }
+      .grafica-reporte { align-items: center; width: 100%; min-width: 0; }
     }
   </style>
 </head>
@@ -201,7 +215,13 @@
   </nav>
   <main class="main-content">
     <div class="reports-container">
-      <h1>Reportes del Sistema</h1>
+      <h1>Reporte </h1>
+      <div class="filtros-reportes">
+        <label for="filtroMes">Mes:</label>
+        <select id="filtroMes"></select>
+        <label for="filtroAno">Año:</label>
+        <select id="filtroAno"></select>
+      </div>
       <div class="tabla-grafica-wrap">
         <!-- TABLA -->
         <div class="tabla-excel-editable">
@@ -211,13 +231,13 @@
                 <th class="gris-celda">FECHA</th>
                 <th>ALEXIS</th>
                 <th class="amarillo">VENTAS POR DÍA</th>
-                <th class="amarillo">VALOR DE VENTA</th>
+                <th class="verde-celda">VALOR DE VENTA</th>
                 <th class="amarillo">CUENTA ALTERNA</th>
                 <th class="amarillo">VENTAS POR DÍA</th>
-                <th class="amarillo">VALOR DE VENTA</th>
+                <th class="verde-celda">VALOR DE VENTA</th>
                 <th class="gris-celda2">LINEAS</th>
                 <th class="gris-celda2">VENTAS POR DÍA</th>
-                <th class="gris-celda2">VALOR DE VENTA</th>
+                <th class="verde-celda">VALOR DE VENTA</th>
                 <th>TOTAL DEL DÍA</th>
                 <th>TOTAL VENTAS</th>
                 <th class="verde-celda">VALOR VENTA</th>
@@ -226,117 +246,168 @@
               </tr>
             </thead>
             <tbody id="excelBody">
-              <!-- Las filas se generan con JS -->
+              <!-- Filas generadas dinámicamente -->
             </tbody>
           </table>
         </div>
         <!-- GRAFICA -->
         <div class="grafica-reporte">
           <h3>Gastos por mes</h3>
-          <canvas id="graficaGastosMes" width="390" height="340"></canvas>
+          <canvas id="graficaGastosMes" width="600" height="500"></canvas>
         </div>
       </div>
     </div>
   </main>
 </div>
 <script>
-// === SIDEBAR LOGOUT ===
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
 
-// === DATOS DE EJEMPLO PARA LA TABLA ===
-const tablaDatos = [
-  // FECHA      ALEXIS   VENTASD  VALORV   CUENTAALT VENTASD VALORV  LINEAS VENTASD VALORV   TOTALDIA  TOTVENTAS VALORV  PUNTOS  CPA
-  ["1/05/2025", "$1.493,31", "", "", "$31,16", "2", "$15,58", "", "", "", "$972,02", "21", "$46,29", "17,25", "$56,35"],
-  ["2/05/2025", "$1.398,83", "", "", "", "", "", "", "", "", "$1.792,75", "33", "$54,33", "22,15", "$80,94"],
-  ["3/05/2025", "$1.340,88", "", "", "", "", "", "", "", "", "$1.808,87", "39", "$46,38", "25,00", "$72,35"],
-  ["4/05/2025", "$1.233,07", "", "", "", "", "", "", "", "", "$2.129,48", "46", "$46,29", "36,40", "$58,50"],
-  ["5/05/2025", "$1.515,55", "", "", "", "", "", "", "", "", "$1.397,14", "34", "$42,34", "24,75", "$56,45"],
-  ["6/05/2025", "$1.419,46", "", "", "", "", "", "", "", "", "$1.898,97", "37", "$51,32", "23,10", "$82,78"],
-  ["7/05/2025", "$1.578,10", "", "", "", "", "", "", "", "", "$1.960,91", "39", "$50,28", "29,95", "$65,47"],
-  ["8/05/2025", "$1.399,54", "", "", "", "", "", "", "", "", "$1.498,74", "25", "$59,95", "23,65", "$63,37"],
-  ["9/05/2025", "$1.173,82", "", "", "", "", "", "", "", "", "$2.081,02", "35", "$59,46", "25,05", "$83,07"],
-  ["10/05/2025", "$1.166,02", "", "", "", "", "", "", "", "", "$2.028,13", "43", "$47,17", "33,85", "$59,92"],
-  ["11/05/2025", "$708,56", "", "", "", "", "", "", "", "", "$1.353,30", "24", "$56,39", "17,75", "$76,24"],
-  ["12/05/2025", "$1.571,42", "", "", "", "", "", "", "", "", "$1.673,87", "31", "$54,00", "24,65", "$67,91"]
-];
+const filtroMes = document.getElementById("filtroMes");
+const filtroAno = document.getElementById("filtroAno");
 
-// === GENERAR TABLA ===
-const excelBody = document.getElementById("excelBody");
-function renderTabla() {
-  excelBody.innerHTML = "";
-  tablaDatos.forEach((row, i) => {
-    const tr = document.createElement("tr");
-    row.forEach((value, j) => {
-      const td = document.createElement("td");
-      td.textContent = value;
-      if (i !== tablaDatos.length-1) td.contentEditable = (j !== 0 && j !== 10); // FECHA y TOTAL DEL DÍA solo lectura, el resto editable
-      // Clases de color por columna
-      if(j === 0) td.classList.add("gris-celda");
-      if(j >= 2 && j <= 6) td.classList.add("amarillo");
-      if(j >= 7 && j <= 9) td.classList.add("gris-celda2");
-      if(j >= 12 && j <= 14) td.classList.add("verde-celda");
-      if(j === 13 && value && parseFloat(value.replace(',','.')) > 30) td.classList.add("rojo");
-      if(j === 14 && value && value.startsWith("$") && parseFloat(value.replace("$","").replace(',','.')) > 70) td.classList.add("rojo");
-      tr.appendChild(td);
-    });
-    excelBody.appendChild(tr);
-  });
+function fillFiltros() {
+  const meses = [
+    "Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+  ];
+  filtroMes.innerHTML = meses.map((m, i) =>
+    `<option value="${i+1}">${m}</option>`
+  ).join('');
+  const yearNow = (new Date()).getFullYear();
+  let anos = '';
+  for (let y = yearNow-1; y <= yearNow+1; y++) {
+    anos += `<option value="${y}">${y}</option>`;
+  }
+  filtroAno.innerHTML = anos;
+  filtroMes.value = (new Date()).getMonth() + 1;
+  filtroAno.value = yearNow;
 }
-renderTabla();
+fillFiltros();
 
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+const excelBody = document.getElementById("excelBody");
+let tablaDatosMes = {};
+
+function getTablaKey() {
+  return `${filtroAno.value}-${String(filtroMes.value).padStart(2, "0")}`;
+}
 function parseNumber(str) {
-  // Convierte "$1.234,56" o "1,234.56" a número
   if (!str) return 0;
   if (typeof str === "number") return str;
-  str = str.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
-  let num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
+  str = str.replace(/\$/g, '').replace(/\s/g, '');
+  if (str.match(/^\d{1,3}(,\d{3})+(\.\d+)?$/)) {
+    str = str.replace(/,/g, '');
+  }
+  else if (str.match(/^\d+,\d+$/)) {
+    str = str.replace(',', '.');
+  }
+  return parseFloat(str) || 0;
 }
-
-function updateTotalDia(rowIdx) {
-  // Suma Alexis (1), Cuenta Alterna (4), Lineas (7)
-  const alexis = parseNumber(tablaDatos[rowIdx][1]);
-  const cuentaAlterna = parseNumber(tablaDatos[rowIdx][4]);
-  const lineas = parseNumber(tablaDatos[rowIdx][7]);
-  const suma = alexis + cuentaAlterna + lineas;
-  // Formatea el resultado como dinero
-  tablaDatos[rowIdx][10] = suma > 0 ? "$" + suma.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "";
+function formatMoney(num) {
+  if (isNaN(num) || num === 0) return "";
+  return "$" + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
-
-excelBody.addEventListener('blur', function(e){
+function formatDivisionMoney(num) {
+  if (isNaN(num)) return "";
+  return "$" + num.toFixed(2);
+}
+function formatNumber(num) {
+  if (isNaN(num) || num === 0) return "";
+  return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function renderTablaDias(mes, ano) {
+  excelBody.innerHTML = "";
+  const numDias = daysInMonth(ano, mes);
+  const key = `${ano}-${String(mes).padStart(2, "0")}`;
+  if (!tablaDatosMes[key]) {
+    tablaDatosMes[key] = [];
+    for (let d = 1; d <= numDias; d++) {
+      const fechaStr = `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      tablaDatosMes[key].push([
+        fechaStr, "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+      ]);
+    }
+  }
+  for (let i = 0; i < numDias; i++) {
+    const row = tablaDatosMes[key][i];
+    calcularFormulas(row);
+    const tr = document.createElement("tr");
+    const tdFecha = document.createElement("td");
+    const inputFecha = document.createElement("input");
+    inputFecha.type = "date";
+    inputFecha.value = row[0];
+    inputFecha.readOnly = true;
+    tdFecha.appendChild(inputFecha);
+    tr.appendChild(tdFecha);
+    for (let c = 1; c < 15; c++) {
+      const td = document.createElement("td");
+      if (c === 3 || c === 6 || c === 9 || c === 10) {
+        td.textContent = row[c];
+        td.style.background = "#e4f7ec";
+        td.contentEditable = false;
+      } else {
+        td.contentEditable = true;
+        td.textContent = row[c];
+      }
+      tr.appendChild(td);
+    }
+    excelBody.appendChild(tr);
+  }
+}
+function calcularFormulas(row) {
+  const alexis = parseNumber(row[1]);
+  const ventasDia1 = parseNumber(row[2]);
+  if (ventasDia1 > 0) {
+    row[3] = formatDivisionMoney(alexis / ventasDia1);
+  } else {
+    row[3] = "";
+  }
+  const cuentaAlterna = parseNumber(row[4]);
+  const ventasDia2 = parseNumber(row[5]);
+  if (ventasDia2 > 0) {
+    row[6] = formatDivisionMoney(cuentaAlterna / ventasDia2);
+  } else {
+    row[6] = "";
+  }
+  const lineas = parseNumber(row[7]);
+  const ventasDia3 = parseNumber(row[8]);
+  if (ventasDia3 > 0) {
+    row[9] = formatDivisionMoney(lineas / ventasDia3);
+  } else {
+    row[9] = "";
+  }
+  const totalDia = alexis + cuentaAlterna + lineas;
+  row[10] = formatMoney(totalDia);
+}
+excelBody.addEventListener("input", function(e) {
   const td = e.target;
   const tr = td.parentElement;
   if (!tr || td.cellIndex === undefined) return;
   const rowIndex = Array.from(excelBody.children).indexOf(tr);
   const colIndex = td.cellIndex;
-  tablaDatos[rowIndex][colIndex] = td.textContent;
-
-  // Si editaste Alexis, Cuenta Alterna o Lineas, actualiza Total del Día
-  if ([1,4,7].includes(colIndex)) {
-    updateTotalDia(rowIndex);
-    renderTabla();
-  }
-
-  actualizarGrafica();
-}, true);
-
-excelBody.addEventListener('keydown', function(e){
-  if(e.key==="Enter"){
-    e.preventDefault();
-    const td = e.target;
-    td.blur();
-  }
+  if ([0,3,6,9,10].includes(colIndex)) return;
+  const key = getTablaKey();
+  tablaDatosMes[key][rowIndex][colIndex] = td.textContent;
+  calcularFormulas(tablaDatosMes[key][rowIndex]);
+  const tds = tr.querySelectorAll("td");
+  tds[3].textContent = tablaDatosMes[key][rowIndex][3];
+  tds[6].textContent = tablaDatosMes[key][rowIndex][6];
+  tds[9].textContent = tablaDatosMes[key][rowIndex][9];
+  tds[10].textContent = tablaDatosMes[key][rowIndex][10];
 });
-
-// === GRAFICA ===
+filtroMes.addEventListener("change", ()=>{
+  renderTablaDias(Number(filtroMes.value), Number(filtroAno.value));
+});
+filtroAno.addEventListener("change", ()=>{
+  renderTablaDias(Number(filtroMes.value), Number(filtroAno.value));
+});
+renderTablaDias(Number(filtroMes.value), Number(filtroAno.value));
 function obtenerDatosGrafica() {
-  // Total del día (col 10) y Valor Venta (col 12)
-  const totalDia = tablaDatos.map(row => parseNumber(row[10]));
-  const valorVenta = tablaDatos.map(row => parseNumber(row[12]));
-  const etiquetas = tablaDatos.map(row => row[0]);
-  return { etiquetas, totalDia, valorVenta };
+  return { etiquetas: [], totalDia: [], valorVenta: [] };
 }
 let grafica;
 function dibujarGrafica() {
@@ -347,28 +418,14 @@ function dibujarGrafica() {
     data: {
       labels: etiquetas,
       datasets: [
-        {
-          label: "Total del día",
-          data: totalDia,
-          backgroundColor: "#4FC3E3",      // azul claro
-          borderColor: "#204052",          // azul oscuro
-          borderWidth: 2
-        },
-        {
-          label: "Valor Venta",
-          data: valorVenta,
-          backgroundColor: "#2596b6",      // azul medio
-          borderColor: "#204052",          // azul oscuro
-          borderWidth: 2
-        },
+        { label: "Total del día", data: totalDia, backgroundColor: "#4FC3E3", borderColor: "#204052", borderWidth: 2 },
+        { label: "Valor Venta", data: valorVenta, backgroundColor: "#2596b6", borderColor: "#204052", borderWidth: 2 },
       ]
     },
     options: {
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Total del día y Valor venta por fecha' }
-      },
+      plugins: { legend: { position: 'top' }, title: { display: true, text: 'Total del día y Valor venta por fecha' } },
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         x: { stacked: false, ticks: { color: "#204052" }},
         y: { beginAtZero: true, ticks: { color: "#204052" }}
@@ -376,7 +433,6 @@ function dibujarGrafica() {
     }
   });
 }
-function actualizarGrafica() { dibujarGrafica(); }
 dibujarGrafica();
 </script>
 </body>
