@@ -28,6 +28,15 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
+// ==== FUNCIÓN PARA FECHA LOCAL YYYY-MM-DD ====
+function getFechaLocalHoy() {
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, '0');
+  const day = String(hoy.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Middleware robusto para proteger rutas, cerrar sesión si no se ha enviado un lead en 30 minutos
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000; // 30 minutos en milisegundos
@@ -121,7 +130,7 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     ).map(row => ({
       fecha: row.fecha
         ? row.fecha.toString().slice(0, 10)
-        : new Date().toISOString().slice(0, 10),
+        : getFechaLocalHoy(),
       equipo: row.equipo || row.team || "",
       agente: row.agente || row.agent || "",
       telefono: row.telefono || "",
@@ -202,10 +211,10 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
 
-    // Siempre guardar fecha como string YYYY-MM-DD
+    // Siempre guardar fecha como string YYYY-MM-DD en HORA LOCAL
     const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
       ? fecha
-      : new Date().toISOString().slice(0, 10);
+      : getFechaLocalHoy();
 
     const nuevoLead = {
       fecha: fechaLead,
@@ -273,8 +282,8 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
-    // Siempre guardar fecha como string YYYY-MM-DD
-    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : new Date().toISOString().slice(0, 10);
+    // Siempre guardar fecha como string YYYY-MM-DD en HORA LOCAL
+    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
 
     const nuevoCostumer = {
       fecha: fechaCostumer,
@@ -326,7 +335,7 @@ app.post('/api/costumer/import', protegerRuta, upload.single('archivo'), async (
         .map(row => ({
           fecha: row.fecha
             ? row.fecha.toString().slice(0, 10)
-            : new Date().toISOString().slice(0, 10),
+            : getFechaLocalHoy(),
           equipo: row.equipo || row.team || "",
           agente: row.agente || row.agent || "",
           telefono: row.telefono || "",
