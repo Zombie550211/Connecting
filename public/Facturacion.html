@@ -18,6 +18,7 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
+      --modal-bg: rgba(30,41,59,0.22);
     }
     html, body {
       margin: 0;
@@ -55,7 +56,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* No white background, no border-radius, no box-shadow */
       background: none;
       box-shadow: none;
       border-radius: 0;
@@ -109,7 +109,6 @@
       text-align: center;
       font-weight: 600;
     }
-
     /* MAIN CONTENT */
     .main-content {
       flex: 1;
@@ -171,7 +170,83 @@
       font-family: inherit;
       text-shadow: 0 2px 8px rgba(40,181,232,.09);
     }
-
+    /* --- BOTON EXPANDIR TABLA --- */
+    .tabla-expand-btn {
+      margin: 10px 32px 0 32px;
+      text-align: right;
+    }
+    #btnExpandirTabla {
+      background: #22b3ec;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 22px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s;
+      box-shadow: 0 2px 8px #22b3ec22;
+    }
+    #btnExpandirTabla:hover {
+      background: #18a0d6;
+    }
+    /* --- MODAL FULL TABLE --- */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: var(--modal-bg);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-bg.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 40px #0016;
+      padding: 24px 16px 18px 16px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow: auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-width: 400px;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 15px; right: 22px;
+      background: #f74747;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 2px 13px 4px 13px;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 1px 4px #0003;
+      transition: background 0.17s;
+    }
+    .modal-close-btn:hover {
+      background: #ca2222;
+    }
+    .modal-title {
+      font-size: 1.45em;
+      font-weight: 700;
+      color: var(--azul-oscuro);
+      margin: 0 0 18px 0;
+      text-align: center;
+    }
+    .modal-table-container {
+      overflow-y: auto;
+      max-height: 65vh;
+      min-width: 100%;
+    }
     /* --- TABLA --- */
     .tabla-excel-editable {
       background: #fff;
@@ -321,6 +396,7 @@
       .sidebar-title, .sidebar-lema, .sidebar-nav button { display: none; }
       .tabla-excel-editable, .grafica-reporte { margin-left:0; margin-right:0; width:99vw;}
       .header-reportes, .titulo-reportes { font-size:1.1em;}
+      .tabla-expand-btn {margin-left:0;margin-right:0;}
     }
   </style>
 </head>
@@ -366,6 +442,9 @@
         </div>
         <div class="titulo-reportes">Facturación</div>
       </div>
+      <div class="tabla-expand-btn">
+        <button id="btnExpandirTabla" onclick="abrirModalTabla()">Expandir tabla</button>
+      </div>
       <div class="tabla-excel-editable">
         <table id="tablaExcel">
           <thead>
@@ -401,6 +480,38 @@
         </div>
       </div>
     </div>
+    <!-- MODAL DE TABLA COMPLETA -->
+    <div class="modal-bg" id="modalTablaCompleta">
+      <div class="modal-content">
+        <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
+        <div class="modal-title">Tabla completa de facturación del mes</div>
+        <div class="modal-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>FECHA</th>
+                <th>ALEXIS</th>
+                <th>VENTAS<br>POR DIA</th>
+                <th>VALOR<br>DE VENTA</th>
+                <th>CUENTA ALTERNA</th>
+                <th>VENTAS<br>POR DIA</th>
+                <th>VALOR<br>DE VENTA</th>
+                <th>LINEAS</th>
+                <th>VENTAS<br>POR DIA</th>
+                <th>VALOR<br>DE VENTA</th>
+                <th>TOTAL<br>DEL DIA</th>
+                <th>TOTAL<br>VENTAS</th>
+                <th>VALOR<br>VENTA</th>
+                <th>PUNTOS</th>
+                <th>CPA<br>PUNTOS</th>
+              </tr>
+            </thead>
+            <tbody id="modalTablaBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- FIN MODAL -->
   </main>
 </div>
 <script>
@@ -461,6 +572,10 @@ function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   renderTablaDias(currentMonth, currentYear, currentBlock);
+  // También actualiza la tabla del modal si está abierto
+  if (document.getElementById('modalTablaCompleta').classList.contains('active')) {
+    renderTablaCompleta(currentMonth, currentYear);
+  }
 }
 filtroMes.addEventListener('change', updateTableByFilters);
 filtroAno.addEventListener('change', updateTableByFilters);
@@ -480,6 +595,34 @@ function prevBlock() {
 }
 
 renderTablaDias(currentMonth, currentYear, currentBlock);
+
+// --- MODAL LÓGICA ---
+function abrirModalTabla() {
+  renderTablaCompleta(currentMonth, currentYear);
+  document.getElementById('modalTablaCompleta').classList.add('active');
+  document.body.style.overflow = "hidden";
+}
+function cerrarModalTabla() {
+  document.getElementById('modalTablaCompleta').classList.remove('active');
+  document.body.style.overflow = "";
+}
+// Renderiza toda la tabla del mes en el modal
+function renderTablaCompleta(mes, ano) {
+  const modalBody = document.getElementById("modalTablaBody");
+  modalBody.innerHTML = "";
+  const numDias = daysInMonth(ano, mes);
+  for (let i = 0; i < numDias; i++) {
+    const tr = document.createElement("tr");
+    for (let c = 0; c < 15; c++) {
+      const td = document.createElement("td");
+      if (c === 0) {
+        td.textContent = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
+      }
+      tr.appendChild(td);
+    }
+    modalBody.appendChild(tr);
+  }
+}
 
 /* --- Ejemplo de gráfica Chart.js empresarial --- */
 window.addEventListener('DOMContentLoaded', ()=>{
