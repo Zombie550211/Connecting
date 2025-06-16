@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const FacturacionSchema = new mongoose.Schema({
-  fecha: { type: String, required: true },
-  campos: { type: [String], required: true } // 14 campos
+  fecha: String,          // "DD/MM/YYYY"
+  campos: [String],       // Array de 14 columnas (puedes usar [Number] si siempre son números)
 });
 
 module.exports = mongoose.model('Facturacion', FacturacionSchema);
