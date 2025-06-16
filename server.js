@@ -243,6 +243,7 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
       Team: c.equipo || '',
       Agente: c.agente || '',
       Producto: c.producto || '',
+      Estado: c.estado || '',
       Puntaje: c.puntaje || '',
       Cuenta: c.cuenta || '',
       Telefono: c.telefono || '',
@@ -266,7 +267,7 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
 // ====================== COSTUMER ENDPOINTS =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
+    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
@@ -278,6 +279,7 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
       agente: agent,
       telefono: telefono || '',
       producto,
+      estado: estado || "Pending",
       puntaje: Number(puntaje) || 0,
       cuenta: cuenta || '',
       direccion: direccion || '',
@@ -299,6 +301,24 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     }
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// CORRECTO: Actualizar solo el estado del costumer por ID (PUT)
+app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    if (!estado) {
+      return res.status(400).json({ success: false, error: "El campo 'estado' es requerido." });
+    }
+    const updated = await Costumer.findByIdAndUpdate(id, { estado }, { new: true });
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
+    }
+    res.json({ success: true, costumer: updated });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
