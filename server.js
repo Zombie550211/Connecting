@@ -12,7 +12,6 @@ const upload = multer({ dest: 'uploads/' });
 
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
-const Reporte = require('./models/Facturacion');
 const Facturacion = require('./models/Facturacion');
 
 const app = express();
@@ -118,7 +117,10 @@ app.get("/Facturacion.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
 });
 
-// ENDPOINT PARA IMPORTAR EXCEL DE LEADS Y ACTUALIZAR LA BASE DE DATOS
+
+// ================== LEADS =========================
+
+// Importar leads desde Excel
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
     if (!req.file) {
@@ -155,7 +157,73 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
   }
 });
 
-// ENDPOINT PARA DESCARGAR EL EXCEL DE COSTUMERS (DINÁMICO DESDE MONGO, CON FILTRO DE FECHA)
+// CRUD de leads (guardar uno)
+app.post("/api/leads", protegerRuta, async (req, res) => {
+  try {
+    const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
+
+    if (!agent || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos" });
+    }
+
+    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+      ? fecha
+      : getFechaLocalHoy();
+
+    const nuevoLead = {
+      fecha: fechaLead,
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      puntaje: puntaje || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+
+    await Lead.create(nuevoLead);
+    await Costumer.create(nuevoLead);
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
+  }
+});
+
+// ----------- ENDPOINT GRAFICAS LEADS ----------
+app.get("/api/graficas", protegerRuta, async (req, res) => {
+  try {
+    const fechaFiltro = req.query.fecha;
+    const query = {};
+    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
+      query.fecha = fechaFiltro;
+    }
+    const leads = await Lead.find(query).lean();
+
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    const ventasPorProducto = {};
+
+    leads.forEach(row => {
+      const equipo = row.equipo || row.team || "";
+      const producto = row.producto || "";
+      const puntaje = parseFloat(row.puntaje) || 0;
+
+      if (!equipo || !producto) return;
+
+      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
+      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
+      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
+    });
+
+    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
+  } catch (error) {
+    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
+  }
+});
+
+// Descargar Excel de Costumers
 app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   try {
     const { desde, hasta } = req.query;
@@ -195,44 +263,6 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   }
 });
 
-// ====================== ENDPOINTS CRUD Y GRAFICAS DE LEADS ==================
-app.post("/api/leads", protegerRuta, async (req, res) => {
-  try {
-    const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
-
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-
-    // Siempre guardar fecha como string YYYY-MM-DD en HORA LOCAL
-    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
-      ? fecha
-      : getFechaLocalHoy();
-
-    const nuevoLead = {
-      fecha: fechaLead,
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      puntaje: puntaje || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-
-    // Guardar en leads
-    await Lead.create(nuevoLead);
-
-    // Guardar en costumers también
-    await Costumer.create(nuevoLead);
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
-  }
-});
-
 // ====================== COSTUMER ENDPOINTS =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
@@ -240,7 +270,6 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
-    // Siempre guardar fecha como string YYYY-MM-DD en HORA LOCAL
     const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
 
     const nuevoCostumer = {
@@ -298,7 +327,6 @@ app.post('/api/facturacion', protegerRuta, async (req, res) => {
 // OBTENER TODA LA FACTURACION DE UN MES/AÑO
 app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   const { ano, mes } = req.params;
-  // fechas formato DD/MM/YYYY
   const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
   try {
     const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
@@ -329,46 +357,13 @@ app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res)
   res.json({ ok: true, totalesPorDia });
 });
 
-// ELIMINAR TODOS LOS COSTUMERS
-app.delete('/api/costumer/all', protegerRuta, async (req, res) => {
-  try {
-    await Costumer.deleteMany({});
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ELIMINAR UN COSTUMER POR ID
-app.delete('/api/costumer/:id', protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    await Costumer.findByIdAndDelete(id);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// EDITAR/ACTUALIZAR UN COSTUMER POR ID
-app.put('/api/costumer/:id', protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const update = req.body;
-    await Costumer.findByIdAndUpdate(id, update);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
+// =================== UTILIDADES, LOGOUT Y MIGRACIÓN =======================
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
   });
 });
 
-// ==== MIGRACIÓN DE FECHAS A STRING YYYY-MM-DD ====
 app.post('/api/migrar-fechas-a-string', async (req, res) => {
   try {
     let leadsModificados = 0;
