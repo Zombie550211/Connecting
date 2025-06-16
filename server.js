@@ -187,7 +187,12 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
+    // Manejo de error para duplicados
+    if (err.code === 11000) {
+      res.status(400).json({ success: false, error: "Ya existe un registro idéntico. No se puede duplicar." });
+    } else {
+      res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
+    }
   }
 });
 
@@ -288,7 +293,12 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     await Costumer.create(nuevoCostumer);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    // Manejo de error para duplicados
+    if (err.code === 11000) {
+      res.status(400).json({ success: false, error: "Ya existe un costumer idéntico. No se puede duplicar." });
+    } else {
+      res.status(500).json({ success: false, error: err.message });
+    }
   }
 });
 
@@ -319,6 +329,20 @@ app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
       return res.status(404).json({ success: false, error: "Costumer no encontrado." });
     }
     res.json({ success: true, costumer: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ELIMINAR COSTUMER POR ID (NUEVO ENDPOINT)
+app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Costumer.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
+    }
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -323,8 +323,7 @@
       font-size: 0.98em;
       white-space: pre-line;
     }
-
-    /* --- PAGINACION TABLA --- */
+        /* --- PAGINACION TABLA --- */
     .tabla-paginacion {
       width: 100%;
       display: flex;
@@ -573,6 +572,7 @@ const filtroAno = document.getElementById("filtroAno");
 const excelBody = document.getElementById("excelBody");
 const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
+const btnGuardar = document.getElementById('btnGuardarFacturacion');
 
 // Llenar select de años
 (function(){
@@ -593,8 +593,25 @@ function daysInMonth(year, month) {
 let currentBlock = 0;
 let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
+let datosFacturacionMes = []; // [{fecha, campos}]
 
-function renderTablaDias(mes, ano, block=0) {
+async function fetchFacturacionMes(mes, ano) {
+  try {
+    const res = await fetch(`/api/facturacion/${ano}/${String(mes).padStart(2, '0')}`);
+    const data = await res.json();
+    datosFacturacionMes = (data.ok && data.data) ? data.data : [];
+  } catch (e) {
+    datosFacturacionMes = [];
+  }
+}
+
+function buscarCamposPorFecha(fecha) {
+  const fila = datosFacturacionMes.find(f => f.fecha === fecha);
+  return fila ? fila.campos : Array(14).fill('');
+}
+
+async function renderTablaDias(mes, ano, block=0) {
+  await fetchFacturacionMes(mes, ano);
   excelBody.innerHTML = "";
   const numDias = daysInMonth(ano, mes);
   const start = block * 16;
@@ -607,26 +624,25 @@ function renderTablaDias(mes, ano, block=0) {
         td.textContent = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
         td.contentEditable = false;
       } else {
+        const fecha = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
+        const campos = buscarCamposPorFecha(fecha);
+        td.textContent = campos[c-1] ?? '';
         td.contentEditable = true;
       }
       tr.appendChild(td);
     }
     excelBody.appendChild(tr);
   }
-  // Botones de paginación habilitar/deshabilitar
   btnUp.disabled = (block === 0);
   btnDown.disabled = ((block + 1) * 16 >= numDias);
   renderFilaTotalesFacturacion();
 }
+
 function updateTableByFilters() {
   currentBlock = 0;
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   renderTablaDias(currentMonth, currentYear, currentBlock);
-  // También actualiza la tabla del modal si está abierto
-  if (document.getElementById('modalTablaCompleta').classList.contains('active')) {
-    renderTablaCompleta(currentMonth, currentYear);
-  }
 }
 filtroMes.addEventListener('change', updateTableByFilters);
 filtroAno.addEventListener('change', updateTableByFilters);
@@ -645,47 +661,85 @@ function prevBlock() {
   }
 }
 
-renderTablaDias(currentMonth, currentYear, currentBlock);
-
-// --- MODAL LÓGICA ---
-function abrirModalTabla() {
-  renderTablaCompleta(currentMonth, currentYear);
-  document.getElementById('modalTablaCompleta').classList.add('active');
-  document.body.style.overflow = "hidden";
+// --- FÓRMULAS AUTOMÁTICAS Y TOTALES ---
+function recalcularFila(tr) {
+  const tds = Array.from(tr.children);
+  const alexis = parseFloat(tds[1].textContent) || 0;
+  const ventasAlexis = parseFloat(tds[2].textContent) || 0;
+  tds[3].textContent = ventasAlexis > 0 ? (alexis / ventasAlexis).toFixed(2) : "";
+  const cuentaAlterna = parseFloat(tds[4].textContent) || 0;
+  const ventasCA = parseFloat(tds[5].textContent) || 0;
+  tds[6].textContent = ventasCA > 0 ? (cuentaAlterna / ventasCA).toFixed(2) : "";
+  const lineas = parseFloat(tds[7].textContent) || 0;
+  const ventasLineas = parseFloat(tds[8].textContent) || 0;
+  tds[9].textContent = ventasLineas > 0 ? (lineas / ventasLineas).toFixed(2) : "";
+  const totalDia = alexis + cuentaAlterna + lineas;
+  tds[10].textContent = totalDia.toFixed(2);
+  const totalVentas = ventasAlexis + ventasCA + ventasLineas;
+  tds[11].textContent = totalVentas > 0 ? totalVentas : "";
+  tds[12].textContent = (totalVentas > 0) ? (totalDia / totalVentas).toFixed(2) : "";
+  const puntos = parseFloat(tds[13].textContent) || 0;
+  tds[14].textContent = (totalDia > 0) ? (puntos / totalDia).toFixed(2) : "";
 }
-function cerrarModalTabla() {
-  document.getElementById('modalTablaCompleta').classList.remove('active');
-  document.body.style.overflow = "";
-}
-// Renderiza toda la tabla del mes en el modal
-function renderTablaCompleta(mes, ano) {
-  const modalBody = document.getElementById("modalTablaBody");
-  modalBody.innerHTML = "";
-  const numDias = daysInMonth(ano, mes);
-  for (let i = 0; i < numDias; i++) {
-    const tr = document.createElement("tr");
-    for (let c = 0; c < 15; c++) {
-      const td = document.createElement("td");
-      if (c === 0) {
-        td.textContent = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
-      }
-      tr.appendChild(td);
-    }
-    modalBody.appendChild(tr);
+excelBody.addEventListener('input', function(e) {
+  const td = e.target;
+  const tr = td.parentElement;
+  if (td.cellIndex !== 0 && ![3,6,9,10,11,12,14].includes(td.cellIndex)) {
+    recalcularFila(tr);
+    renderFilaTotalesFacturacion();
+  }
+});
+function renderFilaTotalesFacturacion() {
+  const numCols = 15;
+  const totales = Array(numCols).fill(0);
+  const filas = Array.from(excelBody.querySelectorAll('tr'));
+  filas.forEach(tr => {
+    Array.from(tr.children).forEach((td, i) => {
+      if (i === 0) return;
+      const val = parseFloat(td.textContent) || 0;
+      totales[i] += val;
+    });
+  });
+  for (let i = 1; i < numCols; i++) {
+    document.getElementById('total-col-' + i).textContent = totales[i].toFixed(2);
   }
 }
 
-/* --- Gráfica Chart.js GASTOS POR MES --- */
+// --- GUARDAR TODO ---
+btnGuardar.addEventListener('click', guardarTodoFacturacion);
+async function guardarTodoFacturacion() {
+  const filas = Array.from(document.querySelectorAll('#excelBody tr'));
+  let guardados = 0, errores = 0;
+  for (const tr of filas) {
+    recalcularFila(tr);
+    const tds = Array.from(tr.children);
+    const fecha = tds[0].textContent.trim();
+    const campos = tds.slice(1).map(td => td.textContent.trim());
+    if (campos.some(val => val !== "")) {
+      const res = await fetch('/api/facturacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha, campos })
+      });
+      const data = await res.json();
+      if (data.ok) guardados++;
+      else errores++;
+    }
+  }
+  await renderTablaDias(currentMonth, currentYear, currentBlock);
+  await actualizarGrafica();
+  renderFilaTotalesFacturacion();
+  alert(`Guardados: ${guardados}. Errores: ${errores}`);
+}
+
+// --- GRAFICA (igual que antes) ---
 let grafica;
 async function actualizarGrafica() {
-  // Pide los totales del mes seleccionado
   const mes = parseInt(filtroMes.value, 10);
   const ano = parseInt(filtroAno.value, 10);
   const resp = await fetch(`/api/facturacion/estadistica/${ano}/${String(mes).padStart(2, '0')}`);
   const { totalesPorDia } = await resp.json();
-  // suma total del mes actual
   const totalMes = totalesPorDia.reduce((a,b) => a + b, 0);
-  // Actualiza la gráfica: solo una barra (total del mes)
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
   grafica = new Chart(ctx, {
@@ -732,107 +786,10 @@ async function actualizarGrafica() {
   });
 }
 
-// ------------------ FÓRMULAS AUTOMÁTICAS Y TOTALES -------------------
-
-// Aplica las fórmulas automáticas a una fila
-function recalcularFila(tr) {
-  const tds = Array.from(tr.children);
-
-  // 1. VALOR DE VENTA (Alexis, CA, Lineas)
-  // Alexis
-  const alexis = parseFloat(tds[1].textContent) || 0;
-  const ventasAlexis = parseFloat(tds[2].textContent) || 0;
-  tds[3].textContent = ventasAlexis > 0 ? (alexis / ventasAlexis).toFixed(2) : "";
-
-  // Cuenta alterna
-  const cuentaAlterna = parseFloat(tds[4].textContent) || 0;
-  const ventasCA = parseFloat(tds[5].textContent) || 0;
-  tds[6].textContent = ventasCA > 0 ? (cuentaAlterna / ventasCA).toFixed(2) : "";
-
-  // Lineas
-  const lineas = parseFloat(tds[7].textContent) || 0;
-  const ventasLineas = parseFloat(tds[8].textContent) || 0;
-  tds[9].textContent = ventasLineas > 0 ? (lineas / ventasLineas).toFixed(2) : "";
-
-  // 2. TOTAL DEL DIA (Alexis + Cuenta alterna + Lineas)
-  const totalDia = alexis + cuentaAlterna + lineas;
-  tds[10].textContent = totalDia.toFixed(2);
-
-  // 3. TOTAL VENTAS (sumar todas las columnas "VENTAS POR DIA")
-  const totalVentas = ventasAlexis + ventasCA + ventasLineas;
-  tds[11].textContent = totalVentas > 0 ? totalVentas : "";
-
-  // 4. VALOR VENTA AHORA (TOTAL DEL DIA / TOTAL VENTAS)
-  tds[12].textContent = (totalVentas > 0) ? (totalDia / totalVentas).toFixed(2) : "";
-
-  // 5. CPA PUNTOS (PUNTOS / TOTAL DEL DIA)
-  const puntos = parseFloat(tds[13].textContent) || 0;
-  tds[14].textContent = (totalDia > 0) ? (puntos / totalDia).toFixed(2) : "";
-}
-
-// Llama a recalcularFila en cada edición de celda relevante
-excelBody.addEventListener('input', function(e) {
-  const td = e.target;
-  const tr = td.parentElement;
-  // No recalcular si es cabecera ni columna calculada
-  if (td.cellIndex !== 0 && ![3,6,9,10,11,12,14].includes(td.cellIndex)) {
-    recalcularFila(tr);
-    renderFilaTotalesFacturacion();
-  }
-});
-
-// Fila de totales de cada columna numérica
-function renderFilaTotalesFacturacion() {
-  // Hay 15 columnas
-  const numCols = 15;
-  const totales = Array(numCols).fill(0);
-  const filas = Array.from(excelBody.querySelectorAll('tr'));
-  filas.forEach(tr => {
-    Array.from(tr.children).forEach((td, i) => {
-      if (i === 0) return; // FECHA
-      const val = parseFloat(td.textContent) || 0;
-      totales[i] += val;
-    });
-  });
-  for (let i = 1; i < numCols; i++) {
-    document.getElementById('total-col-' + i).textContent = totales[i].toFixed(2);
-  }
-}
-
-// ------------------ GUARDAR TODO -------------------
-document.getElementById('btnGuardarFacturacion').addEventListener('click', guardarTodoFacturacion);
-
-async function guardarTodoFacturacion() {
-  const filas = Array.from(document.querySelectorAll('#excelBody tr'));
-  let guardados = 0, errores = 0;
-  for (const tr of filas) {
-    recalcularFila(tr);
-    const tds = Array.from(tr.children);
-    const fecha = tds[0].textContent.trim();
-    const campos = tds.slice(1).map(td => td.textContent.trim());
-    // Solo guardar si algún campo tiene dato
-    if (campos.some(val => val !== "")) {
-      const res = await fetch('/api/facturacion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fecha, campos })
-      });
-      const data = await res.json();
-      if (data.ok) guardados++;
-      else errores++;
-    }
-  }
+// --- INIT ---
+window.addEventListener('DOMContentLoaded', async () => {
+  await renderTablaDias(currentMonth, currentYear, currentBlock);
   await actualizarGrafica();
-  renderFilaTotalesFacturacion();
-  alert(`Guardados: ${guardados}. Errores: ${errores}`);
-}
-
-// Refresca tabla y gráfica al cambiar mes/año
-filtroMes.addEventListener('change', actualizarGrafica);
-filtroAno.addEventListener('change', actualizarGrafica);
-
-window.addEventListener('DOMContentLoaded', () => {
-  actualizarGrafica();
   renderFilaTotalesFacturacion();
 });
 </script>
