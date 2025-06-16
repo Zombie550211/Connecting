@@ -20,6 +20,12 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
+
+      --estado-pending: #A259E6;           /* Morado */
+      --estado-complete: #4CAF50;          /* Verde */
+      --estado-rescheduled: #36B3E6;       /* Celeste */
+      --estado-pending-chargeback: #B71C1C;/* Rojo sangre */
+      --estado-cancelled: #FF1A1A;         /* Rojo vivo */
     }
     * { box-sizing: border-box; }
     body {
@@ -335,6 +341,30 @@
     }
     .btn-editar:hover { color: #FFD600; }
     .btn-eliminar:hover { color: #ff5252; }
+
+    .estado-select {
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 5px 7px;
+      border: 1.5px solid #e3e8ee;
+      outline: none;
+      min-width: 120px;
+      transition: border 0.18s, box-shadow 0.18s;
+    }
+    .estado-pending { background: var(--estado-pending); color: #fff; }
+    .estado-complete { background: var(--estado-complete); color: #fff; }
+    .estado-rescheduled { background: var(--estado-rescheduled); color: #fff; }
+    .estado-pending-chargeback { background: var(--estado-pending-chargeback); color: #fff; }
+    .estado-cancelled { background: var(--estado-cancelled); color: #fff; }
+    .estado-select option {
+      color: #fff;
+      font-weight: bold;
+    }
+    .estado-select option[value="Pending"] { background: var(--estado-pending);}
+    .estado-select option[value="Complete"] { background: var(--estado-complete);}
+    .estado-select option[value="Rescheduled"] { background: var(--estado-rescheduled);}
+    .estado-select option[value="Pending Chargeback"] { background: var(--estado-pending-chargeback);}
+    .estado-select option[value="Cancelled"] { background: var(--estado-cancelled);}
     @media (max-width: 1100px) {
       .filters-download-bar, .actions-bar { flex-direction: column; gap: 11px; align-items: flex-start; }
       .descargar-btn-icono { margin-left: 0; margin-top: 10px;}
@@ -366,7 +396,7 @@
       <button onclick="location.href='inicio.html'">Inicio</button>
       <button onclick="location.href='lead.html'">Lead</button>
       <button class="active" onclick="location.href='costumer.html'">Costumer</button>
-      <button onclick="location.href='Facturacion.html'">Facturacion</button>
+      <button onclick="location.href='Facturacion.html'">Fac</button>
       <button onclick="logout()">Cerrar sesión</button>
     </div>
     <div class="sidebar-lema">
@@ -452,6 +482,7 @@
             <th>TEAM</th>
             <th>AGENTE</th>
             <th>PRODUCTO</th>
+            <th>Estado</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
             <th>TELÉFONO</th>
@@ -467,7 +498,6 @@
   </main>
 </div>
 <script>
-// Teams y agentes FIJOS
 const TEAMS = {
   "Team Pleitez": [
     "Diego Mejia",
@@ -526,6 +556,14 @@ const TEAMS = {
 
 let datosCostumers = [];
 
+const ESTADO_OPCIONES = [
+  { value: "Pending", texto: "Pending", clase: "estado-pending" },
+  { value: "Complete", texto: "Complete", clase: "estado-complete" },
+  { value: "Rescheduled", texto: "Rescheduled", clase: "estado-rescheduled" },
+  { value: "Pending Chargeback", texto: "Pending Chargeback", clase: "estado-pending-chargeback" },
+  { value: "Cancelled", texto: "Cancelled", clase: "estado-cancelled" }
+];
+
 async function cargarCostumers() {
   try {
     const res = await fetch('/api/costumer');
@@ -540,6 +578,7 @@ async function cargarCostumers() {
       "TEAM": item.equipo || "",
       "AGENTE": item.agente || "",
       "PRODUCTO": item.producto || "",
+      "Estado": item.estado || "Pending", // Por defecto Pending si no hay
       "PUNTAJE": item.puntaje || "",
       "CUENTA": item.cuenta || "",
       "TELÉFONO": item.telefono || "",
@@ -557,16 +596,31 @@ function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
   }
   filas.forEach(fila => {
+    // Determina la clase de color para el select según estado actual
+    const estadoActual = ESTADO_OPCIONES.find(e => e.value === fila.Estado) ? fila.Estado : "Pending";
+    const claseColor = ESTADO_OPCIONES.find(e => e.value === estadoActual)?.clase || "estado-pending";
+
+    // Genera las opciones del select con el valor seleccionado y los colores
+    const opcionesEstado = ESTADO_OPCIONES.map(op =>
+      `<option value="${op.value}"${fila.Estado === op.value ? " selected" : ""}>${op.texto}</option>`
+    ).join('');
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${fila.FECHA}</td>
       <td>${fila.TEAM}</td>
       <td>${fila.AGENTE}</td>
       <td>${fila.PRODUCTO}</td>
+      <td>
+        <select class="estado-select ${claseColor}"
+                onchange="actualizarEstadoCostumer('${fila._id}', this.value, this)">
+          ${opcionesEstado}
+        </select>
+      </td>
       <td>${fila.PUNTAJE}</td>
       <td>${fila.CUENTA}</td>
       <td>${fila["TELÉFONO"]}</td>
@@ -579,6 +633,31 @@ function renderizarTablaCostumers(filas) {
     `;
     tbody.appendChild(tr);
   });
+}
+
+async function actualizarEstadoCostumer(id, estado, selectEl) {
+  // Cambia el color del select automáticamente
+  selectEl.classList.remove(
+    "estado-pending", "estado-complete", "estado-rescheduled", "estado-pending-chargeback", "estado-cancelled"
+  );
+  const estadoInfo = ESTADO_OPCIONES.find(e => e.value === estado);
+  if (estadoInfo) selectEl.classList.add(estadoInfo.clase);
+
+  try {
+    const res = await fetch(`/api/costumer/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      alert("Error al actualizar el estado: " + (data.error || ""));
+      cargarCostumers();
+    }
+  } catch (e) {
+    alert("Error al actualizar el estado: " + e.message);
+    cargarCostumers();
+  }
 }
 
 // Llena los filtros de Team y Agente FIJOS
@@ -647,7 +726,6 @@ function mostrarFormEditar(id) {
   const costumer = datosCostumers.find(c => c._id === id);
   if (!costumer) return alert("No se encontró el costumer");
 
-  // Genera formulario (simple, puedes mejorar el aspecto)
   const cont = document.getElementById("editar-form-container");
   cont.innerHTML = `
     <form id="edit-costumer-form" style="background:#fff;border:1px solid #eee;padding:18px;margin:18px 0;border-radius:8px;">
@@ -661,6 +739,13 @@ function mostrarFormEditar(id) {
         (TEAMS[costumer.TEAM]||[]).map(a=>`<option value="${a}"${costumer.AGENTE===a?' selected':''}>${a}</option>`).join('')
       }</select></label><br>
       <label>Producto: <input type="text" name="producto" value="${costumer.PRODUCTO}" required></label><br>
+      <label>Estado:
+        <select name="estado" class="estado-select" required>
+          ${ESTADO_OPCIONES.map(op =>
+            `<option value="${op.value}"${costumer.Estado===op.value?' selected':''}>${op.texto}</option>`
+          ).join('')}
+        </select>
+      </label><br>
       <label>Puntaje: <input type="number" name="puntaje" step="0.01" value="${costumer.PUNTAJE}" required></label><br>
       <label>Cuenta: <input type="text" name="cuenta" value="${costumer.CUENTA}" ></label><br>
       <label>Teléfono: <input type="text" name="telefono" value="${costumer["TELÉFONO"]}" ></label><br>
@@ -687,6 +772,7 @@ function mostrarFormEditar(id) {
       equipo: f.equipo.value,
       agente: f.agente.value,
       producto: f.producto.value,
+      estado: f.estado.value,
       puntaje: f.puntaje.value,
       cuenta: f.cuenta.value,
       telefono: f.telefono.value,
@@ -715,7 +801,6 @@ function mostrarFormEditar(id) {
 function cerrarFormEditar() {
   document.getElementById("editar-form-container").innerHTML = "";
 }
-
 // Eventos de los filtros
 document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
 document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
@@ -723,10 +808,8 @@ document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarF
 document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
-
 // Inicial
 cargarCostumers();
-
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
