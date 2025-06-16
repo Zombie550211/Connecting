@@ -8,11 +8,13 @@ const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
 const multer = require('multer');
+const bcrypt = require('bcrypt');
 const upload = multer({ dest: 'uploads/' });
 
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
 const Facturacion = require('./models/Facturacion');
+const User = require('./models/user'); // Nuevo modelo para usuarios 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -94,14 +96,55 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-app.post("/login", (req, res) => {
+// LOGIN: ahora acepta admin fijo o usuarios registrados en modelo User
+app.post("/login", async (req, res) => {
   const { user, pass } = req.body;
-  if (user === "admin" && pass === "1234") {
-    req.session.usuario = user;
+  try {
+    // Permite el usuario admin fijo por compatibilidad
+    if (user === "admin" && pass === "1234") {
+      req.session.usuario = user;
+      req.session.ultimoLead = Date.now();
+      return res.json({ success: true });
+    }
+    // Busca el usuario en la base de datos
+    const usuarioDB = await User.findOne({ usuario: user });
+    if (!usuarioDB) return res.json({ success: false });
+
+    const match = await bcrypt.compare(pass, usuarioDB.password);
+    if (!match) return res.json({ success: false });
+
+    req.session.usuario = usuarioDB.usuario;
     req.session.ultimoLead = Date.now();
+    return res.json({ success: true });
+  } catch (err) {
+    return res.json({ success: false, error: "Error interno" });
+  }
+});
+
+// REGISTRO DE USUARIO NUEVO
+app.post('/api/users/register', async (req, res) => {
+  try {
+    const { nombre, apellido, correo, usuario, pass } = req.body;
+    if (!nombre || !apellido || !correo || !usuario || !pass)
+      return res.json({ success: false, error: "Todos los campos son obligatorios." });
+
+    // Verifica si ya existe ese usuario o correo
+    const existe = await User.findOne({ $or: [ { usuario }, { correo } ] });
+    if (existe) return res.json({ success: false, error: "Ya existe un usuario o correo registrado." });
+
+    const hash = await bcrypt.hash(pass, 10);
+
+    await User.create({
+      nombre,
+      apellido,
+      correo,
+      usuario,
+      password: hash
+    });
+
     res.json({ success: true });
-  } else {
-    res.json({ success: false });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
   }
 });
 
