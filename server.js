@@ -348,6 +348,66 @@ app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS KPI PARA COSTUMER ====================
+// Devuelve el total de ventas de hoy (Costumer creados hoy)
+app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
+  try {
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    const fechaHoy = `${yyyy}-${mm}-${dd}`;
+    const total = await Costumer.countDocuments({ fecha: fechaHoy });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+
+// Devuelve el número de leads pendientes (estado === 'Pending')
+app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
+  try {
+    const total = await Costumer.countDocuments({ estado: 'Pending' });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+
+// Devuelve el total de clientes (todos los costumers)
+app.get('/api/clientes', protegerRuta, async (req, res) => {
+  try {
+    const total = await Costumer.countDocuments();
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+
+// Devuelve el total de ventas del mes actual (costumers creados este mes)
+app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
+  try {
+    const hoy = new Date();
+    const year = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const inicioMes = `${year}-${mes}-01`;
+
+    // Obtener último día del mes
+    const finMesDate = new Date(year, hoy.getMonth() + 1, 0);
+    const finMes = `${year}-${mes}-${String(finMesDate.getDate()).padStart(2, '0')}`;
+
+    // Fecha en formato string YYYY-MM-DD
+    const total = await Costumer.countDocuments({
+      fecha: { $gte: inicioMes, $lte: finMes }
+    });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+// ==================== FIN ENDPOINTS KPI ====================
+
 // =========== INTEGRACIÓN DE FACTURACIÓN (tabla de facturación) ===========
 
 // GUARDAR/ACTUALIZAR UNA FILA DE FACTURACION (por fecha)

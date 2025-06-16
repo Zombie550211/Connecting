@@ -564,6 +564,26 @@ const ESTADO_OPCIONES = [
   { value: "Cancelled", texto: "Cancelled", clase: "estado-cancelled" }
 ];
 
+// --- INICIO KPIs FUNCIONALES ---
+async function cargarKPIsCostumer() {
+  const [
+    ventasHoy,
+    leadsPendientes,
+    clientes,
+    ventasMes
+  ] = await Promise.all([
+    fetch('/api/ventas/hoy').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/leads/pendientes').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/clientes').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/ventas/mes').then(r => r.json()).catch(() => ({total:0}))
+  ]);
+  document.getElementById('kpi-ventas-hoy').textContent = ventasHoy.total ?? 0;
+  document.getElementById('kpi-leads-pendientes').textContent = leadsPendientes.total ?? 0;
+  document.getElementById('kpi-clientes').textContent = clientes.total ?? 0;
+  document.getElementById('kpi-ventas-mes').textContent = ventasMes.total ?? 0;
+}
+// --- FIN KPIs FUNCIONALES ---
+
 async function cargarCostumers() {
   try {
     const res = await fetch('/api/costumer');
@@ -810,6 +830,7 @@ document.getElementById("filtro-direccion").addEventListener("input", aplicarFil
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
 // Inicial
 cargarCostumers();
+cargarKPIsCostumer(); // <-- Se llama al cargar la página
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
