@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login | Connecting</title>
+  <title>Connecting | Acceso</title>
   <style>
     body {
       min-height: 100vh;
@@ -11,251 +11,267 @@
       background: linear-gradient(135deg, #22b3ec 0%, #f5f7fa 100%);
       font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
     }
-    .login-register-wrapper {
-      display: flex;
-      flex-direction: row;
+    .auth-card {
       width: 520px;
       height: 520px;
-      min-height: 350px;
       max-width: 98vw;
-      max-height: 96vh;
-      margin: auto;
-      box-shadow: 0 10px 60px 0 rgba(30,41,59,0.17);
-      border-radius: 20px;
+      max-height: 98vh;
+      border-radius: 18px;
       background: #fff;
+      box-shadow: 0 8px 32px rgba(30,41,59,0.18);
+      display: flex;
       overflow: hidden;
+      position: relative;
+      transition: box-shadow .2s;
     }
-    .login-section,
-    .register-section {
+    .auth-card:hover {
+      box-shadow: 0 16px 48px rgba(30,41,59,0.24);
+    }
+    .auth-left, .auth-right {
       flex: 1 1 0;
-      height: 100%;
+      padding: 36px 28px;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 24px 18px;
-      box-sizing: border-box;
-    }
-    .login-section {
       align-items: center;
-      background: #fff;
-      border-right: 1.5px solid #f0f3fa;
+      min-width: 0;
+      overflow: hidden;
+      transition: background .18s;
     }
-    .login-logo {
+    .auth-left {
+      background: #fff;
+      border-right: 2px solid #f0f3fa;
+      align-items: center;
+    }
+    .auth-logo {
       width: 48px;
       height: 48px;
-      margin-bottom: 11px;
+      margin-bottom: 10px;
+      animation: fadeInLogo 1s;
     }
-    .login-logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
+    @keyframes fadeInLogo {
+      from { opacity:0; transform: scale(0.7);}
+      to { opacity:1; transform: scale(1);}
     }
-    .login-title {
-      font-size: 1.3em;
+    .auth-title {
+      font-size: 1.45em;
       font-weight: 700;
       color: #1e293b;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
       letter-spacing: 1px;
       text-align: center;
     }
-    .login-form {
+    .auth-form {
       width: 100%;
-      max-width: 190px;
+      max-width: 210px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 13px;
     }
-    .login-field {
+    .auth-field {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      gap: 5px;
       width: 100%;
-      gap: 4px;
+      position: relative;
     }
-    .login-form label {
+    .auth-form label {
       font-weight: 500;
       color: #2d456b;
       font-size: 1em;
-      margin-bottom: 0;
     }
-    .login-form input[type="text"], .login-form input[type="password"] {
-      padding: 8px 11px;
-      font-size: 1em;
+    .auth-form input[type="text"], 
+    .auth-form input[type="password"], 
+    .auth-form input[type="email"] {
+      padding: 9px 13px;
+      font-size: 1.05em;
       border-radius: 8px;
       border: 1.5px solid #e3e8ee;
       background: #f5f7fa;
-      transition: border 0.2s;
       outline: none;
       width: 100%;
       box-sizing: border-box;
       margin-bottom: 0;
+      transition: border .2s, box-shadow .2s;
+      font-family: inherit;
     }
-    .login-form input:focus {
+    .auth-form input:focus {
       border-color: #22b3ec;
       background: #fff;
+      box-shadow: 0 2px 12px #22b3ec22;
     }
-    .login-btn {
+    .auth-btn {
       background: #22b3ec;
       color: #fff;
-      font-size: 1em;
+      font-size: 1.08em;
       font-weight: 700;
-      padding: 9px 0;
+      padding: 10px 0;
       border: none;
       border-radius: 8px;
-      margin-top: 3px;
-      transition: background .17s;
+      margin-top: 2px;
+      transition: background .17s, box-shadow .2s;
       cursor: pointer;
       box-shadow: 0 2px 8px #22b3ec22;
       width: 100%;
+      letter-spacing: .5px;
     }
-    .login-btn:hover {
+    .auth-btn:hover, .auth-btn:focus {
       background: #1896c8;
+      box-shadow: 0 4px 12px #22b3ec55;
     }
-    .login-error {
-      color: #ff3b3b;
-      background: #fff6f6;
-      border: 1px solid #ffbdbd;
-      padding: 6px 12px;
+    .auth-error, .auth-success {
+      font-size: .97em;
+      padding: 7px 14px;
       border-radius: 7px;
       text-align: center;
       margin-bottom: 2px;
-      font-size: 0.95em;
       display: none;
+      width: 100%;
+      box-sizing: border-box;
+      animation: fadeIn .4s;
     }
-    /* ---------- REGISTRO USUARIO ----------- */
-    .register-section {
-      align-items: center;
+    .auth-error {
+      color: #ff3b3b;
+      background: #fff6f6;
+      border: 1px solid #ffbdbd;
+    }
+    .auth-success {
+      color: #169e38;
+      background: #e3ffe9;
+      border: 1px solid #a3f5b6;
+    }
+    /* Registro */
+    .auth-right {
       background: #f8fafc;
+      align-items: center;
     }
     .register-title {
-      font-size: 1.1em;
+      font-size: 1.13em;
       font-weight: 700;
       color: #1e293b;
-      margin-bottom: 7px;
+      margin-bottom: 9px;
       text-align: center;
     }
     .register-form {
       width: 100%;
-      max-width: 190px;
+      max-width: 210px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 9px;
     }
     .register-field {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       width: 100%;
-      gap: 3px;
+      gap: 4px;
+      position: relative;
     }
     .register-form label {
       font-weight: 500;
       color: #2d456b;
       font-size: 1em;
-      margin-bottom: 0;
     }
     .register-form input[type="text"],
     .register-form input[type="password"],
     .register-form input[type="email"] {
-      padding: 8px 11px;
-      font-size: 1em;
+      padding: 9px 13px;
+      font-size: 1.05em;
       border-radius: 8px;
       border: 1.5px solid #e3e8ee;
       background: #fff;
-      transition: border 0.2s;
       outline: none;
       width: 100%;
       box-sizing: border-box;
       margin-bottom: 0;
+      transition: border .2s, box-shadow .2s;
+      font-family: inherit;
     }
     .register-form input:focus {
       border-color: #22b3ec;
       background: #f5f7fa;
+      box-shadow: 0 2px 12px #22b3ec22;
     }
     .register-btn {
       background: #22b3ec;
       color: #fff;
-      font-size: 1em;
+      font-size: 1.08em;
       font-weight: 700;
-      padding: 9px 0;
+      padding: 10px 0;
       border: none;
       border-radius: 8px;
-      margin-top: 3px;
-      transition: background .17s;
+      margin-top: 2px;
+      transition: background .17s, box-shadow .2s;
       cursor: pointer;
       box-shadow: 0 2px 8px #22b3ec22;
       width: 100%;
+      letter-spacing: .5px;
     }
-    .register-btn:hover {
+    .register-btn:hover, .register-btn:focus {
       background: #1896c8;
+      box-shadow: 0 4px 12px #22b3ec55;
     }
-    .register-success {
-      color: #169e38;
-      background: #e3ffe9;
-      border: 1px solid #a3f5b6;
-      padding: 6px 12px;
-      border-radius: 7px;
-      text-align: center;
-      margin-bottom: 2px;
-      font-size: 0.95em;
-      display: none;
-    }
-    .register-error {
-      color: #ff3b3b;
-      background: #fff6f6;
-      border: 1px solid #ffbdbd;
-      padding: 6px 12px;
-      border-radius: 7px;
-      text-align: center;
-      margin-bottom: 2px;
-      font-size: 0.95em;
-      display: none;
-    }
-    @media (max-width: 600px) {
-      .login-register-wrapper {
+    @media (max-width: 640px) {
+      .auth-card {
         flex-direction: column;
-        width: 99vw;
-        min-height: unset;
+        width: 97vw;
         height: auto;
-        max-height: unset;
+        min-height: 0;
+        border-radius: 12px;
       }
-      .login-section, .register-section { border: none; }
-      .login-section, .register-section { padding: 18px 5vw; }
-      .login-title, .register-title { font-size: 1em; }
-      .login-form, .register-form { max-width: 100%; }
+      .auth-left, .auth-right {
+        border: none;
+        min-width: 0;
+        padding: 22px 5vw;
+      }
+      .auth-title, .register-title { font-size: 1em; }
+      .auth-form, .register-form { max-width: 100%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div class="login-register-wrapper">
+  <div class="auth-card">
     <!-- LOGIN -->
-    <div class="login-section">
-      <div class="login-logo">
-        <img src="logo connecting.png" alt="Logo Connecting">
+    <div class="auth-left">
+      <div class="auth-logo">
+        <img src="logo connecting.png" alt="Logo Connecting" style="width:100%;height:100%;">
       </div>
-      <div class="login-title">Connecting</div>
-      <form class="login-form" id="loginForm" autocomplete="off">
-        <div class="login-field">
+      <div class="auth-title">Connecting</div>
+      <form class="auth-form" id="loginForm" autocomplete="off">
+        <div class="auth-field">
           <label for="user">Usuario</label>
           <input type="text" id="user" name="user" autocomplete="username" required autofocus>
         </div>
-        <div class="login-field">
+        <div class="auth-field">
           <label for="pass">Contraseña</label>
           <input type="password" id="pass" name="pass" autocomplete="current-password" required>
         </div>
-        <div class="login-error" id="loginError"></div>
-        <button class="login-btn" type="submit">Ingresar</button>
+        <div class="auth-error" id="loginError"></div>
+        <button class="auth-btn" type="submit">Ingresar</button>
       </form>
     </div>
-
     <!-- REGISTRO -->
-    <div class="register-section">
+    <div class="auth-right">
       <div class="register-title">Crear nuevo usuario</div>
       <form class="register-form" id="registerForm" autocomplete="off">
+        <div class="register-field">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" required placeholder="Nombre">
+        </div>
+        <div class="register-field">
+          <label for="apellido">Apellido</label>
+          <input type="text" id="apellido" name="apellido" required placeholder="Apellido">
+        </div>
         <div class="register-field">
           <label for="newuser">Usuario</label>
           <input type="text" id="newuser" name="newuser" required minlength="3" maxlength="30" pattern="^[a-zA-Z0-9_.-]{3,30}$" placeholder="Nombre de usuario">
@@ -272,8 +288,8 @@
           <label for="newpass2">Confirmar Contraseña</label>
           <input type="password" id="newpass2" name="newpass2" required minlength="6" maxlength="32" placeholder="Repite la contraseña">
         </div>
-        <div class="register-success" id="registerSuccess"></div>
-        <div class="register-error" id="registerError"></div>
+        <div class="auth-success" id="registerSuccess"></div>
+        <div class="auth-error" id="registerError"></div>
         <button class="register-btn" type="submit">Crear Usuario</button>
       </form>
     </div>
@@ -319,11 +335,13 @@
       e.preventDefault();
       registerErrorDiv.style.display = "none";
       registerSuccessDiv.style.display = "none";
-      const user = registerForm.newuser.value.trim();
-      const email = registerForm.newemail.value.trim();
+      const nombre = registerForm.nombre.value.trim();
+      const apellido = registerForm.apellido.value.trim();
+      const usuario = registerForm.newuser.value.trim();
+      const correo = registerForm.newemail.value.trim();
       const pass = registerForm.newpass.value;
       const pass2 = registerForm.newpass2.value;
-      if (!user || !email || !pass || !pass2) {
+      if (!nombre || !apellido || !usuario || !correo || !pass || !pass2) {
         registerErrorDiv.textContent = "Por favor, completa todos los campos.";
         registerErrorDiv.style.display = "block";
         return;
@@ -337,7 +355,7 @@
         const resp = await fetch('/api/users/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user, email, pass })
+          body: JSON.stringify({ nombre, apellido, usuario, correo, pass })
         });
         const data = await resp.json();
         if (data.success) {

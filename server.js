@@ -28,13 +28,12 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
-// ==== FUNCIÓN PARA FECHA LOCAL YYYY-MM-DD ====
+// ==== FUNCIÓN PARA FECHA LOCAL DE EL SALVADOR YYYY-MM-DD ====
 function getFechaLocalHoy() {
+  // Obtiene la fecha local de El Salvador (sin importar dónde esté el servidor)
   const hoy = new Date();
-  const year = hoy.getFullYear();
-  const month = String(hoy.getMonth() + 1).padStart(2, '0');
-  const day = String(hoy.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 // Middleware robusto para proteger rutas, cerrar sesión si no se ha enviado un lead en 30 minutos
@@ -396,11 +395,9 @@ app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
 app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
   try {
     const hoy = new Date();
-    hoy.setHours(0,0,0,0);
-    const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dd = String(hoy.getDate()).padStart(2, '0');
-    const fechaHoy = `${yyyy}-${mm}-${dd}`;
+    // Usa la función de El Salvador para el KPI
+    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
+    const fechaHoy = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     const total = await Costumer.countDocuments({ fecha: fechaHoy });
     res.json({ total });
   } catch (err) {
@@ -432,13 +429,12 @@ app.get('/api/clientes', protegerRuta, async (req, res) => {
 app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   try {
     const hoy = new Date();
-    const year = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const inicioMes = `${year}-${mes}-01`;
+    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
+    const inicioMes = `${year}-${month.padStart(2, '0')}-01`;
 
     // Obtener último día del mes
-    const finMesDate = new Date(year, hoy.getMonth() + 1, 0);
-    const finMes = `${year}-${mes}-${String(finMesDate.getDate()).padStart(2, '0')}`;
+    const finMesDate = new Date(year, parseInt(month), 0);
+    const finMes = `${year}-${month.padStart(2, '0')}-${String(finMesDate.getDate()).padStart(2, '0')}`;
 
     // Fecha en formato string YYYY-MM-DD
     const total = await Costumer.countDocuments({
