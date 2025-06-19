@@ -273,6 +273,8 @@
   </style>
 </head>
 <body>
+  <!-- VALIDACIÓN DE AUTENTICACIÓN, debe ser el primer script del body -->
+  <script src="agentes/js/auth-check.js"></script>
   <div class="topbar">
     <div><b>CRM Agente</b></div>
     <a href="#" class="logout">Cerrar sesión</a>
@@ -466,7 +468,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script>
-    // Validación visual tipo Google Forms
+    // VALIDACIÓN visual tipo Google Forms
     document.getElementById('crmForm').addEventListener('submit', function(e){
       e.preventDefault();
       let ok = true;

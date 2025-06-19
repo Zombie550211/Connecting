@@ -1,3 +1,9 @@
+// --- CONFIGURACIÓN AUTOMÁTICA DE URL DEL BACKEND ---
+const API_URL =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : "https://connecting-klf7.onrender.com"; // <-- Cambia esta URL por la tuya de Render
+
 // --- TAB NAVIGATION ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.onclick = function(e) {
@@ -14,7 +20,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- LEAD PANEL INICIALIZACIÓN ---
 async function getAgenteInfo() {
-  const resp = await fetch('/api/agente/info');
+  const resp = await fetch(`${API_URL}/api/agente/info`);
   return await resp.json();
 }
 getAgenteInfo().then(info => {
@@ -42,7 +48,7 @@ document.getElementById('formLead').onsubmit = async function(e) {
   const errorDiv = document.getElementById('leadError');
   const okDiv = document.getElementById('leadSuccess');
   errorDiv.style.display = okDiv.style.display = "none";
-  const resp = await fetch('/api/agente/leads', {
+  const resp = await fetch(`${API_URL}/api/agente/leads`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify(data)
@@ -63,7 +69,7 @@ document.getElementById('formLead').onsubmit = async function(e) {
 
 // --- GRÁFICAS ---
 async function cargarGraficaMensual() {
-  const resp = await fetch('/api/agente/estadisticas-mes');
+  const resp = await fetch(`${API_URL}/api/agente/estadisticas-mes`);
   const data = await resp.json();
   const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const ctx = document.getElementById('graficaMensual').getContext('2d');
@@ -86,7 +92,7 @@ async function cargarGraficaMensual() {
   });
 }
 async function cargarGraficaProducto() {
-  const resp = await fetch('/api/agente/ventas-producto');
+  const resp = await fetch(`${API_URL}/api/agente/ventas-producto`);
   const data = await resp.json();
   const ctx = document.getElementById('graficaProducto').getContext('2d');
   if(window.graficaProductoObj) window.graficaProductoObj.destroy();
@@ -116,7 +122,7 @@ async function cargarCostumerPanel() {
 // --- Métricas ---
 async function cargarCostumerMetricas() {
   const params = new URLSearchParams(costumerFiltro).toString();
-  const resp = await fetch('/api/agente/costumer-metricas?' + params);
+  const resp = await fetch(`${API_URL}/api/agente/costumer-metricas?` + params);
   const m = await resp.json();
   document.getElementById('ventasHoy').textContent = m.ventasHoy || 0;
   document.getElementById('leadsPendientes').textContent = m.leadsPendientes || 0;
@@ -126,7 +132,7 @@ async function cargarCostumerMetricas() {
 
 // --- Teams para filtro ---
 async function cargarCostumerTeams() {
-  const resp = await fetch('/api/agente/teams');
+  const resp = await fetch(`${API_URL}/api/agente/teams`);
   const teams = await resp.json();
   const sel = document.getElementById('filtroTeam');
   let prev = sel.value;
@@ -137,7 +143,7 @@ async function cargarCostumerTeams() {
 // --- Tabla principal ---
 async function cargarCostumersTabla() {
   const params = new URLSearchParams(costumerFiltro).toString();
-  const resp = await fetch('/api/agente/costumer?' + params);
+  const resp = await fetch(`${API_URL}/api/agente/costumer?` + params);
   const data = await resp.json();
   const tbody = document.querySelector('#tablaCostumer tbody');
   tbody.innerHTML = '';
@@ -179,7 +185,7 @@ function actualizarFiltroCostumer() {
 // --- ACCIONES: EDITAR / ELIMINAR ---
 window.eliminarCostumer = async function(id){
   if(!confirm("¿Seguro de eliminar este registro?")) return;
-  const resp = await fetch('/api/agente/costumer/'+id, {method:'DELETE'});
+  const resp = await fetch(`${API_URL}/api/agente/costumer/`+id, {method:'DELETE'});
   const data = await resp.json();
   if(data.success){
     cargarCostumerPanel();
@@ -195,7 +201,7 @@ window.editarCostumer = function(id){
 // --- ACCIONES: DESCARGAR EXCEL ---
 document.getElementById('btnDescargarExcel').onclick = function(){
   const params = new URLSearchParams(costumerFiltro).toString();
-  window.open('/api/agente/costumer-excel?' + params, '_blank');
+  window.open(`${API_URL}/api/agente/costumer-excel?` + params, '_blank');
 };
 
 // --- ACCIONES: IMPORTAR EXCEL ---
@@ -211,7 +217,7 @@ document.getElementById('btnImportarExcel').onclick = async function(){
   if(!archivoSeleccionado) return alert("Selecciona un archivo Excel primero.");
   const formData = new FormData();
   formData.append('excel', archivoSeleccionado);
-  const resp = await fetch('/api/agente/costumer-import', {method:'POST', body:formData});
+  const resp = await fetch(`${API_URL}/api/agente/costumer-import`, {method:'POST', body:formData});
   const data = await resp.json();
   if(data.success){
     alert("Importado correctamente.");
@@ -227,7 +233,7 @@ document.getElementById('btnImportarExcel').onclick = async function(){
 // --- ACCIONES: ELIMINAR TODO ---
 document.getElementById('btnEliminarTodo').onclick = async function(){
   if(!confirm("¿Seguro de eliminar TODOS tus costumers?")) return;
-  const resp = await fetch('/api/agente/costumer-eliminar-todo', {method:'DELETE'});
+  const resp = await fetch(`${API_URL}/api/agente/costumer-eliminar-todo`, {method:'DELETE'});
   const data = await resp.json();
   if(data.success){
     alert("Eliminados todos los registros.");

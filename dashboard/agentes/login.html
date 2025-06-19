@@ -24,16 +24,6 @@
       <button type="submit">Entrar</button>
     </form>
   </div>
-  <script>
-    document.getElementById('loginForm').onsubmit = async function(e){
-      e.preventDefault();
-      const user = this.user.value, pass = this.pass.value, err = document.getElementById('loginError');
-      err.style.display='none';
-      const resp = await fetch('/agente/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user,pass})});
-      const data = await resp.json();
-      if(data.success) window.location='/agente/dashboard.html';
-      else{ err.textContent="Usuario o contraseña incorrectos."; err.style.display='block'; }
-    }
-  </script>
+  <script src="agentes/js/login.js"></script>
 </body>
 </html>
