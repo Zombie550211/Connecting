@@ -24,6 +24,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
     }
     .login-title {
       font-size: 2rem;
@@ -66,6 +67,13 @@
     .login-btn:hover {
       background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
     }
+    .create-account-link {
+      color: #2c5364;
+      margin-top: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 1rem;
+    }
     .login-footer {
       margin-top: 20px;
       font-size: .97rem;
@@ -83,8 +91,108 @@
       display: none;
       font-size: 1rem;
     }
+    /* Modal styles */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(44, 83, 100, 0.32);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-bg.active { display: flex; }
+    .modal-content {
+      background: #fff;
+      padding: 32px 24px 24px 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(44,83,100,0.19);
+      width: 96%;
+      max-width: 370px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: modalIn .25s;
+    }
+    @keyframes modalIn {
+      from { transform: translateY(-40px) scale(0.98); opacity: 0.3;}
+      to   { transform: none; opacity: 1;}
+    }
+    .close-modal {
+      position: absolute;
+      top: 10px; right: 14px;
+      font-size: 1.5rem;
+      color: #2c5364;
+      cursor: pointer;
+    }
+    .register-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #2c5364;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .register-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .register-form input {
+      padding: 12px 14px;
+      border: 1px solid #d1d9de;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border .2s;
+    }
+    .register-form input:focus {
+      border: 1.5px solid #2c5364;
+      outline: none;
+    }
+    .register-btn {
+      margin-top: 10px;
+      background: linear-gradient(90deg, #2c5364 60%, #0f2027 100%);
+      color: #fff;
+      font-size: 1.08rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      cursor: pointer;
+      letter-spacing: .5px;
+      box-shadow: 0 2px 8px rgba(44,83,100,0.08);
+      transition: background .2s;
+    }
+    .register-btn:hover {
+      background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
+    }
+    .register-error {
+      color: #fff;
+      background: #e74c3c;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 7px;
+      display: none;
+      font-size: 1rem;
+    }
+    .register-success {
+      color: #fff;
+      background: #06c24f;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 7px;
+      display: none;
+      font-size: 1rem;
+    }
     @media (max-width: 480px) {
-      .login-container {
+      .login-container, .modal-content {
         padding: 25px 10px;
         max-width: 95vw;
       }
@@ -103,11 +211,40 @@
       <input type="password" name="contrasena" placeholder="Contraseña" required>
       <button class="login-btn" type="submit">Ingresar</button>
     </form>
+    <div class="create-account-link" id="openRegister">¿Crear cuenta nueva?</div>
     <div class="login-footer">
-      &copy; 2025 CRM Connecintg. Todos los derechos reservados.
+      &copy; 2025 CRM Connecting. Todos los derechos reservados.
+    </div>
+  </div>
+
+  <!-- Modal Registro -->
+  <div class="modal-bg" id="registerModal">
+    <div class="modal-content">
+      <div class="close-modal" id="closeRegister" title="Cerrar">&times;</div>
+      <div class="register-title">Crear cuenta</div>
+      <div id="registerError" class="register-error"></div>
+      <div id="registerSuccess" class="register-success"></div>
+      <form id="registerForm" class="register-form" autocomplete="off">
+        <input type="text" name="usuario" placeholder="Usuario" required>
+        <input type="email" name="email" placeholder="Correo electrónico" required>
+        <input type="password" name="contrasena" placeholder="Contraseña" required>
+        <input type="password" name="confirmar" placeholder="Confirmar contraseña" required>
+        <button class="register-btn" type="submit">Crear cuenta</button>
+      </form>
     </div>
   </div>
   <script>
+    // Modal control
+    const openRegister = document.getElementById('openRegister');
+    const closeRegister = document.getElementById('closeRegister');
+    const registerModal = document.getElementById('registerModal');
+    openRegister.onclick = () => registerModal.classList.add('active');
+    closeRegister.onclick = () => registerModal.classList.remove('active');
+    window.onclick = function(e) {
+      if (e.target === registerModal) registerModal.classList.remove('active');
+    };
+
+    // Login
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
@@ -119,13 +256,10 @@
       try {
         const res = await fetch('/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
         if (res.redirected) {
-          // Si el servidor responde con un redirect, sigue la redirección
           window.location.href = res.url;
           return;
         }
@@ -133,17 +267,57 @@
         if (result.success) {
           window.location.href = '/lead.html';
         } else {
-          mostrarError('Usuario o contraseña incorrectos');
+          mostrarError('loginError', 'Usuario o contraseña incorrectos');
         }
       } catch (err) {
-        mostrarError('Error en el servidor. Intente de nuevo.');
+        mostrarError('loginError', 'Error en el servidor. Intente de nuevo.');
       }
     });
 
-    function mostrarError(msg) {
-      const errorDiv = document.getElementById('loginError');
-      errorDiv.textContent = msg;
-      errorDiv.style.display = 'block';
+    // Registro
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const usuario = formData.get('usuario');
+      const email = formData.get('email');
+      const contrasena = formData.get('contrasena');
+      const confirmar = formData.get('confirmar');
+      if (contrasena !== confirmar) {
+        mostrarError('registerError', 'Las contraseñas no coinciden');
+        return;
+      }
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, email, contrasena })
+        });
+        const result = await res.json();
+        if (result.success) {
+          mostrarExito('registerSuccess', '¡Usuario creado correctamente! Revisa tu correo para más detalles.');
+          form.reset();
+        } else {
+          mostrarError('registerError', result.message || 'No se pudo crear el usuario.');
+        }
+      } catch (err) {
+        mostrarError('registerError', 'Error en el servidor. Intente de nuevo.');
+      }
+    });
+
+    function mostrarError(id, msg) {
+      document.getElementById(id).textContent = msg;
+      document.getElementById(id).style.display = 'block';
+      setTimeout(() => {
+        document.getElementById(id).style.display = 'none';
+      }, 4000);
+    }
+    function mostrarExito(id, msg) {
+      document.getElementById(id).textContent = msg;
+      document.getElementById(id).style.display = 'block';
+      setTimeout(() => {
+        document.getElementById(id).style.display = 'none';
+      }, 4000);
     }
   </script>
 </body>
