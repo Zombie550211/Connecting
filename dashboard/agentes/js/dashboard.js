@@ -34,46 +34,96 @@ async function getAgenteInfo() {
   return await resp.json();
 }
 getAgenteInfo().then(info => {
-  document.getElementById('nombreAgente').textContent = info.nombre || '';
-  document.getElementById('agente').value = info.nombreCompleto || '';
-  document.getElementById('fecha').valueAsDate = new Date();
+  if(document.getElementById('nombreAgente')) document.getElementById('nombreAgente').textContent = info.nombre || '';
+  if(document.getElementById('agente')) document.getElementById('agente').value = info.nombreCompleto || '';
+  if(document.getElementById('fecha')) document.getElementById('fecha').valueAsDate = new Date();
   cargarGraficaMensual();
   cargarGraficaProducto();
 });
 
-// --- LEAD FORMULARIO ---
-document.getElementById('formLead').onsubmit = async function(e) {
+// --- LEAD FORMULARIO (NUEVO FORMULARIO ADAPTADO) ---
+document.getElementById('crmForm').onsubmit = async function(e) {
   e.preventDefault();
   const f = this;
+  const formData = new FormData(f);
+
+  // Mapear campos del formulario de acuerdo al HTML actualizado
   const data = {
-    fecha: f.fecha.value,
-    team: f.team.value,
-    agente: f.agente.value,
-    producto: f.producto.value,
-    puntaje: f.puntaje.value,
-    telefono: f.telefono.value,
-    direccion: f.direccion.value,
-    zip: f.zip.value
+    nombre_cliente: formData.get('nombre_cliente'),
+    telefono_principal: formData.get('telefono_principal'),
+    telefono_alterno: formData.get('telefono_alterno'),
+    numero_cuenta: formData.get('numero_cuenta'),
+    autopago: formData.get('autopago'),
+    direccion: formData.get('direccion'),
+    tipo_servicios: formData.get('tipo_servicios'),
+    sistema: formData.get('sistema'),
+    riesgo: formData.get('riesgo'),
+    dia_venta: formData.get('dia_venta'),
+    dia_instalacion: formData.get('dia_instalacion'),
+    status: formData.get('status'),
+    servicios: formData.get('servicios'),
+    mercado: formData.get('mercado'),
+    supervisor: formData.get('supervisor'),
+    comentario: formData.get('comentario'),
+    motivo_llamada: formData.get('motivo_llamada'),
+    zip_code: formData.get('zip_code')
   };
-  const errorDiv = document.getElementById('leadError');
-  const okDiv = document.getElementById('leadSuccess');
-  errorDiv.style.display = okDiv.style.display = "none";
+
+  // Limpia mensajes previos
+  let okDiv = document.getElementById('leadSuccess');
+  let errorDiv = document.getElementById('leadError');
+  if(okDiv) okDiv.style.display = "none";
+  if(errorDiv) errorDiv.style.display = "none";
+
+  // Envía datos al backend
   const resp = await fetchAuth(`${API_URL}/api/agente/leads`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
   const res = await resp.json();
+
+  // Usar SweetAlert2 si existe, si no usar alert clásico
   if(res.success){
-    okDiv.textContent = "Venta registrada!";
-    okDiv.style.display = "block";
+    if(typeof Swal !== "undefined") {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Venta registrada!',
+        text: 'Lead guardado correctamente.',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } else {
+      if(okDiv) {
+        okDiv.textContent = "Venta registrada!";
+        okDiv.style.display = "block";
+      } else {
+        alert("Venta registrada!");
+      }
+    }
+    f.reset();
+    // Si tienes campos de fecha que quieres resetear a hoy:
+    if(f.dia_venta) f.dia_venta.value = new Date().toISOString().slice(0,10);
+    if(f.dia_instalacion) f.dia_instalacion.value = new Date().toISOString().slice(0,10);
+    // Actualizar gráficas y métricas
     cargarGraficaMensual();
     cargarGraficaProducto();
-    f.reset();
-    document.getElementById('fecha').valueAsDate = new Date();
+    if(typeof cargarCostumerPanel === 'function') cargarCostumerPanel();
   }else{
-    errorDiv.textContent = res.error || "Error al guardar.";
-    errorDiv.style.display = "block";
+    if(typeof Swal !== "undefined") {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: res.error || "Error al guardar."
+      });
+    } else {
+      if(errorDiv) {
+        errorDiv.textContent = res.error || "Error al guardar.";
+        errorDiv.style.display = "block";
+      } else {
+        alert(res.error || "Error al guardar.");
+      }
+    }
   }
 };
 
@@ -82,7 +132,8 @@ async function cargarGraficaMensual() {
   const resp = await fetchAuth(`${API_URL}/api/agente/estadisticas-mes`);
   const data = await resp.json();
   const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const ctx = document.getElementById('graficaMensual').getContext('2d');
+  const ctx = document.getElementById('graficaMensual')?.getContext('2d');
+  if(!ctx) return;
   if(window.graficaMensualObj) window.graficaMensualObj.destroy();
   window.graficaMensualObj = new Chart(ctx, {
     type: 'bar',
@@ -104,7 +155,8 @@ async function cargarGraficaMensual() {
 async function cargarGraficaProducto() {
   const resp = await fetchAuth(`${API_URL}/api/agente/ventas-producto`);
   const data = await resp.json();
-  const ctx = document.getElementById('graficaProducto').getContext('2d');
+  const ctx = document.getElementById('graficaProducto')?.getContext('2d');
+  if(!ctx) return;
   if(window.graficaProductoObj) window.graficaProductoObj.destroy();
   window.graficaProductoObj = new Chart(ctx, {
     type: 'bar',
@@ -134,10 +186,10 @@ async function cargarCostumerMetricas() {
   const params = new URLSearchParams(costumerFiltro).toString();
   const resp = await fetchAuth(`${API_URL}/api/agente/costumer-metricas?` + params);
   const m = await resp.json();
-  document.getElementById('ventasHoy').textContent = m.ventasHoy || 0;
-  document.getElementById('leadsPendientes').textContent = m.leadsPendientes || 0;
-  document.getElementById('clientesTotal').textContent = m.clientes || 0;
-  document.getElementById('ventasMes').textContent = m.ventasMes || 0;
+  if(document.getElementById('ventasHoy')) document.getElementById('ventasHoy').textContent = m.ventasHoy || 0;
+  if(document.getElementById('leadsPendientes')) document.getElementById('leadsPendientes').textContent = m.leadsPendientes || 0;
+  if(document.getElementById('clientesTotal')) document.getElementById('clientesTotal').textContent = m.clientes || 0;
+  if(document.getElementById('ventasMes')) document.getElementById('ventasMes').textContent = m.ventasMes || 0;
 }
 
 // --- Teams para filtro ---
@@ -145,6 +197,7 @@ async function cargarCostumerTeams() {
   const resp = await fetchAuth(`${API_URL}/api/agente/teams`);
   const teams = await resp.json();
   const sel = document.getElementById('filtroTeam');
+  if(!sel) return;
   let prev = sel.value;
   sel.innerHTML = '<option value="">Todos</option>' + teams.map(t=>`<option value="${t}">${t}</option>`).join('');
   sel.value = prev || '';
@@ -156,6 +209,7 @@ async function cargarCostumersTabla() {
   const resp = await fetchAuth(`${API_URL}/api/agente/costumer?` + params);
   const data = await resp.json();
   const tbody = document.querySelector('#tablaCostumer tbody');
+  if(!tbody) return;
   tbody.innerHTML = '';
   data.costumers.forEach(c => {
     tbody.innerHTML += `<tr>
@@ -179,17 +233,19 @@ async function cargarCostumersTabla() {
 
 // --- Filtros ---
 function actualizarFiltroCostumer() {
-  costumerFiltro.fechaDesde = document.getElementById('filtroFechaDesde').value;
-  costumerFiltro.fechaHasta = document.getElementById('filtroFechaHasta').value;
-  costumerFiltro.team = document.getElementById('filtroTeam').value;
-  costumerFiltro.numero = document.getElementById('filtroNumero').value;
-  costumerFiltro.direccion = document.getElementById('filtroDireccion').value;
-  costumerFiltro.zip = document.getElementById('filtroZip').value;
+  costumerFiltro.fechaDesde = document.getElementById('filtroFechaDesde')?.value || '';
+  costumerFiltro.fechaHasta = document.getElementById('filtroFechaHasta')?.value || '';
+  costumerFiltro.team = document.getElementById('filtroTeam')?.value || '';
+  costumerFiltro.numero = document.getElementById('filtroNumero')?.value || '';
+  costumerFiltro.direccion = document.getElementById('filtroDireccion')?.value || '';
+  costumerFiltro.zip = document.getElementById('filtroZip')?.value || '';
   cargarCostumerPanel();
 }
 ['filtroFechaDesde','filtroFechaHasta','filtroTeam','filtroNumero','filtroDireccion','filtroZip'].forEach(id=>{
-  document.getElementById(id).addEventListener('change',actualizarFiltroCostumer);
-  document.getElementById(id).addEventListener('input',actualizarFiltroCostumer);
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('change',actualizarFiltroCostumer);
+  el.addEventListener('input',actualizarFiltroCostumer);
 });
 
 // --- ACCIONES: EDITAR / ELIMINAR ---
@@ -209,56 +265,67 @@ window.editarCostumer = function(id){
 };
 
 // --- ACCIONES: DESCARGAR EXCEL ---
-document.getElementById('btnDescargarExcel').onclick = function(){
-  const params = new URLSearchParams(costumerFiltro).toString();
-  const token = localStorage.getItem('token');
-  let url = `${API_URL}/api/agente/costumer-excel?` + params;
-  if(token) {
-    url += (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
-  }
-  window.open(url, '_blank');
-};
+if(document.getElementById('btnDescargarExcel')) {
+  document.getElementById('btnDescargarExcel').onclick = function(){
+    const params = new URLSearchParams(costumerFiltro).toString();
+    const token = localStorage.getItem('token');
+    let url = `${API_URL}/api/agente/costumer-excel?` + params;
+    if(token) {
+      url += (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
+    }
+    window.open(url, '_blank');
+  };
+}
 
 // --- ACCIONES: IMPORTAR EXCEL ---
 let archivoSeleccionado = null;
-document.getElementById('btnSeleccionarArchivo').onclick = function(){
-  document.getElementById('inputExcel').click();
-};
-document.getElementById('inputExcel').onchange = function(){
-  archivoSeleccionado = this.files[0];
-  document.getElementById('nombreArchivo').textContent = archivoSeleccionado ? archivoSeleccionado.name : "Ningún archivo seleccionado";
-};
-document.getElementById('btnImportarExcel').onclick = async function(){
-  if(!archivoSeleccionado) return alert("Selecciona un archivo Excel primero.");
-  const formData = new FormData();
-  formData.append('excel', archivoSeleccionado);
-  const resp = await fetchAuth(`${API_URL}/api/agente/costumer-import`, {method:'POST', body:formData});
-  const data = await resp.json();
-  if(data.success){
-    alert("Importado correctamente.");
-    archivoSeleccionado = null;
-    document.getElementById('inputExcel').value = "";
-    document.getElementById('nombreArchivo').textContent = "Ningún archivo seleccionado";
-    cargarCostumerPanel();
-  }else{
-    alert("Error al importar: " + (data.error || ""));
-  }
-};
+if(document.getElementById('btnSeleccionarArchivo')) {
+  document.getElementById('btnSeleccionarArchivo').onclick = function(){
+    document.getElementById('inputExcel').click();
+  };
+}
+if(document.getElementById('inputExcel')) {
+  document.getElementById('inputExcel').onchange = function(){
+    archivoSeleccionado = this.files[0];
+    document.getElementById('nombreArchivo').textContent = archivoSeleccionado ? archivoSeleccionado.name : "Ningún archivo seleccionado";
+  };
+}
+if(document.getElementById('btnImportarExcel')) {
+  document.getElementById('btnImportarExcel').onclick = async function(){
+    if(!archivoSeleccionado) return alert("Selecciona un archivo Excel primero.");
+    const formData = new FormData();
+    formData.append('excel', archivoSeleccionado);
+    const resp = await fetchAuth(`${API_URL}/api/agente/costumer-import`, {method:'POST', body:formData});
+    const data = await resp.json();
+    if(data.success){
+      alert("Importado correctamente.");
+      archivoSeleccionado = null;
+      document.getElementById('inputExcel').value = "";
+      document.getElementById('nombreArchivo').textContent = "Ningún archivo seleccionado";
+      cargarCostumerPanel();
+    }else{
+      alert("Error al importar: " + (data.error || ""));
+    }
+  };
+}
 
 // --- ACCIONES: ELIMINAR TODO ---
-document.getElementById('btnEliminarTodo').onclick = async function(){
-  if(!confirm("¿Seguro de eliminar TODOS tus costumers?")) return;
-  const resp = await fetchAuth(`${API_URL}/api/agente/costumer-eliminar-todo`, {method:'DELETE'});
-  const data = await resp.json();
-  if(data.success){
-    alert("Eliminados todos los registros.");
-    cargarCostumerPanel();
-  }else{
-    alert("Error al eliminar todo.");
-  }
-};
+if(document.getElementById('btnEliminarTodo')) {
+  document.getElementById('btnEliminarTodo').onclick = async function(){
+    if(!confirm("¿Seguro de eliminar TODOS tus costumers?")) return;
+    const resp = await fetchAuth(`${API_URL}/api/agente/costumer-eliminar-todo`, {method:'DELETE'});
+    const data = await resp.json();
+    if(data.success){
+      alert("Eliminados todos los registros.");
+      cargarCostumerPanel();
+    }else{
+      alert("Error al eliminar todo.");
+    }
+  };
+}
 
 // --- Inicialización automática si se entra directo a costumer ---
 if(window.location.hash === "#costumer" || window.location.search.includes("costumer")){
-  document.getElementById('tabCostumer').click();
+  const tab = document.getElementById('tabCostumer');
+  if(tab) tab.click();
 }
