@@ -5,6 +5,7 @@
   <title>CRM Agentes - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    /* ... mismos estilos que tu versión ... */
     body {
       background: linear-gradient(120deg, #0f2027, #2c5364 80%);
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -225,6 +226,8 @@
       <div id="registerError" class="register-error"></div>
       <div id="registerSuccess" class="register-success"></div>
       <form id="registerForm" class="register-form" autocomplete="off">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="apellido" placeholder="Apellido" required>
         <input type="text" name="usuario" placeholder="Usuario" required>
         <input type="email" name="email" placeholder="Correo electrónico" required>
         <input type="password" name="contrasena" placeholder="Contraseña" required>
@@ -279,10 +282,17 @@
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
+      const nombre = formData.get('nombre');
+      const apellido = formData.get('apellido');
       const usuario = formData.get('usuario');
       const email = formData.get('email');
       const contrasena = formData.get('contrasena');
       const confirmar = formData.get('confirmar');
+
+      if (!nombre || !apellido || !usuario || !email || !contrasena || !confirmar) {
+        mostrarError('registerError', 'Todos los campos son obligatorios.');
+        return;
+      }
       if (contrasena !== confirmar) {
         mostrarError('registerError', 'Las contraseñas no coinciden');
         return;
@@ -291,7 +301,7 @@
         const res = await fetch('/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario, email, contrasena })
+          body: JSON.stringify({ nombre, apellido, usuario, email, contrasena })
         });
         const result = await res.json();
         if (result.success) {
