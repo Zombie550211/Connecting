@@ -13,10 +13,10 @@ const upload = multer({ dest: 'uploads/' });
 const cors = require("cors"); // <-- Añadido para CORS
 
 // CORREGIDO: paths relativos correctos, SIN '/backend/'
-const Lead = require('./models/lead');
-const Costumer = require('./models/costumer');
-const Facturacion = require('./models/Facturacion');
-const User = require('./models/user');
+const Lead = require('./backend/models/lead');
+const Costumer = require('./backend/models/costumer');
+const Facturacion = require('./backend/models/Facturacion');
+const User = require('./backend/models/user');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
