@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> Connecting </title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <style>
+    :root {
+      --sidebar-bg: #15344a;
+      --sidebar-accent: #22b3ec;
+      --sidebar-hover: #1ea1d8;
+      --sidebar-text: #222;
+      --sidebar-radius: 14px;
+      --azul-oscuro: #1e293b;
+      --azul-acento: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* SIDEBAR - ESTILO REPORTS, NEGRITA */
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: var(--sidebar-text);
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 40px 50px;
+      background: var(--gris-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    /* LEAD FORM */
+    .lead-content-row {
+      display: flex;
+      gap: 30px;
+      width: 100%;
+      align-items: flex-start;
+    }
+    .form-section {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #0001;
+      padding: 42px 38px 36px 38px;
+      max-width: 480px;
+      width: 100%;
+      margin: 44px auto;
+      flex: 1;
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+    }
+    .form-section h2 {
+      font-weight: 700;
+      font-size: 2em;
+      color: #183153;
+      margin-bottom: 28px;
+      margin-top: 0;
+    }
+    .form-group { margin-bottom: 18px;}
+    .form-section label {
+      color: #25a9dd;
+      font-weight: 700;
+      margin-bottom: 7px;
+      display: block;
+    }
+    .form-section label[for="fecha-lead"] {
+      color: #183153;
+    }
+    .form-section input, .form-section select {
+      background: #f8fcff;
+      border-radius: 7px;
+      border: 1.5px solid #e4e6f1;
+      padding: 13px 15px;
+      font-size: 1.12em;
+      width: 100%;
+      margin-top: 2px;
+    }
+    .form-section button[type="submit"] {
+      background: #25a9dd;
+      color: #fff;
+      border-radius: 9px;
+      border: none;
+      font-weight: 700;
+      font-size: 1.18em;
+      padding: 16px 0;
+      width: 100%;
+      margin-top: 9px;
+      transition: background 0.2s;
+    }
+    .form-section button[type="submit"]:hover {
+      background: #183153;
+    }
+    /* CHARTS SECTION */
+    .charts-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      height: 100%;
+      min-width: 0;
+    }
+    .charts-section .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
+    .charts-section .charts-filter label { font-weight: 600; margin-bottom: 0;}
+    .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
+    .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
+    .charts-section .charts-filter button:hover { background: #126de4; }
+    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
+    .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
+    .chart-container {
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .chart-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 5;
+      display: block;
+      background: transparent;
+    }
+    .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
+    @media (max-width: 1100px) {
+      .charts-section .charts-filter, .form-section { padding: 12px 7vw; }
+      .lead-content-row { flex-direction: column; gap: 13px; }
+      .main-content { padding: 14px 2vw; }
+    }
+    @media (max-width: 700px) {
+      .layout { flex-direction: column;}
+      .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
+      .sidebar-logo { margin: 0 12px 0 0; }
+      .sidebar-title { font-size: 1em; margin-bottom: 0;}
+      .sidebar-nav { flex-direction: row; gap: 0; }
+      .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
+      .sidebar-lema { display: none;}
+      .main-content { padding: 12px 2px; }
+      .lead-content-row { flex-direction: column; gap: 7px;}
+      .form-section { padding: 13px 7px;}
+      .chart-container {padding: 7px 2vw;}
+      .charts-section .charts-filter {padding: 7px 2vw;}
+      .chart-canvas { aspect-ratio: 16/12; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo connecting.png" alt="Logo Connecting"/>
+    </div>
+    <div class="sidebar-title">Connecting</div>
+    <div class="sidebar-nav">
+      <button onclick="location.href='inicio.html'">Inicio</button>
+      <button class="active" onclick="location.href='lead.html'">Lead</button>
+      <button onclick="location.href='costumer.html'">Costumer</button>
+      <button onclick="location.href='Facturacion.html'">Facturacion</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="sidebar-lema">
+      "Conectando tu éxito, un cliente a la vez"
+    </div>
+  </nav>
+  <main class="main-content">
+    <div class="lead-content-row">
+      <!-- FORMULARIO -->
+      <section class="form-section" id="form-panel">
+        <h2>Formulario de Registro</h2>
+        <form id="crmForm">
+          <div class="form-group">
+            <label for="fecha-lead" style="color: #183153;">Fecha</label>
+            <input type="date" id="fecha-lead" name="fecha-lead" />
+          </div>
+          <div class="form-group">
+            <label for="team">Team</label>
+            <select id="team" required>
+              <option value="">Seleccione team</option>
+              <option value="Team Irania">Team Irania</option>
+              <option value="Team Pleitez">Team Pleitez</option>
+              <option value="Team Roberto">Team Roberto</option>
+              <option value="Team Lineas">Team Lineas</option>
+              <option value="Team Randal">Team Randal</option>
+              <option value="Team Marisol">Team Marisol</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="agent">Agente</label>
+            <select id="agent" required>
+              <option>Seleccione Agente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="producto">Producto</label>
+            <select id="producto" required>
+              <option>Seleccione Producto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="puntaje">Puntaje</label>
+            <select id="puntaje" required>
+              <option>Seleccione Puntaje</option>
+              <option>Sin Puntaje</option>
+              <option>0.25</option>
+              <option>0.35</option>
+              <option>1.0</option>
+              <option>1.25</option>
+              <option>1.50</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cuenta">Cuenta Google</label>
+            <select id="cuenta" required>
+              <option>Seleccione Cuenta</option>
+              <option>Cuenta Alexis</option>
+              <option>Cuenta Eduardo</option>
+              <option>Cuenta Israel</option>
+              <option>Cuenta Lineas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
+          </div>
+          <div class="form-group">
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" placeholder="Dirección del cliente" required/>
+          </div>
+          <div class="form-group" style="margin-bottom: 26px;">
+            <label for="zip">ZIP Code</label>
+            <input type="text" id="zip" placeholder="Código ZIP" required/>
+          </div>
+          <button type="submit">Guardar Lead</button>
+        </form>
+      </section>
+      <section class="charts-section" id="charts-panel">
+        <div class="charts-filter">
+          <label for="fechaGraficas">Filtrar gráficas por fecha:</label>
+          <input type="date" id="fechaGraficas" />
+          <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="ventasTeamChart" class="chart-canvas"></canvas>
+          <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="productosChart" class="chart-canvas"></canvas>
+          <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+  // SIDEBAR logout
+  function logout() {
+    fetch('/logout', { credentials: 'include' })
+      .then(() => window.location.href = '/login.html');
+  }
+
+  // --- ARRAYS ---
+  const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
+  const productos = [
+    "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "2G AT&T",
+    "2GB SPECTRUM", "1GB SPECTRUM", "500 SPECTRUM", "200 SPECTRUM", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM BUSSINES", "SPECTRUM PREMIER", "SPECTRUM ADVENTAGE",
+    "5GB FRONTIER", "2GB FRONTIER", "1GB FRONTIER", "500 FRONTIER", "200 FRONTIER",
+    "OPTIMO MAS", "MAS LATINO", "MAS ULTRA", "DIRECTV BUSSINES", "HUGHESNET", "OPTIMUM", "VIASAT", "WINDSTREAM",
+    "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
+  ];
+
+  // --- AGENTES POR TEAM ---
+  const agentesPorTeam = {
+    "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz"],
+    "Team Pleitez": ["Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Estefany Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
+    "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren", "Tatiana Ayala","David Quinteros"],
+    "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
+    "Team Randal": ["Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
+    "Team Marisol": ["Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"],
+  };
+
+  document.getElementById("team").addEventListener("change", function () {
+    const team = this.value;
+    const selectAgente = document.getElementById("agent");
+    selectAgente.innerHTML = "<option>Seleccione Agente</option>";
+    if (agentesPorTeam[team]) {
+      agentesPorTeam[team].forEach(agente => {
+        const option = document.createElement("option");
+        option.value = agente;
+        option.textContent = agente;
+        selectAgente.appendChild(option);
+      });
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const selectProducto = document.getElementById("producto");
+    productos.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      selectProducto.appendChild(opt);
+    });
+
+    // Selecciona la fecha de hoy por defecto al cargar la página
+    const hoy = new Date().toISOString().slice(0,10);
+    document.getElementById('fechaGraficas').value = hoy;
+    document.getElementById('fecha-lead').value = hoy;
+
+    iniciarGraficas();
+    actualizarGraficas();
+
+    setInterval(actualizarGraficas, 30000);
+  });
+
+  let ventasTeamChart, productosChart;
+
+  function destroyChart(chart) {
+    if (chart && typeof chart.destroy === 'function') chart.destroy();
+  }
+
+  // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
+  function iniciarGraficas() {
+    // Limpia si ya existen
+    destroyChart(ventasTeamChart);
+    destroyChart(productosChart);
+
+    // Calcula dimensiones reales del contenedor
+    const teamCanvas = document.getElementById("ventasTeamChart");
+    const prodCanvas = document.getElementById("productosChart");
+    const teamParent = teamCanvas.parentElement;
+    const prodParent = prodCanvas.parentElement;
+
+    // Usa getBoundingClientRect para obtener tamaño real responsivo
+    const teamRect = teamParent.getBoundingClientRect();
+    const prodRect = prodParent.getBoundingClientRect();
+
+    const width1 = Math.max(600, teamRect.width || 1200);
+    const height1 = Math.max(200, teamRect.height || 400);
+    const width2 = Math.max(600, prodRect.width || 1200);
+    const height2 = Math.max(200, prodRect.height || 400);
+
+    // Ajusta el canvas para pantallas retina/4K (HiDPI)
+    function setHiDPICanvas(canvas, width, height) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      return ctx;
+    }
+
+    // Canvas 1
+    const ctxTeam = setHiDPICanvas(teamCanvas, width1, height1);
+    ventasTeamChart = new Chart(ctxTeam, {
+      type: 'bar',
+      data: {
+        labels: equipos,
+        datasets: [
+          {
+            label: 'Ventas',
+            data: equipos.map(() => 0),
+            backgroundColor: '#007bff',
+            borderRadius: 6
+          },
+          {
+            label: 'Puntaje',
+            data: equipos.map(() => 0),
+            backgroundColor: '#dc3545',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        animation: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            color: '#000',
+            anchor: 'end',
+            align: 'top',
+            font: { weight: 'bold' },
+            formatter: value => value
+          },
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // Canvas 2
+    const ctxProducto = setHiDPICanvas(prodCanvas, width2, height2);
+    productosChart = new Chart(ctxProducto, {
+      type: 'bar',
+      data: {
+        labels: productos,
+        datasets: [{
+          label: 'Ventas por Producto',
+          data: productos.map(() => 0),
+          backgroundColor: '#007bff',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        animation: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            color: '#000',
+            anchor: 'end',
+            align: 'start',
+            offset: -5,
+            font: { weight: 'bold' },
+            formatter: value => value
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
+  window.addEventListener('resize', () => {
+    setTimeout(() => {
+      iniciarGraficas();
+    }, 150);
+  });
+
+  function actualizarGraficas() {
+    const fecha = document.getElementById('fechaGraficas').value;
+    fetch(`/api/graficas?fecha=${fecha}`, {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Ventas y puntaje por equipo
+        let hayDataTeam = false;
+        equipos.forEach((team, i) => {
+          const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
+          const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+          ventasTeamChart.data.datasets[0].data[i] = ventas;
+          ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
+          if (ventas > 0 || puntos > 0) hayDataTeam = true;
+        });
+        ventasTeamChart.update();
+        mostrarNoData(!hayDataTeam, false);
+
+        // Ventas por producto: SIEMPRE usa el array productos como labels.
+        productosChart.data.labels = productos;
+        productosChart.data.datasets[0].data = productos.map(
+          prod => {
+            if (!data.ventasPorProducto) return 0;
+            if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
+            // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
+            const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
+            return key ? data.ventasPorProducto[key] : 0;
+          }
+        );
+        productosChart.update();
+
+        let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
+        mostrarNoData(false, !hayDataProd);
+      })
+      .catch(err => {
+        console.error("Error al cargar gráficas:", err);
+        mostrarNoData(true, true);
+      });
+  }
+
+  function mostrarNoData(team, producto) {
+    document.getElementById('no-data-team').style.display = team ? '' : 'none';
+    document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
+  }
+
+  // --- Formulario Lead ---
+  document.getElementById("crmForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const fecha = document.getElementById("fecha-lead").value;
+    const team = document.getElementById("team").value;
+    const agent = document.getElementById("agent").value;
+    const producto = document.getElementById("producto").value;
+    const puntajeVal = document.getElementById("puntaje").value;
+    const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
+    const cuenta = document.getElementById("cuenta").value;
+    const telefono = document.getElementById("telefono").value;
+    const direccion = document.getElementById("direccion").value;
+    const zip = document.getElementById("zip").value;
+
+    if (
+      team === "" || agent === "Seleccione Agente" ||
+      producto === "Seleccione Producto" || isNaN(puntaje) ||
+      cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
+      direccion.trim() === "" || zip.trim() === ""
+    ) {
+      alert("Por favor, complete todos los campos.");
+      return;
+    }
+
+    fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: 'include',
+      body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
+    })
+      .then(async res => {
+        if (res.status === 401) {
+          alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+          window.location.href = "/login.html";
+          throw new Error("No autorizado.");
+        }
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          if (contentType.includes('application/json')) {
+            const errorText = await res.text();
+            console.error("Error en respuesta:", res.status, errorText);
+          } else {
+            console.error("Respuesta inesperada:", res.status, await res.text());
+          }
+          throw new Error("Error al guardar el lead.");
+        }
+        if (contentType.includes('application/json')) {
+          return res.json();
+        } else {
+          throw new Error("Respuesta inesperada del servidor.");
+        }
+      })
+      .then(() => {
+        actualizarGraficas();
+        document.getElementById("crmForm").reset();
+        document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
+        alert("Lead guardado exitosamente.");
+      })
+      .catch(error => {
+        console.error("Error al guardar lead:", error);
+        alert("Hubo un error al guardar el lead. Revisa la consola.");
+      });
+  });
+</script>
+</body>
+</html>
