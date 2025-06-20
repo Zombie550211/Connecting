@@ -11,9 +11,8 @@ const multer = require('multer');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const upload = multer({ dest: 'uploads/' });
-const cors = require("cors"); // <-- Añadido para CORS
+const cors = require("cors");
 
-// Importaciones de modelos con paths relativos correctos (SIN '/backend/')
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
 const Facturacion = require('./models/Facturacion');
@@ -31,26 +30,22 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
-// ==== CORS MULTI-ORIGEN PARA DASHBOARD LOCAL Y PRODUCCIÓN ====
 app.use(cors({
   origin: [
-    "http://localhost:5173",                    // Vite local
-    "http://localhost:5500",                    // Live Server local VSCode
-    "https://crm-dashboard-1234.netlify.app",   // <-- Cambia por tu dashboard en Netlify
-    "https://crm-dashboard-xyz.vercel.app"      // <-- O el de Vercel si usas
-    // Agrega aquí otros orígenes frontend si los tienes
+    "http://localhost:5173",
+    "http://localhost:5500",
+    "https://crm-dashboard-1234.netlify.app",
+    "https://crm-dashboard-xyz.vercel.app"
   ],
   credentials: true
 }));
 
-// ==== FUNCIÓN PARA FECHA LOCAL DE EL SALVADOR YYYY-MM-DD ====
 function getFechaLocalHoy() {
   const hoy = new Date();
   const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
-// Middleware robusto para proteger rutas, cerrar sesión si no se ha enviado un lead en 30 minutos
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000;
   const ahora = Date.now();
@@ -93,7 +88,6 @@ function protegerRuta(req, res, next) {
   return res.redirect("/login.html");
 }
 
-// Middleware para proteger agentes
 function protegerAgente(req, res, next) {
   if (req.session && req.session.agente) return next();
   return res.redirect('/agente/login.html');
@@ -115,11 +109,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// --- PARTE 2: Login, registro, páginas principales, leads, costumer global, facturación, migración, logout ---
-
 // LOGIN: ahora acepta admin fijo o usuarios registrados en modelo User
 app.post("/login", async (req, res) => {
-  // Cambiado a los campos del frontend: usuario, contrasena
   const { usuario, contrasena } = req.body;
   try {
     if (usuario === "admin" && contrasena === "1234") {
@@ -141,11 +132,11 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// REGISTRO DE USUARIO NUEVO CON ENVÍO DE CORREO PERSONALIZADO
+// REGISTRO DE USUARIO NUEVO CON nombre, apellido, correo, usuario, password y correo de bienvenida
 app.post('/register', async (req, res) => {
   try {
-    const { usuario, email, contrasena } = req.body;
-    if (!usuario || !email || !contrasena)
+    const { usuario, email, contrasena, nombre, apellido } = req.body;
+    if (!usuario || !email || !contrasena || !nombre || !apellido)
       return res.json({ success: false, message: "Todos los campos son obligatorios." });
 
     // Evita duplicados
@@ -158,7 +149,9 @@ app.post('/register', async (req, res) => {
     const nuevoUsuario = await User.create({
       usuario,
       correo: email,
-      password: hash
+      password: hash,
+      nombre,
+      apellido
     });
 
     // ENVÍO DE CORREO DE BIENVENIDA
@@ -174,7 +167,7 @@ app.post('/register', async (req, res) => {
       from: '"CRM Agentes" <' + process.env.CRM_GMAIL_USER + '>',
       to: email,
       subject: 'Bienvenido a CRM Agentes',
-      html: `<h2>Bienvenido ${usuario}, acá están tus credenciales para tu crm-personal.</h2>
+      html: `<h2>Bienvenido ${nombre} ${apellido}, estas son tus credenciales para tu crm-personal.</h2>
              <p><b>Usuario:</b> ${usuario}</p>
              <p><b>Contraseña:</b> ${contrasena}</p>
              <p>Ingresa a tu crm y navega dentro de tu perfil personal de ventas! Que tengas un excelente día.</p>
@@ -192,8 +185,19 @@ app.post('/register', async (req, res) => {
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
-});// ------------------ PARTE 2/¿N? --------------------
+});
 
+app.get("/lead.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "lead.html"));
+});
+app.get("/costumer.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "costumer.html"));
+});
+app.get("/Facturacion.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
+});// ------------------ PARTE 2 --------------------
+
+// ==== Páginas principales (solo para usuarios autenticados) ====
 app.get("/lead.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "lead.html"));
 });
@@ -351,8 +355,7 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   } catch (err) {
     res.status(500).send('Error generando Excel');
   }
-});
-// ====================== COSTUMER ENDPOINTS GLOBALES =========================
+});// ====================== COSTUMER ENDPOINTS GLOBALES =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
     const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
@@ -554,7 +557,7 @@ app.post('/api/migrar-fechas-a-string', async (req, res) => {
   }
 });
 
-// --- PARTE 3: ENDPOINTS DE AGENTE PARA COSTUMER Y LISTEN FINAL ---
+// --- ENDPOINTS DE AGENTE PARA COSTUMER Y LISTEN FINAL ---
 
 // =================== INICIO ENDPOINTS DE AGENTE ===================
 
