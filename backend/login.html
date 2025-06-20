@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agente - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f6fa;font-family:sans-serif;}
+    .login-card {background:#fff;padding:2.5em 2em;border-radius:12px;box-shadow:0 4px 24px #0001;width:320px;}
+    .login-card h2 {margin-bottom:1.5em;font-weight:700;}
+    .login-card input {width:100%;margin-bottom:1em;padding:10px;border-radius:8px;border:1.5px solid #e3e8ee;font-size:1em;}
+    .login-card button {width:100%;padding:10px;background:#22b3ec;color:#fff;font-weight:700;border:none;border-radius:8px;font-size:1.1em;cursor:pointer;}
+    .login-card button:hover {background:#1896c8;}
+    .error {color:#ff3b3b;margin-bottom:1em;}
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2>Acceso Agentes</h2>
+    <form id="loginForm">
+      <input type="text" name="user" placeholder="Usuario" required autocomplete="username">
+      <input type="password" name="pass" placeholder="Contraseña" required autocomplete="current-password">
+      <div class="error" id="loginError" style="display:none"></div>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+  <script src="agentes/js/login.js"></script>
+</body>
+</html>
