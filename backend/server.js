@@ -9,6 +9,7 @@ const fs = require("fs");
 const XLSX = require("xlsx");
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
 const upload = multer({ dest: 'uploads/' });
 const cors = require("cors"); // <-- Añadido para CORS
 
@@ -113,21 +114,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
 // --- PARTE 2: Login, registro, páginas principales, leads, costumer global, facturación, migración, logout ---
 
 // LOGIN: ahora acepta admin fijo o usuarios registrados en modelo User
 app.post("/login", async (req, res) => {
-  const { user, pass } = req.body;
+  // Cambiado a los campos del frontend: usuario, contrasena
+  const { usuario, contrasena } = req.body;
   try {
-    if (user === "admin" && pass === "1234") {
-      req.session.usuario = user;
+    if (usuario === "admin" && contrasena === "1234") {
+      req.session.usuario = usuario;
       req.session.ultimoLead = Date.now();
       return res.json({ success: true });
     }
-    const usuarioDB = await User.findOne({ usuario: user });
+    const usuarioDB = await User.findOne({ usuario });
     if (!usuarioDB) return res.json({ success: false });
 
-    const match = await bcrypt.compare(pass, usuarioDB.password);
+    const match = await bcrypt.compare(contrasena, usuarioDB.password);
     if (!match) return res.json({ success: false });
 
     req.session.usuario = usuarioDB.usuario;
@@ -138,31 +141,58 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// REGISTRO DE USUARIO NUEVO
-app.post('/api/users/register', async (req, res) => {
+// REGISTRO DE USUARIO NUEVO CON ENVÍO DE CORREO PERSONALIZADO
+app.post('/register', async (req, res) => {
   try {
-    const { nombre, apellido, correo, usuario, pass } = req.body;
-    if (!nombre || !apellido || !correo || !usuario || !pass)
-      return res.json({ success: false, error: "Todos los campos son obligatorios." });
+    const { usuario, email, contrasena } = req.body;
+    if (!usuario || !email || !contrasena)
+      return res.json({ success: false, message: "Todos los campos son obligatorios." });
 
-    const existe = await User.findOne({ $or: [ { usuario }, { correo } ] });
-    if (existe) return res.json({ success: false, error: "Ya existe un usuario o correo registrado." });
+    // Evita duplicados
+    const existe = await User.findOne({ $or: [ { usuario }, { correo: email } ] });
+    if (existe) return res.json({ success: false, message: "Usuario o correo ya registrado." });
 
-    const hash = await bcrypt.hash(pass, 10);
+    const hash = await bcrypt.hash(contrasena, 10);
 
-    await User.create({
-      nombre,
-      apellido,
-      correo,
+    // Guarda en la BD
+    const nuevoUsuario = await User.create({
       usuario,
+      correo: email,
       password: hash
     });
 
+    // ENVÍO DE CORREO DE BIENVENIDA
+    let transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.CRM_GMAIL_USER,
+        pass: process.env.CRM_GMAIL_PASS
+      }
+    });
+
+    let mailOptions = {
+      from: '"CRM Agentes" <' + process.env.CRM_GMAIL_USER + '>',
+      to: email,
+      subject: 'Bienvenido a CRM Agentes',
+      html: `<h2>Bienvenido ${usuario}, acá están tus credenciales para tu crm-personal.</h2>
+             <p><b>Usuario:</b> ${usuario}</p>
+             <p><b>Contraseña:</b> ${contrasena}</p>
+             <p>Ingresa a tu crm y navega dentro de tu perfil personal de ventas! Que tengas un excelente día.</p>
+             <br>
+             <p style="color:gray;font-size:13px;">No respondas a este correo. Si no solicitaste esta cuenta, ignora este mensaje.</p>`
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (e) {
+      return res.json({ success: true, message: "Usuario creado, pero no se pudo enviar el correo." });
+    }
+
     res.json({ success: true });
   } catch (err) {
-    res.json({ success: false, error: err.message });
+    res.json({ success: false, message: err.message });
   }
-});
+});// ------------------ PARTE 2/¿N? --------------------
 
 app.get("/lead.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "lead.html"));
@@ -322,7 +352,6 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
     res.status(500).send('Error generando Excel');
   }
 });
-
 // ====================== COSTUMER ENDPOINTS GLOBALES =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
@@ -493,9 +522,7 @@ app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res)
   });
 
   res.json({ ok: true, totalesPorDia });
-});
-
-// =================== UTILIDADES, LOGOUT Y MIGRACIÓN =======================
+});// =================== UTILIDADES, LOGOUT Y MIGRACIÓN =======================
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login.html");
