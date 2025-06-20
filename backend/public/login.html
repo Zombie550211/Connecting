@@ -72,6 +72,17 @@
       color: #7d8c98;
       text-align: center;
     }
+    .login-error {
+      color: #fff;
+      background: #e74c3c;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+      display: none;
+      font-size: 1rem;
+    }
     @media (max-width: 480px) {
       .login-container {
         padding: 25px 10px;
@@ -86,7 +97,8 @@
 <body>
   <div class="login-container">
     <div class="login-title">CRM Agentes</div>
-    <form class="login-form" autocomplete="off" method="POST" action="/login">
+    <div id="loginError" class="login-error"></div>
+    <form id="loginForm" class="login-form" autocomplete="off">
       <input type="text" name="usuario" placeholder="Usuario" required>
       <input type="password" name="contrasena" placeholder="Contraseña" required>
       <button class="login-btn" type="submit">Ingresar</button>
@@ -95,5 +107,44 @@
       &copy; 2025 CRM Connecintg. Todos los derechos reservados.
     </div>
   </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const data = {
+        usuario: formData.get('usuario'),
+        contrasena: formData.get('contrasena')
+      };
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (res.redirected) {
+          // Si el servidor responde con un redirect, sigue la redirección
+          window.location.href = res.url;
+          return;
+        }
+        const result = await res.json();
+        if (result.success) {
+          window.location.href = '/lead.html';
+        } else {
+          mostrarError('Usuario o contraseña incorrectos');
+        }
+      } catch (err) {
+        mostrarError('Error en el servidor. Intente de nuevo.');
+      }
+    });
+
+    function mostrarError(msg) {
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+    }
+  </script>
 </body>
 </html>
