@@ -197,8 +197,7 @@ app.get("/Facturacion.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
 });
 
-// ------------------ Continúa en la PARTE 2 ------------------// ================== LEADS =========================
-
+// ================== LEADS =========================
 // Importar leads desde Excel
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
@@ -347,7 +346,6 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER ENDPOINTS GLOBALES =========================
-// ...continúa PARTE 3...// ====================== COSTUMER ENDPOINTS GLOBALES =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
     const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
@@ -426,6 +424,7 @@ app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
 });
 
 // ==================== ENDPOINTS KPI PARA COSTUMER GLOBAL ====================
+// KPI: Ventas Hoy
 app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
   try {
     const hoy = new Date();
@@ -438,6 +437,7 @@ app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
   }
 });
 
+// KPI: Leads Pendientes
 app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
   try {
     const total = await Costumer.countDocuments({ estado: 'Pending' });
@@ -447,6 +447,7 @@ app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
   }
 });
 
+// KPI: Total Clientes
 app.get('/api/clientes', protegerRuta, async (req, res) => {
   try {
     const total = await Costumer.countDocuments();
@@ -456,6 +457,7 @@ app.get('/api/clientes', protegerRuta, async (req, res) => {
   }
 });
 
+// KPI: Ventas del Mes
 app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   try {
     const hoy = new Date();
@@ -470,11 +472,11 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   } catch (err) {
     res.status(500).json({ total: 0, error: err.message });
   }
-});// ==================== FACTURACIÓN ====================
-// ...[CÓDIGO ANTERIOR IGUAL]...
+});
+
+// ...[El resto de tus endpoints de facturación, agente y app.listen()]...
 
 // ==================== FACTURACIÓN ====================
-
 app.post('/api/facturacion', protegerRuta, async (req, res) => {
   const { fecha, campos } = req.body;
   if (!fecha || !Array.isArray(campos) || campos.length !== 14) {
@@ -559,8 +561,6 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// ...[Codgo de manejo de facturación]...
-
 app.post('/api/migrar-fechas-a-string', async (req, res) => {
   try {
     let leadsModificados = 0;
@@ -584,10 +584,9 @@ app.post('/api/migrar-fechas-a-string', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});// --- ENDPOINTS DE AGENTE PARA COSTUMER Y LISTEN FINAL ---
+});
 
 // =================== INICIO ENDPOINTS DE AGENTE ===================
-
 // Login de agente
 app.post('/agente/login', async (req, res) => {
   const { user, pass } = req.body;
@@ -675,7 +674,6 @@ app.get('/api/agente/ventas-producto', protegerAgente, async (req, res) => {
 });
 
 // ==================== COSTUMER AGENTE: KPIs, FILTROS, CRUD, EXCEL ====================
-
 // KPIs/métricas de costumer del agente
 app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
   try {
@@ -702,7 +700,9 @@ app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
   } catch (err) {
     res.status(500).json({ ventasHoy:0, leadsPendientes:0, clientes:0, ventasMes:0, error:err.message });
   }
-});// Tabla con filtros (costumers del agente)
+});
+
+// Tabla con filtros (costumers del agente)
 app.get('/api/agente/costumer', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
