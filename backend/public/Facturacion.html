@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Tipografía moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
     :root {
       --azul-oscuro: #1e293b;
@@ -527,40 +529,38 @@
         <div class="facturacion-toolbar">
           <button id="btnGuardarFacturacion">Guardar</button>
         </div>
-      </div>
-    </div>
-    <!-- MODAL DE TABLA COMPLETA -->
-    <div class="modal-bg" id="modalTablaCompleta">
-      <div class="modal-content">
-        <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
-        <div class="modal-title">Tabla completa de facturación del mes</div>
-        <div class="modal-table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>FECHA</th>
-                <th>ALEXIS</th>
-                <th>VENTAS<br>POR DIA</th>
-                <th>VALOR<br>DE VENTA</th>
-                <th>CUENTA ALTERNA</th>
-                <th>VENTAS<br>POR DIA</th>
-                <th>VALOR<br>DE VENTA</th>
-                <th>LINEAS</th>
-                <th>VENTAS<br>POR DIA</th>
-                <th>VALOR<br>DE VENTA</th>
-                <th>TOTAL<br>DEL DIA</th>
-                <th>TOTAL<br>VENTAS</th>
-                <th>VALOR<br>VENTA</th>
-                <th>PUNTOS</th>
-                <th>CPA<br>PUNTOS</th>
-              </tr>
-            </thead>
-            <tbody id="modalTablaBody"></tbody>
-          </table>
+      </div>      <div class="modal-bg" id="modalTablaCompleta">
+        <div class="modal-content">
+          <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
+          <div class="modal-title">Tabla completa de facturación del mes</div>
+          <div class="modal-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>FECHA</th>
+                  <th>ALEXIS</th>
+                  <th>VENTAS<br>POR DIA</th>
+                  <th>VALOR<br>DE VENTA</th>
+                  <th>CUENTA ALTERNA</th>
+                  <th>VENTAS<br>POR DIA</th>
+                  <th>VALOR<br>DE VENTA</th>
+                  <th>LINEAS</th>
+                  <th>VENTAS<br>POR DIA</th>
+                  <th>VALOR<br>DE VENTA</th>
+                  <th>TOTAL<br>DEL DIA</th>
+                  <th>TOTAL<br>VENTAS</th>
+                  <th>VALOR<br>VENTA</th>
+                  <th>PUNTOS</th>
+                  <th>CPA<br>PUNTOS</th>
+                </tr>
+              </thead>
+              <tbody id="modalTablaBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
+      <!-- FIN MODAL -->
     </div>
-    <!-- FIN MODAL -->
   </main>
 </div>
 <script>
@@ -595,14 +595,30 @@ let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
 let datosFacturacionMes = []; // [{fecha, campos}]
 
-// --- NUEVO: Cargar TODOS los datos del año para la gráfica ---
-async function fetchFacturacionAnual(ano) {
+// NUEVA función para obtener array de 12 meses directamente del endpoint actualizado
+async function fetchTotalesPorMes(ano) {
   try {
     const res = await fetch(`/api/facturacion/anual/${ano}`);
     const data = await res.json();
-    return (data.ok && Array.isArray(data.data)) ? data.data : [];
+    if (data.ok && Array.isArray(data.totalesPorMes)) {
+      return data.totalesPorMes;
+    }
+    // Si el backend no está actualizado, suma manualmente
+    if (Array.isArray(data.data)) {
+      const totalesPorMes = Array(12).fill(0);
+      data.data.forEach(fila => {
+        if (!fila.fecha || !fila.campos) return;
+        const partes = fila.fecha.split('/');
+        if (partes.length !== 3) return;
+        const mes = parseInt(partes[1], 10);
+        const totalDia = parseFloat(fila.campos[9]) || 0;
+        if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
+      });
+      return totalesPorMes;
+    }
+    return Array(12).fill(0);
   } catch (e) {
-    return [];
+    return Array(12).fill(0);
   }
 }
 
@@ -671,9 +687,7 @@ function prevBlock() {
     currentBlock--;
     renderTablaDias(currentMonth, currentYear, currentBlock);
   }
-}
-
-// --- FÓRMULAS AUTOMÁTICAS Y TOTALES ---
+}// --- FÓRMULAS AUTOMÁTICAS Y TOTALES ---
 function recalcularFila(tr) {
   const tds = Array.from(tr.children);
 
@@ -770,24 +784,8 @@ let grafica;
 async function actualizarGrafica() {
   const ano = parseInt(filtroAno.value, 10);
 
-  // Obtener todos los datos del año
-  const datosAnuales = await fetchFacturacionAnual(ano);
-
-  // Sumar por mes los totales (usando columna "TOTAL DEL DIA" = index 10)
-  // datosAnuales debe tener objetos: { fecha: "DD/MM/YYYY", campos: [...] }
-  const totalesPorMes = Array(12).fill(0);
-
-  datosAnuales.forEach(fila => {
-    // fecha en formato DD/MM/YYYY
-    if (!fila.fecha || !fila.campos) return;
-    const partes = fila.fecha.split('/');
-    if (partes.length !== 3) return;
-    const mes = parseInt(partes[1], 10);
-    const totalDia = parseFloat(fila.campos[10 - 1]) || 0; // index 9 (columna 10)
-    if (mes >= 1 && mes <= 12) {
-      totalesPorMes[mes - 1] += totalDia;
-    }
-  });
+  // USAR LA FUNCIÓN NUEVA, QUE TRAE EL ARRAY DE 12 MESES DIRECTO DEL BACKEND MODIFICADO
+  const totalesPorMes = await fetchTotalesPorMes(ano);
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
@@ -878,7 +876,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderFilaTotalesFacturacion();
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 </body>
 </html>
