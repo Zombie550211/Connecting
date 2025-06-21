@@ -482,6 +482,7 @@
             <th>TEAM</th>
             <th>AGENTE</th>
             <th>PRODUCTO</th>
+            <th>FECHA DE INSTALACION</th>
             <th>Estado</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
@@ -601,6 +602,7 @@ async function cargarCostumers() {
       "TEAM": item.equipo || "",
       "AGENTE": item.agente || "",
       "PRODUCTO": item.producto || "",
+      "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
       "Estado": item.estado || "Pending", // Por defecto Pending si no hay
       "PUNTAJE": item.puntaje || "",
       "CUENTA": item.cuenta || "",
@@ -619,7 +621,7 @@ function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
   }
   filas.forEach(fila => {
@@ -638,6 +640,7 @@ function renderizarTablaCostumers(filas) {
       <td>${fila.TEAM}</td>
       <td>${fila.AGENTE}</td>
       <td>${fila.PRODUCTO}</td>
+      <td>${fila.FECHA_INSTALACION || ""}</td>
       <td>
         <select class="estado-select ${claseColor}"
                 onchange="actualizarEstadoCostumer('${fila._id}', this.value, this)">
@@ -762,6 +765,7 @@ function mostrarFormEditar(id) {
         (TEAMS[costumer.TEAM]||[]).map(a=>`<option value="${a}"${costumer.AGENTE===a?' selected':''}>${a}</option>`).join('')
       }</select></label><br>
       <label>Producto: <input type="text" name="producto" value="${costumer.PRODUCTO}" required></label><br>
+      <label>Fecha de instalación: <input type="date" name="fecha_instalacion" value="${costumer.FECHA_INSTALACION||''}" ></label><br>
       <label>Estado:
         <select name="estado" class="estado-select" required>
           ${ESTADO_OPCIONES.map(op =>
@@ -795,6 +799,7 @@ function mostrarFormEditar(id) {
       equipo: f.equipo.value,
       agente: f.agente.value,
       producto: f.producto.value,
+      fecha_instalacion: f.fecha_instalacion.value,
       estado: f.estado.value,
       puntaje: f.puntaje.value,
       cuenta: f.cuenta.value,

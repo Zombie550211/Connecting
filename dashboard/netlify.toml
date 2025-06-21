@@ -1,7 +1,0 @@
-[build]
-  publish = "dashboard"
-
-[[redirects]]
-  from = "/*"
-  to = "/dashboard.html"
-  status = 200
