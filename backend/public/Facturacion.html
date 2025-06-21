@@ -595,6 +595,17 @@ let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
 let datosFacturacionMes = []; // [{fecha, campos}]
 
+// --- NUEVO: Cargar TODOS los datos del año para la gráfica ---
+async function fetchFacturacionAnual(ano) {
+  try {
+    const res = await fetch(`/api/facturacion/anual/${ano}`);
+    const data = await res.json();
+    return (data.ok && Array.isArray(data.data)) ? data.data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 async function fetchFacturacionMes(mes, ano) {
   try {
     const res = await fetch(`/api/facturacion/${ano}/${String(mes).padStart(2, '0')}`);
@@ -643,6 +654,7 @@ function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   renderTablaDias(currentMonth, currentYear, currentBlock);
+  actualizarGrafica(); // <--- Actualiza gráfica al cambiar filtros
 }
 filtroMes.addEventListener('change', updateTableByFilters);
 filtroAno.addEventListener('change', updateTableByFilters);
@@ -753,23 +765,42 @@ async function guardarTodoFacturacion() {
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
 
-// --- GRAFICA (igual que antes) ---
+// --- GRAFICA: 12 BARRAS POR MES DEL AÑO SELECCIONADO ---
 let grafica;
 async function actualizarGrafica() {
-  const mes = parseInt(filtroMes.value, 10);
   const ano = parseInt(filtroAno.value, 10);
-  const resp = await fetch(`/api/facturacion/estadistica/${ano}/${String(mes).padStart(2, '0')}`);
-  const { totalesPorDia } = await resp.json();
-  const totalMes = totalesPorDia.reduce((a,b) => a + b, 0);
+
+  // Obtener todos los datos del año
+  const datosAnuales = await fetchFacturacionAnual(ano);
+
+  // Sumar por mes los totales (usando columna "TOTAL DEL DIA" = index 10)
+  // datosAnuales debe tener objetos: { fecha: "DD/MM/YYYY", campos: [...] }
+  const totalesPorMes = Array(12).fill(0);
+
+  datosAnuales.forEach(fila => {
+    // fecha en formato DD/MM/YYYY
+    if (!fila.fecha || !fila.campos) return;
+    const partes = fila.fecha.split('/');
+    if (partes.length !== 3) return;
+    const mes = parseInt(partes[1], 10);
+    const totalDia = parseFloat(fila.campos[10 - 1]) || 0; // index 9 (columna 10)
+    if (mes >= 1 && mes <= 12) {
+      totalesPorMes[mes - 1] += totalDia;
+    }
+  });
+
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
   grafica = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ["Total del mes"],
+      labels: [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ],
       datasets: [{
         label: "",
-        data: [totalMes],
+        data: totalesPorMes,
         backgroundColor: "rgba(40,181,232,0.70)",
         borderColor: "#1e293b",
         borderWidth: 2,
