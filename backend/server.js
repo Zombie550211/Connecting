@@ -471,6 +471,10 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
     res.status(500).json({ total: 0, error: err.message });
   }
 });// ==================== FACTURACIÓN ====================
+// ...[CÓDIGO ANTERIOR IGUAL]...
+
+// ==================== FACTURACIÓN ====================
+
 app.post('/api/facturacion', protegerRuta, async (req, res) => {
   const { fecha, campos } = req.body;
   if (!fecha || !Array.isArray(campos) || campos.length !== 14) {
@@ -517,13 +521,32 @@ app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res)
   res.json({ ok: true, totalesPorDia });
 });
 
-// === NUEVO ENDPOINT ANUAL PARA LA GRAFICA DE 12 BARRAS ===
+// === ENDPOINT ANUAL MODIFICADO PARA LA GRAFICA DE 12 BARRAS ===
 app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   const { ano } = req.params;
   const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
   try {
     const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
-    res.json({ ok: true, data });
+
+    // Construir arreglo de 12 meses (idx 0 = enero, idx 5 = junio, etc.)
+    const totalesPorMes = Array(12).fill(0);
+
+    data.forEach(doc => {
+      // doc.fecha: "01/06/2025"
+      const partes = doc.fecha.split('/');
+      if (partes.length === 3) {
+        const mes = parseInt(partes[1], 10); // "06" => 6
+        // campos[9] es el "TOTAL DEL DIA" (ajusta si tu campo total es otro)
+        const totalDia = Number(doc.campos[9]) || 0;
+        // mes-1: de 0 a 11
+        if (!isNaN(mes) && mes >= 1 && mes <= 12) {
+          totalesPorMes[mes - 1] += totalDia;
+        }
+      }
+    });
+
+    // Devuelve también los datos para la tabla si lo necesitas
+    res.json({ ok: true, totalesPorMes, data });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
@@ -535,6 +558,8 @@ app.get("/logout", (req, res) => {
     res.redirect("/login.html");
   });
 });
+
+// ...[Codgo de manejo de facturación]...
 
 app.post('/api/migrar-fechas-a-string', async (req, res) => {
   try {
