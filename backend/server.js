@@ -519,6 +519,90 @@ app.get('/api/costumer/summary', protegerRuta, async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DASHBOARD DINÁMICOS PARA ADMIN ====================
+
+// PANEL DE BIENVENIDA (nombre y frase inspiradora)
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  try {
+    // Puedes cambiar cómo se obtiene el nombre
+    let nombre = "Equipo administrativo";
+    if (req.session && req.session.usuario) {
+      // Buscar nombre real si existe en BD
+      const user = await User.findOne({ usuario: req.session.usuario });
+      if (user && user.nombre) nombre = user.nombre;
+      else nombre = req.session.usuario;
+    }
+    // Puedes cambiar la frase por una aleatoria o fija aquí
+    const frases = [
+      "Liderar con integridad y visión: eso es Connecting.",
+      "El éxito administrativo se construye con disciplina y pasión.",
+      "Cada gestión es un paso hacia la excelencia.",
+      "La confianza y la transparencia son nuestro mejor activo.",
+      "¡Gracias por ser parte de nuestro crecimiento diario!",
+      "El profesionalismo conecta sueños con resultados.",
+      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
+    ];
+    const frase = frases[Math.floor(Math.random() * frases.length)];
+    res.json({ nombre, frase });
+  } catch (err) {
+    res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
+  }
+});
+
+// RANKING POR EQUIPO
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  try {
+    // Agrupar por equipo y contar ventas
+    const pipeline = [
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ];
+    const equipos = await Costumer.aggregate(pipeline);
+    // Calcular porcentaje relativo para la barra (respecto al top 1)
+    const ventasTop = equipos.length ? equipos[0].ventas : 1;
+    const resultado = equipos.map((eq, idx) => ({
+      nombre: eq._id || "Sin equipo",
+      ventas: eq.ventas,
+      porc: Math.round((eq.ventas * 100) / ventasTop)
+    }));
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// RANKING POR AGENTE
+app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
+  try {
+    // Agrupar por agente y contar ventas
+    const pipeline = [
+      { $group: { _id: { nombre: "$agente", equipo: "$equipo" }, ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ];
+    const agentes = await Costumer.aggregate(pipeline);
+
+    // Puedes personalizar los avatares, aquí usamos randomuser.me por defecto
+    const avatarPorNombre = nombre => {
+      // Simple hash para usar un avatar distinto por nombre
+      let base = nombre ? nombre.charCodeAt(0) + nombre.length : Math.floor(Math.random()*100);
+      let url = base % 2 === 0
+        ? `https://randomuser.me/api/portraits/men/${base % 100}.jpg`
+        : `https://randomuser.me/api/portraits/women/${base % 100}.jpg`;
+      return url;
+    };
+
+    const resultado = agentes.map((ag, idx) => ({
+      nombre: ag._id.nombre || "Sin nombre",
+      equipo: ag._id.equipo || "Sin equipo",
+      ventas: ag.ventas,
+      avatar: avatarPorNombre(ag._id.nombre)
+    }));
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
 // ... [el resto de tu código sigue igual, incluyendo facturación, agentes, etc.] ...
 
 // ==================== FACTURACIÓN ====================
