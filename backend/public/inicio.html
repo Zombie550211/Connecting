@@ -3,18 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard CRM Admin</title>
-  <meta name="viewport" content="width=600, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    :root {
+      --azul: #5f8f9f;
+      --azul-sidebar: #5f8f9f;
+      --azul-txt: #468496;
+      --gris-sidebar: #d4d7d8;
+      --gris-sidebar-borde: #e1e3e5;
+      --gris-fondo: #e6e9ed;
+      --gris-card: #f6f8fa;
+      --azul-activo: #5f8f9f;
+      --sombra-activo: 0 2px 10px 0 #5f8f9f66; /* sombra azul translúcida */
+    }
     body {
-      background: #f1f5fa;
-      font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
       margin: 0;
       padding: 0;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+      background: var(--gris-fondo);
+      color: #222;
+      min-height: 100vh;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--gris-fondo);
+    }
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      background: linear-gradient(to right, var(--gris-sidebar) 85%, var(--gris-sidebar-borde) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 24px;
+      padding-bottom: 24px;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 10;
+      box-shadow: 2px 0 12px #0001;
+    }
+    .sidebar-logo {
+      margin: 0 auto 0 32px;
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      opacity: 0.85;
+    }
+    .sidebar-title {
+      font-weight: 700;
+      color: var(--azul);
+      margin: 10px 0 32px 32px;
+      font-size: 1.15em;
+      letter-spacing: 0.5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: auto;
+      padding-left: 0;
+    }
+    .sidebar-nav a {
+      display: block;
+      width: 82%;
+      margin-left: 18px;
+      padding: 11px 0 11px 22px;
+      border: none;
+      background: none;
+      text-align: left;
+      font-size: 1em;
+      border-radius: 16px;
+      color: #222;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+      outline: none;
+      text-decoration: none;
+      font-weight: 500;
+      letter-spacing:0.2px;
+      box-shadow: none;
+    }
+    .sidebar-nav .active {
+      background: var(--azul-activo);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: var(--sombra-activo);
+    }
+    .sidebar-nav a:not(.active):hover {
+      background: #bed9e3;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      margin-bottom: 12px;
+      width: 90%;
+      font-size: 0.97em;
+      color: var(--azul);
+      text-align: left;
+      font-style: italic;
+      opacity: 0.75;
+      margin-left: 16px;
+      margin-right: 10px;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      margin-left: 220px;
+      padding: 38px 0 0 0;
+      width: 100%;
+      min-height: 100vh;
     }
     .dashboard-container {
       max-width: 1100px;
-      margin: 48px auto;
-      padding: 0 18px;
+      margin: 0 auto;
+      padding: 0 18px 24px 18px;
     }
     .panel-bienvenida-admin {
       background: linear-gradient(120deg, #f1fafe 62%, #e8f0fd 100%);
@@ -41,7 +146,6 @@
       min-width: 110px;
       text-align: center;
     }
-    /* Rankings */
     .rankings-wrapper {
       display: flex;
       gap: 38px;
@@ -93,171 +197,111 @@
       width: 38px;
       height: 38px;
     }
+
+    /* RESPONSIVE */
+    @media (max-width: 1050px) {
+      .dashboard-container { max-width: 99vw; }
+    }
     @media (max-width: 900px) {
-      .rankings-wrapper {
-        flex-direction: column;
-        gap: 0;
-      }
-      .ranking-panel {
-        max-width: 100%;
-      }
+      .main-content { margin-left: 0; }
+      .sidebar { position: relative; width: 100vw; height: auto; flex-direction: row; }
+      .sidebar-logo { margin-left: 8px; }
+      .sidebar-title { margin-left: 8px; }
+      .sidebar-nav { flex-direction: row; justify-content: center; gap: 0; }
+      .sidebar-nav a { width: auto; min-width: 0; margin: 0 3px; padding: 10px 16px; }
+      .sidebar-footer { display: none; }
+      .panel-bienvenida-admin { margin-top: 20px; }
+    }
+    @media (max-width: 600px) {
+      .dashboard-container { padding: 0 2vw; }
+      .panel-bienvenida-admin { padding-bottom: 20px; }
+      .panel-bienvenida-admin .valores-cultura { flex-direction: column; gap: 7px; }
+      .ranking-panel { padding: 15px 5px 16px 5px; font-size: 0.97em; }
+      .ranking-panel h3 { font-size: 1em; }
+      .ranking-panel li { font-size: 0.98em; }
+      .sidebar { flex-direction: column; width: 100vw; }
+      .main-content { margin-left: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- Panel de bienvenida -->
-    <div class="panel-bienvenida-admin">
-      <!-- SVG Ilustración Astronauta llegando a la luna -->
-      <div style="width:100%;height:180px;overflow:hidden;border-radius:22px 22px 0 0;background: #209dd5;">
-        <svg width="100%" height="180" viewBox="0 0 600 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="150" cy="90" rx="120" ry="70" fill="#22b3ec" opacity="0.23"/>
-          <ellipse cx="470" cy="110" rx="80" ry="50" fill="#fff" opacity="0.14"/>
-          <ellipse cx="320" cy="70" rx="70" ry="40" fill="#fff" opacity="0.10"/>
-          <circle cx="500" cy="60" r="32" fill="#22b3ec" opacity="0.13"/>
-          <circle cx="90" cy="60" r="18" fill="#fff" opacity="0.10"/>
-          <!-- Luna -->
-          <circle cx="300" cy="120" r="44" fill="#F4F7FB" stroke="#b7d7ef" stroke-width="3" opacity="0.98"/>
-          <ellipse cx="320" cy="135" rx="6" ry="3" fill="#d9eaff" opacity="0.35"/>
-          <ellipse cx="292" cy="145" rx="4" ry="2" fill="#d9eaff" opacity="0.25"/>
-          <!-- Astronauta -->
-          <g>
-            <!-- Cuerpo -->
-            <rect x="288" y="95" width="24" height="32" rx="8" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <!-- Casco -->
-            <circle cx="300" cy="98" r="12" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <ellipse cx="300" cy="103" rx="6" ry="3" fill="#b7d7ef" opacity="0.25"/>
-            <!-- Visor del casco -->
-            <ellipse cx="303" cy="98" rx="5" ry="4" fill="#22b3ec" opacity="0.45"/>
-            <!-- Brazos -->
-            <rect x="282" y="105" width="8" height="24" rx="4" transform="rotate(-20 282 105)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <rect x="310" y="105" width="8" height="24" rx="4" transform="rotate(20 310 105)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <!-- Piernas -->
-            <rect x="292" y="125" width="7" height="18" rx="3" transform="rotate(-8 292 125)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <rect x="301" y="128" width="7" height="18" rx="3" transform="rotate(8 301 128)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
-            <!-- Mochila -->
-            <rect x="292" y="109" width="16" height="11" rx="3" fill="#d9eaff" opacity="0.45"/>
-            <!-- Bandera -->
-            <rect x="318" y="116" width="2" height="20" fill="#209dd5"/>
-            <rect x="320" y="116" width="14" height="9" fill="#22b3ec" stroke="#209dd5" stroke-width="1"/>
-            <rect x="324" y="119" width="6" height="3" fill="#fff"/>
-          </g>
-        </svg>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <img src="logo connecting.png" alt="Logo" class="sidebar-logo" />
+      <div class="sidebar-title">Connecting</div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active">Inicio</a>
+        <a href="lead.html">Lead</a>
+        <a href="costumer.html">Costumer</a>
+        <a href="Facturacion.html">Facturacion</a>
+        <a href="logout" onclick="return confirm('¿Cerrar sesión?');">Cerrar sesión</a>
+      </nav>
+      <div class="sidebar-footer">
+        “Conectando tu éxito,<br>un cliente a la vez”
       </div>
-      <h2 id="saludo" style="margin-top:24px;margin-bottom:16px;font-weight:900; color:#209dd5; letter-spacing:-1px;"></h2>
-      <div id="frase-inspiradora" style="font-size:1.13em;color:#1e293b;font-style:italic;margin-bottom:18px;"></div>
-      <!-- Valores/Cultura Connecting -->
-      <div class="valores-cultura">
-        <div class="valor-card">
-          <span style="font-size:1.4em;">🤝</span><br>
-          <span style="color:#209dd5;font-weight:700;">Colaboración</span>
+    </aside>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <div class="dashboard-container">
+        <!-- Panel bienvenida y rankings (idéntico a antes) -->
+        <div class="panel-bienvenida-admin">
+          <!-- SVG Astronauta -->
+          <div style="width:100%;height:180px;overflow:hidden;border-radius:22px 22px 0 0;background: #209dd5;">
+            <svg width="100%" height="180" viewBox="0 0 600 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="150" cy="90" rx="120" ry="70" fill="#22b3ec" opacity="0.23"/>
+              <ellipse cx="470" cy="110" rx="80" ry="50" fill="#fff" opacity="0.14"/>
+              <ellipse cx="320" cy="70" rx="70" ry="40" fill="#fff" opacity="0.10"/>
+              <circle cx="500" cy="60" r="32" fill="#22b3ec" opacity="0.13"/>
+              <circle cx="90" cy="60" r="18" fill="#fff" opacity="0.10"/>
+              <!-- Luna -->
+              <circle cx="300" cy="120" r="44" fill="#F4F7FB" stroke="#b7d7ef" stroke-width="3" opacity="0.98"/>
+              <ellipse cx="320" cy="135" rx="6" ry="3" fill="#d9eaff" opacity="0.35"/>
+              <ellipse cx="292" cy="145" rx="4" ry="2" fill="#d9eaff" opacity="0.25"/>
+              <!-- Astronauta -->
+              <g>
+                <rect x="288" y="95" width="24" height="32" rx="8" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <circle cx="300" cy="98" r="12" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <ellipse cx="300" cy="103" rx="6" ry="3" fill="#b7d7ef" opacity="0.25"/>
+                <ellipse cx="303" cy="98" rx="5" ry="4" fill="#22b3ec" opacity="0.45"/>
+                <rect x="282" y="105" width="8" height="24" rx="4" transform="rotate(-20 282 105)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <rect x="310" y="105" width="8" height="24" rx="4" transform="rotate(20 310 105)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <rect x="292" y="125" width="7" height="18" rx="3" transform="rotate(-8 292 125)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <rect x="301" y="128" width="7" height="18" rx="3" transform="rotate(8 301 128)" fill="#fff" stroke="#209dd5" stroke-width="2"/>
+                <rect x="292" y="109" width="16" height="11" rx="3" fill="#d9eaff" opacity="0.45"/>
+                <rect x="318" y="116" width="2" height="20" fill="#209dd5"/>
+                <rect x="320" y="116" width="14" height="9" fill="#22b3ec" stroke="#209dd5" stroke-width="1"/>
+                <rect x="324" y="119" width="6" height="3" fill="#fff"/>
+              </g>
+            </svg>
+          </div>
+          <h2 id="saludo" style="margin-top:24px;margin-bottom:16px;font-weight:900; color:#209dd5; letter-spacing:-1px;"></h2>
+          <div id="frase-inspiradora" style="font-size:1.13em;color:#1e293b;font-style:italic;margin-bottom:18px;"></div>
+          <div class="valores-cultura" id="valores-cultura"></div>
+          <div style="margin-top:16px;color:#b6c8d8;font-size:0.98em;font-style:italic;">
+            Connecting CRM Administrativo
+          </div>
         </div>
-        <div class="valor-card">
-          <span style="font-size:1.4em;">🏆</span><br>
-          <span style="color:#209dd5;font-weight:700;">Excelencia</span>
+        <div class="rankings-wrapper">
+          <div class="ranking-panel" id="ranking-equipos-panel">
+            <h3>🏆 Ranking por Equipo</h3>
+            <ol id="ranking-equipos-list"></ol>
+          </div>
+          <div class="ranking-panel" id="ranking-agentes-panel">
+            <h3>🌟 Ranking por Agente</h3>
+            <ol id="ranking-agentes-list"></ol>
+          </div>
         </div>
-        <div class="valor-card">
-          <span style="font-size:1.4em;">💡</span><br>
-          <span style="color:#209dd5;font-weight:700;">Innovación</span>
-        </div>
       </div>
-      <div style="margin-top:16px;color:#b6c8d8;font-size:0.98em;font-style:italic;">
-        Connecting CRM Administrativo
-      </div>
-    </div>
-    <!-- Paneles de Ranking -->
-    <div class="rankings-wrapper">
-      <!-- Ranking por equipos -->
-      <div class="ranking-panel">
-        <h3>🏆 Ranking por Equipo</h3>
-        <ol>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥇</span>
-            <span style="font-weight:700;">Team Pleitez</span>
-            <div style="flex:1;margin:0 10px;">
-              <div style="height:10px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
-                <div style="width:85%;background:#22b3ec;height:100%;border-radius:4px;"></div>
-              </div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">42 ventas</span>
-          </li>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥈</span>
-            <span style="font-weight:700;">Team Rivera</span>
-            <div style="flex:1;margin:0 10px;">
-              <div style="height:10px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
-                <div style="width:72%;background:#b6e0fb;height:100%;border-radius:4px;"></div>
-              </div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">36 ventas</span>
-          </li>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥉</span>
-            <span style="font-weight:700;">Team Soto</span>
-            <div style="flex:1;margin:0 10px;">
-              <div style="height:10px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
-                <div style="width:60%;background:#b6e0fb;height:100%;border-radius:4px;"></div>
-              </div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">30 ventas</span>
-          </li>
-          <li class="opacity-low">
-            <span style="font-size:1.2em;margin-right:12px;">4</span>
-            <span style="font-weight:700;">Team López</span>
-            <div style="flex:1;margin:0 10px;">
-              <div style="height:10px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
-                <div style="width:40%;background:#b6e0fb;height:100%;border-radius:4px;"></div>
-              </div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">20 ventas</span>
-          </li>
-        </ol>
-      </div>
-      <!-- Ranking por agentes -->
-      <div class="ranking-panel">
-        <h3>🌟 Ranking por Agente</h3>
-        <ol>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥇</span>
-            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="avatar" class="avatar">
-            <div style="flex:1;">
-              <div style="font-weight:700;">Luis Pleitez</div>
-              <div style="font-size:0.98em;color:#209dd5;">Team Pleitez</div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">23 ventas</span>
-          </li>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥈</span>
-            <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="avatar" class="avatar secondary">
-            <div style="flex:1;">
-              <div style="font-weight:700;">María Rivera</div>
-              <div style="font-size:0.98em;color:#209dd5;">Team Rivera</div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">19 ventas</span>
-          </li>
-          <li>
-            <span style="font-size:1.4em;margin-right:12px;">🥉</span>
-            <img src="https://randomuser.me/api/portraits/men/43.jpg" alt="avatar" class="avatar secondary">
-            <div style="flex:1;">
-              <div style="font-weight:700;">Carlos Soto</div>
-              <div style="font-size:0.98em;color:#209dd5;">Team Soto</div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">15 ventas</span>
-          </li>
-          <li class="opacity-low">
-            <span style="font-size:1.2em;margin-right:12px;">4</span>
-            <img src="https://randomuser.me/api/portraits/women/52.jpg" alt="avatar" class="avatar low">
-            <div style="flex:1;">
-              <div style="font-weight:700;">Claudia López</div>
-              <div style="font-size:0.98em;color:#209dd5;">Team López</div>
-            </div>
-            <span style="font-weight:600;color:#209dd5;">9 ventas</span>
-          </li>
-        </ol>
-      </div>
-    </div>
+    </main>
   </div>
   <script>
+    // Valores/cultura: puedes cambiarlos o traerlos de API si necesitas
+    const valores = [
+      { emoji: "🤝", valor: "Colaboración" },
+      { emoji: "🏆", valor: "Excelencia" },
+      { emoji: "💡", valor: "Innovación" }
+    ];
     const frases = [
       "Liderar con integridad y visión: eso es Connecting.",
       "El éxito administrativo se construye con disciplina y pasión.",
@@ -267,14 +311,80 @@
       "El profesionalismo conecta sueños con resultados.",
       "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
     ];
-    function getSaludo() {
+
+    // Saludo según hora del día
+    function getSaludo(nombre) {
       const hora = new Date().getHours();
-      if (hora < 12) return "¡Buenos días, equipo administrativo!";
-      if (hora < 19) return "¡Buenas tardes, equipo administrativo!";
-      return "¡Buenas noches, equipo administrativo!";
+      let base = nombre ? `, ${nombre}` : "";
+      if (hora < 12) return "¡Buenos días" + base + "!";
+      if (hora < 19) return "¡Buenas tardes" + base + "!";
+      return "¡Buenas noches" + base + "!";
     }
-    document.getElementById('saludo').textContent = getSaludo();
-    document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random() * frases.length)];
+    function renderValores() {
+      const cont = document.getElementById('valores-cultura');
+      cont.innerHTML = valores.map(v =>
+        `<div class="valor-card">
+          <span style="font-size:1.4em;">${v.emoji}</span><br>
+          <span style="color:#209dd5;font-weight:700;">${v.valor}</span>
+        </div>`
+      ).join('');
+    }
+    function renderRankingEquipos(equipos) {
+      const ol = document.getElementById('ranking-equipos-list');
+      ol.innerHTML = equipos.map((eq, idx) => `
+        <li${idx>2?' class="opacity-low"':''}>
+          <span style="font-size:1.3em;margin-right:9px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
+          <span style="font-weight:700;">${eq.nombre}</span>
+          <div style="flex:1;margin:0 8px;">
+            <div style="height:8px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
+              <div style="width:${Math.min(100,eq.porc)}%;background:${idx==0?'#22b3ec':'#b6e0fb'};height:100%;border-radius:4px;"></div>
+            </div>
+          </div>
+          <span style="font-weight:600;color:#209dd5;">${eq.ventas} ventas</span>
+        </li>
+      `).join('');
+    }
+    function renderRankingAgentes(agentes) {
+      const ol = document.getElementById('ranking-agentes-list');
+      ol.innerHTML = agentes.map((ag, idx) => `
+        <li${idx>2?' class="opacity-low"':''}>
+          <span style="font-size:1.3em;margin-right:9px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
+          <img src="${ag.avatar}" alt="avatar" class="avatar${idx==1||idx==2?' secondary':''}${idx>2?' low':''}">
+          <div style="flex:1;">
+            <div style="font-weight:700;">${ag.nombre}</div>
+            <div style="font-size:0.97em;color:#209dd5;">${ag.equipo}</div>
+          </div>
+          <span style="font-weight:600;color:#209dd5;">${ag.ventas} ventas</span>
+        </li>
+      `).join('');
+    }
+    async function cargarDashboard() {
+      // Panel bienvenida (puedes cambiar por fetch('/api/welcome'))
+      const bienvenida = await fetch('/api/welcome').then(r=>r.json())
+        .catch(()=>({nombre:'Equipo administrativo'}));
+      document.getElementById('saludo').textContent = getSaludo(bienvenida.nombre);
+      document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random()*frases.length)];
+      renderValores();
+      // Ranking por equipos
+      const equipos = await fetch('/api/ranking-equipos').then(r=>r.json())
+        .catch(()=>[
+          {nombre:"Team Pleitez", ventas:42, porc:85},
+          {nombre:"Team Rivera", ventas:36, porc:72},
+          {nombre:"Team Soto", ventas:30, porc:60},
+          {nombre:"Team López", ventas:20, porc:40}
+        ]);
+      renderRankingEquipos(equipos);
+      // Ranking por agentes
+      const agentes = await fetch('/api/ranking-agentes').then(r=>r.json())
+        .catch(()=>[
+          {nombre:"Luis Pleitez", equipo:"Team Pleitez", ventas:23, avatar:"https://randomuser.me/api/portraits/men/32.jpg"},
+          {nombre:"María Rivera", equipo:"Team Rivera", ventas:19, avatar:"https://randomuser.me/api/portraits/women/65.jpg"},
+          {nombre:"Carlos Soto", equipo:"Team Soto", ventas:15, avatar:"https://randomuser.me/api/portraits/men/43.jpg"},
+          {nombre:"Claudia López", equipo:"Team López", ventas:9, avatar:"https://randomuser.me/api/portraits/women/52.jpg"}
+        ]);
+      renderRankingAgentes(agentes);
+    }
+    cargarDashboard();
   </script>
 </body>
 </html>
