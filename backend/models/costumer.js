@@ -9,7 +9,8 @@ const costumerSchema = new mongoose.Schema({
   puntaje:  { type: Number,  default: 0 },
   cuenta:   { type: String, default: '' },
   direccion:{ type: String, default: '' },
-  zip:      { type: String, default: '' }
+  zip:      { type: String, default: '' },
+  estado:   { type: String, default: 'Pending' } // <---- Añade este campo
 });
 
-module.exports = mongoose.model('Costumer', costumerSchema, 'costumers'); // Fuerza el nombre de la colección
+module.exports = mongoose.model('Costumer', costumerSchema, 'costumers');
