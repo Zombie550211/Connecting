@@ -579,11 +579,35 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
       { $group: { _id: { nombre: "$agente", equipo: "$equipo" }, ventas: { $sum: 1 } } },
       { $sort: { ventas: -1 } }
     ];
-    const agentes = await Costumer.aggregate(pipeline);
 
-    // Puedes personalizar los avatares, aquí usamos randomuser.me por defecto
+    // Unifica alias para nombres duplicados
+    const ALIAS_AGENTES = {
+      "Evelyn Garcia": ["Evelyn Garcia", "Estefany Garcia"],
+      // Agrega más alias aquí si es necesario
+    };
+    function nombreFinal(nombre) {
+      for (const [final, aliasArr] of Object.entries(ALIAS_AGENTES)) {
+        if (aliasArr.map(a => a.toLowerCase().trim()).includes((nombre||"").toLowerCase().trim())) {
+          return final;
+        }
+      }
+      return nombre;
+    }
+
+    // Traer todos los costumers para re-agrupar
+    const docs = await Costumer.find({}, { agente: 1, equipo: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = nombreFinal(venta.agente || "Sin nombre");
+      const equipo = venta.equipo || "Sin equipo";
+      if (!ranking[nombreAgente]) {
+        ranking[nombreAgente] = { nombre: nombreAgente, equipo, ventas: 0, avatar: "" };
+      }
+      ranking[nombreAgente].ventas += 1;
+    }
+
+    // Para avatar random
     const avatarPorNombre = nombre => {
-      // Simple hash para usar un avatar distinto por nombre
       let base = nombre ? nombre.charCodeAt(0) + nombre.length : Math.floor(Math.random()*100);
       let url = base % 2 === 0
         ? `https://randomuser.me/api/portraits/men/${base % 100}.jpg`
@@ -591,19 +615,65 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
       return url;
     };
 
-    const resultado = agentes.map((ag, idx) => ({
-      nombre: ag._id.nombre || "Sin nombre",
-      equipo: ag._id.equipo || "Sin equipo",
-      ventas: ag.ventas,
-      avatar: avatarPorNombre(ag._id.nombre)
-    }));
+    const resultado = Object.values(ranking)
+      .sort((a, b) => b.ventas - a.ventas)
+      .map(r => ({
+        ...r,
+        avatar: avatarPorNombre(r.nombre)
+      }));
+
     res.json(resultado);
   } catch (err) {
     res.status(500).json([]);
   }
 });
 
-// ... [el resto de tu código sigue igual, incluyendo facturación, agentes, etc.] ...
+// RANKING POR PUNTOS (SUMA PUNTOS Y UNIFICA ALIAS DE AGENTES)
+app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
+  try {
+    // Define aquí los alias/manualmente o puedes cargar de BD
+    const ALIAS_AGENTES = {
+      "Evelyn Garcia": ["Evelyn Garcia", "Estefany Garcia"],
+      // ...agrega más alias si es necesario
+    };
+
+    // Función que retorna el nombre final para cualquier nombre (alias)
+    function nombreFinal(nombre) {
+      for (const [final, aliasArr] of Object.entries(ALIAS_AGENTES)) {
+        if (aliasArr.map(a => a.toLowerCase().trim()).includes((nombre||"").toLowerCase().trim())) {
+          return final;
+        }
+      }
+      return nombre;
+    }
+
+    // Trae todas las ventas individuales
+    const docs = await Costumer.find({}, { agente: 1, equipo: 1, puntaje: 1 }).lean();
+
+    // Agrupa sumando puntos por agente (unificando alias)
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = nombreFinal(venta.agente || "Sin nombre");
+      const equipo = venta.equipo || "Sin equipo";
+      if (!ranking[nombreAgente]) {
+        ranking[nombreAgente] = { nombre: nombreAgente, equipo, puntos: 0 };
+      }
+      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
+    }
+
+    // Ordena descendente por puntos
+    const resultado = Object.values(ranking)
+      .sort((a, b) => b.puntos - a.puntos)
+      .map((r, idx) => ({
+        ...r,
+        puntos: Math.round(r.puntos)
+      }));
+
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
 
 // ==================== FACTURACIÓN ====================
 // (Sigue igual...)

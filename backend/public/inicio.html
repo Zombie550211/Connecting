@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Inicio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
- <style>
+  <style>
     :root {
       --sidebar-bg: #15344a;
       --sidebar-accent: #22b3ec;
@@ -184,13 +184,13 @@
     }
     .ranking-panel {
       flex: 1;
-      min-width: 340px;
+      min-width: 320px;
       background: var(--panel-bg);
       border-radius: 15px;
       box-shadow: 0 3px 18px #209dd524;
       padding: 32px;
       margin-bottom: 24px;
-      max-width: 450px;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -398,6 +398,11 @@
             <ol id="ranking-agentes-list"></ol>
             <button class="ver-todo-link" onclick="abrirModal('agentes')">Ver todo</button>
           </div>
+          <div class="ranking-panel" id="ranking-puntos-panel">
+            <h3>⭐ Ranking por Puntos</h3>
+            <ol id="ranking-puntos-list"></ol>
+            <button class="ver-todo-link" onclick="abrirModal('puntos')">Ver todo</button>
+          </div>
         </div>
       </div>
       <!-- MODAL -->
@@ -424,32 +429,6 @@
       "¡Gracias por ser parte de nuestro crecimiento diario!",
       "El profesionalismo conecta sueños con resultados.",
       "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
-    ];
-
-    // Datos ejemplo
-    const mockEquipos = [
-      {nombre:"Team Irania", ventas:199, porc:100},
-      {nombre:"Team Roberto", ventas:144, porc:72},
-      {nombre:"Team Pleitez", ventas:135, porc:68},
-      {nombre:"Team Randal", ventas:112, porc:56},
-      {nombre:"Team Marisol", ventas:72, porc:36},
-      {nombre:"Team Lineas", ventas:65, porc:33}
-    ];
-    const mockAgentes = [
-      {nombre:"Francisco Aguilar", equipo:"Team Roberto", ventas:40, avatar:"https://randomuser.me/api/portraits/men/1.jpg"},
-      {nombre:"Katerine Gomez", equipo:"Team Marisol", ventas:36, avatar:"https://randomuser.me/api/portraits/women/2.jpg"},
-      {nombre:"Julio Chavez", equipo:"Team Randal", ventas:34, avatar:"https://randomuser.me/api/portraits/men/3.jpg"},
-      {nombre:"Giselle Diaz", equipo:"Team Irania", ventas:32, avatar:"https://randomuser.me/api/portraits/women/4.jpg"},
-      {nombre:"Irvin Cruz", equipo:"Team Irania", ventas:32, avatar:"https://randomuser.me/api/portraits/men/5.jpg"},
-      {nombre:"Lisbeth Cortez", equipo:"Team Roberto", ventas:30, avatar:"https://randomuser.me/api/portraits/women/6.jpg"},
-      {nombre:"Pamela Urrutia", equipo:"Team Irania", ventas:29, avatar:"https://randomuser.me/api/portraits/women/7.jpg"},
-      {nombre:"Miguel Nunez", equipo:"Team Irania", ventas:27, avatar:"https://randomuser.me/api/portraits/men/8.jpg"},
-      {nombre:"Roxana Martinez", equipo:"Team Irania", ventas:27, avatar:"https://randomuser.me/api/portraits/women/9.jpg"},
-      {nombre:"Luis Chavarria", equipo:"Team Pleitez", ventas:25, avatar:"https://randomuser.me/api/portraits/men/10.jpg"},
-      {nombre:"Diego Mejía", equipo:"Team Pleitez", ventas:25, avatar:"https://randomuser.me/api/portraits/men/11.jpg"},
-      {nombre:"Steven Valera", equipo:"Team Pleitez", ventas:24, avatar:"https://randomuser.me/api/portraits/men/12.jpg"},
-      {nombre:"Johana Santana", equipo:"Team Randal", ventas:23, avatar:"https://randomuser.me/api/portraits/women/13.jpg"},
-      {nombre:"Mauricio Rivera", equipo:"Team Pleitez", ventas:21, avatar:"https://randomuser.me/api/portraits/men/14.jpg"}
     ];
 
     function getSaludo(nombre) {
@@ -484,7 +463,6 @@
         </li>
       `).join('');
     }
-    // Ranking Agentes: sin foto, solo número y medallas top 3, muestra todos los agentes en el modal
     function renderRankingAgentes(agentes, mostrarTodos) {
       const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-agentes-list');
       const cantidad = mostrarTodos ? agentes.length : Math.min(4, agentes.length);
@@ -501,6 +479,23 @@
         </li>
       `).join('');
     }
+    function renderRankingPuntos(puntos, mostrarTodos) {
+      const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-puntos-list');
+      const cantidad = mostrarTodos ? puntos.length : Math.min(4, puntos.length);
+      ol.innerHTML = puntos.slice(0, cantidad).map((p, idx) => `
+        <li>
+          <span style="font-size:1.3em;margin-right:8px;">
+            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
+          </span>
+          <div style="flex:1;">
+            <div style="font-weight:700;">${p.nombre}</div>
+            <div style="font-size:0.97em;color:#209dd5;">${p.equipo}</div>
+          </div>
+          <span style="font-weight:600;color:#209dd5;">${p.puntos} pts</span>
+        </li>
+      `).join('');
+    }
+
     // MODAL LÓGICA
     let currentModal = null;
     function abrirModal(tipo) {
@@ -509,9 +504,12 @@
       if (tipo === "equipos") {
         document.getElementById('modal-title').textContent = "Ranking completo por Equipo";
         renderRankingEquipos(window.equiposRanking, true);
-      } else {
+      } else if (tipo === "agentes") {
         document.getElementById('modal-title').textContent = "Ranking completo por Agente";
         renderRankingAgentes(window.agentesRanking, true);
+      } else if (tipo === "puntos") {
+        document.getElementById('modal-title').textContent = "Ranking completo por Puntos";
+        renderRankingPuntos(window.puntosRanking, true);
       }
     }
     function cerrarModal() {
@@ -524,10 +522,12 @@
       document.getElementById('saludo').textContent = getSaludo(bienvenida.nombre);
       document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random()*frases.length)];
       renderValores();
-      window.equiposRanking = await fetch('/api/ranking-equipos').then(r=>r.json()).catch(()=>mockEquipos);
+      window.equiposRanking = await fetch('/api/ranking-equipos').then(r=>r.json()).catch(()=>[]);
       renderRankingEquipos(window.equiposRanking, false);
-      window.agentesRanking = await fetch('/api/ranking-agentes').then(r=>r.json()).catch(()=>mockAgentes);
+      window.agentesRanking = await fetch('/api/ranking-agentes').then(r=>r.json()).catch(()=>[]);
       renderRankingAgentes(window.agentesRanking, false);
+      window.puntosRanking = await fetch('/api/ranking-puntos').then(r=>r.json()).catch(()=>[]);
+      renderRankingPuntos(window.puntosRanking, false);
     }
     cargarDashboard();
     function logout() {
