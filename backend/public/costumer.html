@@ -478,25 +478,22 @@
       <table id="tabla-clientes">
         <thead>
           <tr>
-            <th>Agente</th>
-            <th>Nombre cliente</th>
-            <th>Teléfono principal</th>
-            <th>Teléfono Alterno</th>
-            <th>Numero de cuenta</th>
-            <th>Autopaquete</th>
-            <th>Dirección</th>
-            <th>Tipo de serv</th>
-            <th>Sistema</th>
-            <th>Riesgo</th>
-            <th>Día de venta a de instalaci</th>
-            <th>Status</th>
-            <th>Servicios</th>
-            <th>Mercado</th>
-            <th>Supervisor</th>
-            <th>Comentario</th>
-            <th>¿Por que llamo el cliente?</th>
-            <th>ZIP CODE</th>
+            <th>FECHA</th>
+            <th>TEAM</th>
+            <th>AGENTE</th>
+            <th>PRODUCTO</th>
+            <th>FECHA DE INSTALACION</th>
+            <th>Estado</th>
             <th>PUNTAJE</th>
+            <th>CUENTA</th>
+            <th>RIESGO</th>
+            <th>MERCADO</th>
+            <th>NOMBRE DEL CLIENTE</th>
+            <th>NÚMERO DE CUENTA</th>
+            <th>TELÉFONO</th>
+            <th>TELÉFONO ALTERNO</th>
+            <th>DIRECCIÓN</th>
+            <th>ZIP</th>
             <th>ACCIÓN</th>
           </tr>
         </thead>
@@ -507,8 +504,363 @@
   </main>
 </div>
 <script>
-// ... (todo tu JS igual, pero la tabla y el formulario usan el orden y campos pedidos) ...
-// (por límite de espacio, si necesitas el JS completo aquí, dímelo y te lo envío separado, pero ya tienes arriba todos los fragmentos integrados)
+const TEAMS = {
+  "Team Pleitez": [
+    "Diego Mejia",
+    "Fabricio Panameño",
+    "Luis Chavarria",
+    "Mauricio Rivera",
+    "Steven Varela",
+    "Evelyn Garcia",
+    "Abigail Galdamez"
+  ],
+  "Team Irania": [
+    "Irania Serrano",
+    "Irvin Cruz",
+    "Josue Renderos",
+    "Julissa Rubio",
+    "Miguel Nunez",
+    "Pamela Urrutia",
+    "Roxana Martinez",
+    "Giselle Diaz",
+    "Estefany Amaya"
+  ],
+  "Team Lineas": [
+    "Jocelyn R Lineas",
+    "Jonathan Figueroa",
+    "Lineas-Carlos",
+    "Lineas-Cristian R",
+    "Lineas-Diego.O",
+    "Lineas-Edward",
+    "Lineas-Kenia",
+    "Lineas-Luis G",
+    "Lineas-Oscar R"
+  ],
+  "Team Marisol": [
+    "Fernanda Castillo",
+    "Katerine Gomez",
+    "Kimberly Iglesias",
+    "Marisol Beltran"
+  ],
+  "Team Randal": [
+    "Abigail Morales",
+    "Alexander Montecinos",
+    "Anderson Guzman",
+    "Carlos Grande",
+    "Guadalupe Santana",
+    "Julio Chavez",
+    "Priscila Hernandez",
+    "Randal Martinez"
+  ],
+  "Team Roberto": [
+    "Daniela Bonilla",
+    "Francisco Aguilar",
+    "Ingrid Garcia",
+    "Lisbeth Cortez",
+    "Nelson Ceren",
+    "Roberto Velasquez",
+    "Tatiana Ayala"
+  ]
+};
+
+let datosCostumers = [];
+
+const ESTADO_OPCIONES = [
+  { value: "Pending", texto: "Pending", clase: "estado-pending" },
+  { value: "Complete", texto: "Complete", clase: "estado-complete" },
+  { value: "Rescheduled", texto: "Rescheduled", clase: "estado-rescheduled" },
+  { value: "Pending Chargeback", texto: "Pending Chargeback", clase: "estado-pending-chargeback" },
+  { value: "Cancelled", texto: "Cancelled", clase: "estado-cancelled" }
+];
+
+// --- INICIO KPIs FUNCIONALES ---
+async function cargarKPIsCostumer() {
+  const [
+    ventasHoy,
+    leadsPendientes,
+    clientes,
+    ventasMes
+  ] = await Promise.all([
+    fetch('/api/ventas/hoy').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/leads/pendientes').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/clientes').then(r => r.json()).catch(() => ({total:0})),
+    fetch('/api/ventas/mes').then(r => r.json()).catch(() => ({total:0}))
+  ]);
+  document.getElementById('kpi-ventas-hoy').textContent = ventasHoy.total ?? 0;
+  document.getElementById('kpi-leads-pendientes').textContent = leadsPendientes.total ?? 0;
+  document.getElementById('kpi-clientes').textContent = clientes.total ?? 0;
+  document.getElementById('kpi-ventas-mes').textContent = ventasMes.total ?? 0;
+}
+// --- FIN KPIs FUNCIONALES ---
+
+async function cargarCostumers() {
+  try {
+    const res = await fetch('/api/costumer');
+    const data = await res.json();
+    if (!data.costumers) {
+      console.error("No se recibieron costumers del backend:", data);
+      return;
+    }
+    datosCostumers = data.costumers.map(item => ({
+      "_id": item._id,
+      "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
+      "TEAM": item.equipo || "",
+      "AGENTE": item.agente || "",
+      "PRODUCTO": item.producto || "",
+      "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
+      "Estado": item.estado || "Pending",
+      "PUNTAJE": item.puntaje || "",
+      "CUENTA": item.cuenta || "",
+      "RIESGO": item.riesgo || "",
+      "MERCADO": item.mercado || "",
+      "NOMBRE_CLIENTE": item.nombre_cliente || "",
+      "NUMERO_DE_CUENTA": item.numero_de_cuenta || "",
+      "TELÉFONO": item.telefono || "",
+      "TELÉFONO_ALTERNO": item.telefono_alterno || "",
+      "DIRECCIÓN": item.direccion || "",
+      "ZIP": item.zip || ""
+    }));
+    renderizarTablaCostumers(datosCostumers);
+    llenarFiltroTeamYAgente();
+  } catch (err) {
+    console.error("Error cargando costumers:", err);
+  }
+}
+
+function renderizarTablaCostumers(filas) {
+  const tbody = document.getElementById("bodyTablaCostumers");
+  tbody.innerHTML = "";
+  if (!filas.length) {
+    tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    return;
+  }
+  filas.forEach(fila => {
+    const estadoActual = ESTADO_OPCIONES.find(e => e.value === fila.Estado) ? fila.Estado : "Pending";
+    const claseColor = ESTADO_OPCIONES.find(e => e.value === estadoActual)?.clase || "estado-pending";
+    const opcionesEstado = ESTADO_OPCIONES.map(op =>
+      `<option value="${op.value}"${fila.Estado === op.value ? " selected" : ""}>${op.texto}</option>`
+    ).join('');
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fila.FECHA}</td>
+      <td>${fila.TEAM}</td>
+      <td>${fila.AGENTE}</td>
+      <td>${fila.PRODUCTO}</td>
+      <td>${fila.FECHA_INSTALACION || ""}</td>
+      <td>
+        <select class="estado-select ${claseColor}"
+                onchange="actualizarEstadoCostumer('${fila._id}', this.value, this)">
+          ${opcionesEstado}
+        </select>
+      </td>
+      <td>${fila.PUNTAJE}</td>
+      <td>${fila.CUENTA}</td>
+      <td>${fila.RIESGO}</td>
+      <td>${fila.MERCADO}</td>
+      <td>${fila.NOMBRE_CLIENTE}</td>
+      <td>${fila.NUMERO_DE_CUENTA}</td>
+      <td>${fila["TELÉFONO"]}</td>
+      <td>${fila["TELÉFONO_ALTERNO"]}</td>
+      <td>${fila["DIRECCIÓN"]}</td>
+      <td>${fila.ZIP}</td>
+      <td>
+        <button class="btn-editar" title="Editar" onclick="mostrarFormEditar('${fila._id}')">&#9998;</button>
+        <button class="btn-eliminar" title="Eliminar" onclick="eliminarCostumer('${fila._id}')">&#128465;</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function actualizarEstadoCostumer(id, estado, selectEl) {
+  selectEl.classList.remove(
+    "estado-pending", "estado-complete", "estado-rescheduled", "estado-pending-chargeback", "estado-cancelled"
+  );
+  const estadoInfo = ESTADO_OPCIONES.find(e => e.value === estado);
+  if (estadoInfo) selectEl.classList.add(estadoInfo.clase);
+
+  try {
+    const res = await fetch(`/api/costumer/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      alert("Error al actualizar el estado: " + (data.error || ""));
+      cargarCostumers();
+    }
+  } catch (e) {
+    alert("Error al actualizar el estado: " + e.message);
+    cargarCostumers();
+  }
+}
+
+function llenarFiltroTeamYAgente() {
+  const teamSelect = document.getElementById("filtro-team");
+  teamSelect.innerHTML = `<option value="">Todos</option>` +
+    Object.keys(TEAMS).map(t => `<option value="${t}">${t}</option>`).join('');
+  teamSelect.onchange = function() {
+    llenarFiltroAgente(this.value);
+    aplicarFiltros();
+  };
+  llenarFiltroAgente(teamSelect.value);
+}
+
+function llenarFiltroAgente(team) {
+  const agenteSelect = document.getElementById("filtro-agente");
+  let agentes = [];
+  if (!team) {
+    agentes = Object.values(TEAMS).flat();
+  } else {
+    agentes = TEAMS[team] || [];
+  }
+  agenteSelect.innerHTML = `<option value="">Todos</option>` +
+    agentes.map(a => `<option value="${a}">${a}</option>`).join('');
+}
+
+function aplicarFiltros() {
+  let filtrados = [...datosCostumers];
+  const desde = document.getElementById("filtro-fecha-desde").value;
+  const hasta = document.getElementById("filtro-fecha-hasta").value;
+  const team = document.getElementById("filtro-team").value;
+  const agente = document.getElementById("filtro-agente").value;
+  const telefono = document.getElementById("filtro-telefono").value.trim();
+  const direccion = document.getElementById("filtro-direccion").value.trim();
+  const zip = document.getElementById("filtro-zip").value.trim();
+
+  if (desde) filtrados = filtrados.filter(f => f.FECHA >= desde);
+  if (hasta) filtrados = filtrados.filter(f => f.FECHA <= hasta);
+  if (team) filtrados = filtrados.filter(f => f.TEAM === team);
+  if (agente) filtrados = filtrados.filter(f => f.AGENTE === agente);
+  if (telefono) filtrados = filtrados.filter(f => f["TELÉFONO"].includes(telefono));
+  if (direccion) filtrados = filtrados.filter(f => f["DIRECCIÓN"].toLowerCase().includes(direccion.toLowerCase()));
+  if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
+
+  renderizarTablaCostumers(filtrados);
+}
+
+async function eliminarCostumer(id) {
+  if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
+  try {
+    const res = await fetch(`/api/costumer/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) {
+      cargarCostumers();
+    } else {
+      alert("Error eliminando costumer: " + (data.error || ''));
+    }
+  } catch (e) {
+    alert("Error eliminando costumer: " + e.message);
+  }
+}
+
+function mostrarFormEditar(id) {
+  const costumer = datosCostumers.find(c => c._id === id);
+  if (!costumer) return alert("No se encontró el costumer");
+
+  const cont = document.getElementById("editar-form-container");
+  cont.innerHTML = `
+    <form id="edit-costumer-form" style="background:#fff;border:1px solid #eee;padding:18px;margin:18px 0;border-radius:8px;">
+      <h3>Editar Costumer</h3>
+      <input type="hidden" name="_id" value="${costumer._id}">
+      <label>Fecha: <input type="date" name="fecha" value="${costumer.FECHA}" required></label><br>
+      <label>Team: <select name="equipo" required>${
+        Object.keys(TEAMS).map(t => `<option value="${t}"${costumer.TEAM===t?' selected':''}>${t}</option>`).join('')
+      }</select></label><br>
+      <label>Agente: <select name="agente" required>${
+        (TEAMS[costumer.TEAM]||[]).map(a=>`<option value="${a}"${costumer.AGENTE===a?' selected':''}>${a}</option>`).join('')
+      }</select></label><br>
+      <label>Producto: <input type="text" name="producto" value="${costumer.PRODUCTO}" required></label><br>
+      <label>Fecha de instalación: <input type="date" name="fecha_instalacion" value="${costumer.FECHA_INSTALACION||''}" ></label><br>
+      <label>Estado:
+        <select name="estado" class="estado-select" required>
+          ${ESTADO_OPCIONES.map(op =>
+            `<option value="${op.value}"${costumer.Estado===op.value?' selected':''}>${op.texto}</option>`
+          ).join('')}
+        </select>
+      </label><br>
+      <label>Puntaje: <input type="number" name="puntaje" step="0.01" value="${costumer.PUNTAJE}" required></label><br>
+      <label>Cuenta: <input type="text" name="cuenta" value="${costumer.CUENTA}" ></label><br>
+      <label>Riesgo: <input type="text" name="riesgo" value="${costumer.RIESGO}" ></label><br>
+      <label>Mercado: <input type="text" name="mercado" value="${costumer.MERCADO}" ></label><br>
+      <label>Nombre del cliente: <input type="text" name="nombre_cliente" value="${costumer.NOMBRE_CLIENTE}" ></label><br>
+      <label>Número de cuenta: <input type="text" name="numero_de_cuenta" value="${costumer.NUMERO_DE_CUENTA}" ></label><br>
+      <label>Teléfono: <input type="text" name="telefono" value="${costumer["TELÉFONO"]}" ></label><br>
+      <label>Teléfono alterno: <input type="text" name="telefono_alterno" value="${costumer["TELÉFONO_ALTERNO"]||''}" ></label><br>
+      <label>Dirección: <input type="text" name="direccion" value="${costumer["DIRECCIÓN"]}" ></label><br>
+      <label>ZIP: <input type="text" name="zip" value="${costumer.ZIP}" ></label><br>
+      <button type="submit">Guardar</button>
+      <button type="button" onclick="cerrarFormEditar()">Cancelar</button>
+    </form>
+    <script>
+      document.querySelector('select[name="equipo"]').onchange = function() {
+        let team = this.value;
+        let agenteSel = document.querySelector('select[name="agente"]');
+        agenteSel.innerHTML = (window.TEAMS[team]||[]).map(a=>'<option value="'+a+'">'+a+'</option>').join('');
+      }
+    <\/script>
+  `;
+  cont.scrollIntoView({behavior:'smooth'});
+  document.getElementById("edit-costumer-form").onsubmit = async function(e){
+    e.preventDefault();
+    const f = e.target;
+    const id = f._id.value;
+    const datos = {
+      fecha: f.fecha.value,
+      equipo: f.equipo.value,
+      agente: f.agente.value,
+      producto: f.producto.value,
+      fecha_instalacion: f.fecha_instalacion.value,
+      estado: f.estado.value,
+      puntaje: f.puntaje.value,
+      cuenta: f.cuenta.value,
+      riesgo: f.riesgo.value,
+      mercado: f.mercado.value,
+      nombre_cliente: f.nombre_cliente.value,
+      numero_de_cuenta: f.numero_de_cuenta.value,
+      telefono: f.telefono.value,
+      telefono_alterno: f.telefono_alterno.value,
+      direccion: f.direccion.value,
+      zip: f.zip.value
+    };
+    try {
+      const res = await fetch(`/api/costumer/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      });
+      const data = await res.json();
+      if (data.success) {
+        cerrarFormEditar();
+        cargarCostumers();
+      } else {
+        alert("Error al editar: " + (data.error||''));
+      }
+    } catch(e) {
+      alert("Error al editar: " + e.message);
+    }
+  };
+}
+
+function cerrarFormEditar() {
+  document.getElementById("editar-form-container").innerHTML = "";
+}
+// Eventos de los filtros
+document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
+document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
+// Inicial
+cargarCostumers();
+cargarKPIsCostumer();
+function logout() {
+  fetch('/logout').then(() => location.href = 'login.html');
+}
+window.TEAMS = TEAMS;
 </script>
 </body>
 </html>
