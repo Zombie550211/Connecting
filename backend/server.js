@@ -367,27 +367,39 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER ENDPOINTS GLOBALES =========================
+const COSTUMER_HEADER = [
+  "agente", "nombre_cliente", "telefono", "telefono_alterno", "numero_de_cuenta", "autopaquete",
+  "direccion", "tipo_de_serv", "sistema", "riesgo", "dia_venta_a_instalacion", "estado",
+  "servicios", "mercado", "supervisor", "comentario", "motivo_llamada", "zip", "puntaje"
+];
+
+app.get("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    const query = {};
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      query.fecha = fecha;
+    }
+    let costumers = await Costumer.find(query).sort({ _id: -1 }).lean();
+    costumers = costumers.map(c => {
+      let obj = {};
+      COSTUMER_HEADER.forEach(k => obj[k] = c[k] || "");
+      obj.agente = nombreFinalAgente(obj.agente);
+      obj._id = c._id; // Para edición
+      return obj;
+    });
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
-
-    const nuevoCostumer = {
-      fecha: fechaCostumer,
-      equipo: team || '',
-      agente: nombreFinalAgente(agent),
-      telefono: telefono || '',
-      producto,
-      estado: estado || "Pending",
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Costumer.create(nuevoCostumer);
+    const data = {};
+    COSTUMER_HEADER.forEach(k => data[k] = req.body[k] || "");
+    data.agente = nombreFinalAgente(data.agente);
+    await Costumer.create(data);
     res.json({ success: true });
   } catch (err) {
     if (err.code === 11000) {
@@ -398,36 +410,47 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
   }
 });
 
-app.get("/api/costumer", protegerRuta, async (req, res) => {
+app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
   try {
-    const { fecha } = req.query;
-    const query = {};
-    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      query.fecha = fecha;
+    const { id } = req.params;
+    const updateData = {};
+    COSTUMER_HEADER.forEach(k => {
+      if (Object.prototype.hasOwnProperty.call(req.body, k)) updateData[k] = req.body[k];
+    });
+    if (updateData.agente) updateData.agente = nombreFinalAgente(updateData.agente);
+
+    const updated = await Costumer.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
     }
-    let costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-
-    // Unifica alias antes de enviar la respuesta
-    costumers = costumers.map(c => ({
-      ...c,
-      agente: nombreFinalAgente(c.agente)
-    }));
-
-    res.json({ costumers });
+    res.json({ success: true, costumer: updated });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Actualizar solo el estado del costumer por ID
+app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Costumer.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});// Actualizar solo el estado del costumer por ID (y demás campos según encabezado)
 app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado } = req.body;
-    if (!estado) {
-      return res.status(400).json({ success: false, error: "El campo 'estado' es requerido." });
-    }
-    const updated = await Costumer.findByIdAndUpdate(id, { estado }, { new: true });
+    const updateData = {};
+    COSTUMER_HEADER.forEach(k => {
+      if (Object.prototype.hasOwnProperty.call(req.body, k)) updateData[k] = req.body[k];
+    });
+    if (updateData.agente) updateData.agente = nombreFinalAgente(updateData.agente);
+
+    const updated = await Costumer.findByIdAndUpdate(id, updateData, { new: true });
     if (!updated) {
       return res.status(404).json({ success: false, error: "Costumer no encontrado." });
     }
@@ -599,6 +622,7 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
   }
 });
 
+
 // RANKING POR AGENTE
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
@@ -668,8 +692,20 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
 });
 
 // ==================== FACTURACIÓN ====================
-// (Sigue igual...)
+// Aquí puedes mantener todos tus endpoints de facturación igual...
+// Por ejemplo:
+app.get('/api/facturacion', protegerRuta, async (req, res) => {
+  try {
+    const facturas = await Facturacion.find({}).lean();
+    res.json({ facturas });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// ... otros endpoints de facturación si los tienes ...
+
+// FIN DEL ARCHIVO: Levanta el servidor
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
