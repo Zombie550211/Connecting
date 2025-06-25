@@ -486,7 +486,12 @@
             <th>Estado</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
+            <th>RIESGO</th>
+            <th>MERCADO</th>
+            <th>NOMBRE DEL CLIENTE</th>
+            <th>NÚMERO DE CUENTA</th>
             <th>TELÉFONO</th>
+            <th>TELÉFONO ALTERNO</th>
             <th>DIRECCIÓN</th>
             <th>ZIP</th>
             <th>ACCIÓN</th>
@@ -603,10 +608,15 @@ async function cargarCostumers() {
       "AGENTE": item.agente || "",
       "PRODUCTO": item.producto || "",
       "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
-      "Estado": item.estado || "Pending", // Por defecto Pending si no hay
+      "Estado": item.estado || "Pending",
       "PUNTAJE": item.puntaje || "",
       "CUENTA": item.cuenta || "",
+      "RIESGO": item.riesgo || "",
+      "MERCADO": item.mercado || "",
+      "NOMBRE_CLIENTE": item.nombre_cliente || "",
+      "NUMERO_DE_CUENTA": item.numero_de_cuenta || "",
       "TELÉFONO": item.telefono || "",
+      "TELÉFONO_ALTERNO": item.telefono_alterno || "",
       "DIRECCIÓN": item.direccion || "",
       "ZIP": item.zip || ""
     }));
@@ -621,15 +631,12 @@ function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
   }
   filas.forEach(fila => {
-    // Determina la clase de color para el select según estado actual
     const estadoActual = ESTADO_OPCIONES.find(e => e.value === fila.Estado) ? fila.Estado : "Pending";
     const claseColor = ESTADO_OPCIONES.find(e => e.value === estadoActual)?.clase || "estado-pending";
-
-    // Genera las opciones del select con el valor seleccionado y los colores
     const opcionesEstado = ESTADO_OPCIONES.map(op =>
       `<option value="${op.value}"${fila.Estado === op.value ? " selected" : ""}>${op.texto}</option>`
     ).join('');
@@ -649,7 +656,12 @@ function renderizarTablaCostumers(filas) {
       </td>
       <td>${fila.PUNTAJE}</td>
       <td>${fila.CUENTA}</td>
+      <td>${fila.RIESGO}</td>
+      <td>${fila.MERCADO}</td>
+      <td>${fila.NOMBRE_CLIENTE}</td>
+      <td>${fila.NUMERO_DE_CUENTA}</td>
       <td>${fila["TELÉFONO"]}</td>
+      <td>${fila["TELÉFONO_ALTERNO"]}</td>
       <td>${fila["DIRECCIÓN"]}</td>
       <td>${fila.ZIP}</td>
       <td>
@@ -662,7 +674,6 @@ function renderizarTablaCostumers(filas) {
 }
 
 async function actualizarEstadoCostumer(id, estado, selectEl) {
-  // Cambia el color del select automáticamente
   selectEl.classList.remove(
     "estado-pending", "estado-complete", "estado-rescheduled", "estado-pending-chargeback", "estado-cancelled"
   );
@@ -686,7 +697,6 @@ async function actualizarEstadoCostumer(id, estado, selectEl) {
   }
 }
 
-// Llena los filtros de Team y Agente FIJOS
 function llenarFiltroTeamYAgente() {
   const teamSelect = document.getElementById("filtro-team");
   teamSelect.innerHTML = `<option value="">Todos</option>` +
@@ -731,7 +741,6 @@ function aplicarFiltros() {
   renderizarTablaCostumers(filtrados);
 }
 
-// ---- ELIMINAR COSTUMER ----
 async function eliminarCostumer(id) {
   if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
   try {
@@ -747,7 +756,6 @@ async function eliminarCostumer(id) {
   }
 }
 
-// ---- EDITAR COSTUMER ----
 function mostrarFormEditar(id) {
   const costumer = datosCostumers.find(c => c._id === id);
   if (!costumer) return alert("No se encontró el costumer");
@@ -775,7 +783,12 @@ function mostrarFormEditar(id) {
       </label><br>
       <label>Puntaje: <input type="number" name="puntaje" step="0.01" value="${costumer.PUNTAJE}" required></label><br>
       <label>Cuenta: <input type="text" name="cuenta" value="${costumer.CUENTA}" ></label><br>
+      <label>Riesgo: <input type="text" name="riesgo" value="${costumer.RIESGO}" ></label><br>
+      <label>Mercado: <input type="text" name="mercado" value="${costumer.MERCADO}" ></label><br>
+      <label>Nombre del cliente: <input type="text" name="nombre_cliente" value="${costumer.NOMBRE_CLIENTE}" ></label><br>
+      <label>Número de cuenta: <input type="text" name="numero_de_cuenta" value="${costumer.NUMERO_DE_CUENTA}" ></label><br>
       <label>Teléfono: <input type="text" name="telefono" value="${costumer["TELÉFONO"]}" ></label><br>
+      <label>Teléfono alterno: <input type="text" name="telefono_alterno" value="${costumer["TELÉFONO_ALTERNO"]||''}" ></label><br>
       <label>Dirección: <input type="text" name="direccion" value="${costumer["DIRECCIÓN"]}" ></label><br>
       <label>ZIP: <input type="text" name="zip" value="${costumer.ZIP}" ></label><br>
       <button type="submit">Guardar</button>
@@ -803,7 +816,12 @@ function mostrarFormEditar(id) {
       estado: f.estado.value,
       puntaje: f.puntaje.value,
       cuenta: f.cuenta.value,
+      riesgo: f.riesgo.value,
+      mercado: f.mercado.value,
+      nombre_cliente: f.nombre_cliente.value,
+      numero_de_cuenta: f.numero_de_cuenta.value,
       telefono: f.telefono.value,
+      telefono_alterno: f.telefono_alterno.value,
       direccion: f.direccion.value,
       zip: f.zip.value
     };
@@ -838,7 +856,7 @@ document.getElementById("filtro-direccion").addEventListener("input", aplicarFil
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
 // Inicial
 cargarCostumers();
-cargarKPIsCostumer(); // <-- Se llama al cargar la página
+cargarKPIsCostumer();
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
