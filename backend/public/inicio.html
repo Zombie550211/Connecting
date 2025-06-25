@@ -20,6 +20,9 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
+      --panel-bg: #fff;
+      --panel-radius: 22px;
+      --panel-shadow: 0 8px 32px rgba(30,41,59,0.12);
     }
     * { box-sizing: border-box; }
     body {
@@ -89,12 +92,14 @@
       border-radius: 16px;
       text-align: left;
       padding-left: 18px;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, box-shadow 0.18s;
       letter-spacing: 0.02em;
+      box-shadow: none;
     }
     .sidebar-nav button.active, .sidebar-nav button:hover {
       background: var(--sidebar-accent);
       color: var(--sidebar-text);
+      box-shadow: 0 2px 10px 0 #22b3ec55;
     }
     .sidebar-lema {
       color: var(--sidebar-accent);
@@ -110,113 +115,138 @@
     /* MAIN CONTENT */
     .main-content {
       flex: 1;
-      padding: 40px 50px;
+      padding: 40px 0;
       background: var(--gris-bg);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      align-items: center;
     }
-    /* LEAD FORM */
-    .lead-content-row {
-      display: flex;
-      gap: 30px;
+
+    .dashboard-container {
       width: 100%;
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 0 18px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* PANEL DE BIENVENIDA */
+    .panel-bienvenida-admin {
+      background: linear-gradient(120deg, #f1fafe 62%, #e8f0fd 100%);
+      border-radius: var(--panel-radius);
+      box-shadow: var(--panel-shadow);
+      padding: 0 0 36px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 42px;
+      width: 100%;
+      max-width: 980px;
+    }
+    .panel-bienvenida-admin .panel-header-img {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 22px 22px 0 0;
+      background: #209dd5;
+    }
+    .panel-bienvenida-admin h2 {
+      margin-top: 32px;
+      color: #209dd5;
+      font-weight: 900;
+      font-size: 1.4em;
+      letter-spacing: -1px;
+    }
+    .panel-bienvenida-admin .valores-cultura {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin: 20px 0 12px 0;
+      flex-wrap: wrap;
+    }
+    .valor-card {
+      background: rgba(32,157,213,0.09);
+      border-radius: 11px;
+      padding: 13px 20px 12px 20px;
+      box-shadow: 0 2px 6px #209dd52a;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    /* PANEL DE RANKINGS */
+    .rankings-wrapper {
+      display: flex;
+      gap: 38px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 980px;
+    }
+    .ranking-panel {
+      flex: 1;
+      min-width: 340px;
+      background: var(--panel-bg);
+      border-radius: 15px;
+      box-shadow: 0 3px 18px #209dd524;
+      padding: 32px;
+      margin-bottom: 24px;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
       align-items: flex-start;
     }
-    .form-section {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px #0001;
-      padding: 42px 38px 36px 38px;
-      max-width: 480px;
-      width: 100%;
-      margin: 44px auto;
-      flex: 1;
-      align-self: flex-start;
-      display: flex;
-      flex-direction: column;
-    }
-    .form-section h2 {
-      font-weight: 700;
-      font-size: 2em;
-      color: #183153;
-      margin-bottom: 28px;
+    .ranking-panel h3 {
+      color: #209dd5;
       margin-top: 0;
+      margin-bottom: 20px;
+      font-weight: 800;
     }
-    .form-group { margin-bottom: 18px;}
-    .form-section label {
-      color: #25a9dd;
-      font-weight: 700;
-      margin-bottom: 7px;
-      display: block;
-    }
-    .form-section label[for="fecha-lead"] {
-      color: #183153;
-    }
-    .form-section input, .form-section select {
-      background: #f8fcff;
-      border-radius: 7px;
-      border: 1.5px solid #e4e6f1;
-      padding: 13px 15px;
-      font-size: 1.12em;
+    .ranking-panel ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 0;
       width: 100%;
-      margin-top: 2px;
     }
-    .form-section button[type="submit"] {
-      background: #25a9dd;
-      color: #fff;
-      border-radius: 9px;
-      border: none;
-      font-weight: 700;
-      font-size: 1.18em;
-      padding: 16px 0;
-      width: 100%;
-      margin-top: 9px;
-      transition: background 0.2s;
-    }
-    .form-section button[type="submit"]:hover {
-      background: #183153;
-    }
-    /* CHARTS SECTION */
-    .charts-section {
-      flex: 2;
+    .ranking-panel li {
+      margin-bottom: 16px;
       display: flex;
-      flex-direction: column;
-      gap: 22px;
-      height: 100%;
-      min-width: 0;
+      align-items: center;
+      gap: 12px;
     }
-    .charts-section .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
-    .charts-section .charts-filter label { font-weight: 600; margin-bottom: 0;}
-    .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
-    .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
-    .charts-section .charts-filter button:hover { background: #126de4; }
-    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
-    .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
-    .chart-container {
-      position: relative;
-      width: 100%;
-      min-height: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+    .ranking-panel li.opacity-low {
+      opacity: 0.75;
     }
-    .chart-canvas {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100%;
-      max-height: 100%;
-      aspect-ratio: 16 / 5;
-      display: block;
-      background: transparent;
+    .ranking-panel .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 12px;
+      border: 2px solid #22b3ec;
     }
-    .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
+    .ranking-panel .avatar.secondary {
+      border-color: #b6e0fb;
+    }
+    .ranking-panel .avatar.low {
+      border-color: #e6f5fb;
+      width: 38px;
+      height: 38px;
+    }
+
+    /* RESPONSIVE */
     @media (max-width: 1100px) {
-      .charts-section .charts-filter, .form-section { padding: 12px 7vw; }
-      .lead-content-row { flex-direction: column; gap: 13px; }
-      .main-content { padding: 14px 2vw; }
+      .dashboard-container, .rankings-wrapper, .panel-bienvenida-admin { max-width: 99vw; }
+    }
+    @media (max-width: 900px) {
+      .main-content {
+        padding: 18px 0;
+      }
+      .panel-bienvenida-admin, .rankings-wrapper { max-width: 99vw; }
+      .rankings-wrapper { flex-direction: column; gap: 18px;}
+      .ranking-panel { max-width: 99vw; }
     }
     @media (max-width: 700px) {
       .layout { flex-direction: column;}
@@ -227,11 +257,12 @@
       .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
       .sidebar-lema { display: none;}
       .main-content { padding: 12px 2px; }
-      .lead-content-row { flex-direction: column; gap: 7px;}
-      .form-section { padding: 13px 7px;}
-      .chart-container {padding: 7px 2vw;}
-      .charts-section .charts-filter {padding: 7px 2vw;}
-      .chart-canvas { aspect-ratio: 16/12; }
+      .dashboard-container { padding: 0 2vw;}
+      .panel-bienvenida-admin { padding-bottom: 20px; }
+      .panel-bienvenida-admin .valores-cultura { flex-direction: column; gap: 7px; }
+      .ranking-panel { padding: 15px 5px 16px 5px; font-size: 0.97em; }
+      .ranking-panel h3 { font-size: 1em; }
+      .ranking-panel li { font-size: 0.98em; }
     }
   </style>
 </head>
@@ -244,7 +275,7 @@
     </div>
     <div class="sidebar-title">Connecting</div>
     <div class="sidebar-nav">
-      <button class="active" location.href='inicio.html'">Inicio</button>
+      <button class="active" onclick="location.href='inicio.html'">Inicio</button>
       <button onclick="location.href='lead.html'">Lead</button>
       <button onclick="location.href='costumer.html'">Costumer</button>
       <button onclick="location.href='Facturacion.html'">Facturacion</button>
@@ -254,14 +285,12 @@
       "Conectando tu éxito, un cliente a la vez"
     </div>
   </nav>
-    </aside>
     <!-- MAIN CONTENT -->
     <main class="main-content">
       <div class="dashboard-container">
-        <!-- Panel bienvenida y rankings (idéntico a antes) -->
+        <!-- Panel bienvenida y rankings -->
         <div class="panel-bienvenida-admin">
-          <!-- SVG Astronauta -->
-          <div style="width:100%;height:180px;overflow:hidden;border-radius:22px 22px 0 0;background: #209dd5;">
+          <div class="panel-header-img">
             <svg width="100%" height="180" viewBox="0 0 600 180" fill="none" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="150" cy="90" rx="120" ry="70" fill="#22b3ec" opacity="0.23"/>
               <ellipse cx="470" cy="110" rx="80" ry="50" fill="#fff" opacity="0.14"/>
@@ -289,7 +318,7 @@
               </g>
             </svg>
           </div>
-          <h2 id="saludo" style="margin-top:24px;margin-bottom:16px;font-weight:900; color:#209dd5; letter-spacing:-1px;"></h2>
+          <h2 id="saludo"></h2>
           <div id="frase-inspiradora" style="font-size:1.13em;color:#1e293b;font-style:italic;margin-bottom:18px;"></div>
           <div class="valores-cultura" id="valores-cultura"></div>
           <div style="margin-top:16px;color:#b6c8d8;font-size:0.98em;font-style:italic;">
@@ -399,6 +428,10 @@
       renderRankingAgentes(agentes);
     }
     cargarDashboard();
+    function logout() {
+      // Lógica para cerrar sesión
+      window.location.href = 'logout';
+    }
   </script>
 </body>
 </html>
