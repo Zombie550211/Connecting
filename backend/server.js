@@ -636,7 +636,7 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   }
 });
 
-// RANKING POR PUNTOS (SUMA PUNTOS Y UNIFICA ALIAS DE AGENTES - CON DECIMALES)
+// RANKING POR PUNTOS (SUMA PUNTOS Y UNIFICA ALIAS DE AGENTES - CON DECIMALES CORREGIDOS)
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   try {
     // Trae todas las ventas individuales
@@ -653,12 +653,12 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
       ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
     }
 
-    // Ordena descendente por puntos y devuelve punto flotante exacto
+    // Ordena descendente por puntos y devuelve hasta 2 decimales
     const resultado = Object.values(ranking)
       .sort((a, b) => b.puntos - a.puntos)
       .map((r, idx) => ({
         ...r,
-        puntos: r.puntos // NO redondear, respeta todos los decimales exactos
+        puntos: Number(r.puntos.toFixed(2)) // usa solo 2 decimales
       }));
 
     res.json(resultado);
