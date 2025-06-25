@@ -46,6 +46,21 @@ function getFechaLocalHoy() {
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
+// ========== ALIAS DE AGENTES ===============
+const ALIAS_AGENTES = {
+  "Evelyn Garcia": ["Evelyn Garcia", "Estefany Garcia"],
+  // Agrega más alias aquí si es necesario
+};
+function nombreFinalAgente(nombre) {
+  for (const [final, aliasArr] of Object.entries(ALIAS_AGENTES)) {
+    if (aliasArr.map(a => a.toLowerCase().trim()).includes((nombre||"").toLowerCase().trim())) {
+      return final;
+    }
+  }
+  return nombre;
+}
+// ========== FIN ALIAS DE AGENTES ===========
+
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000;
   const ahora = Date.now();
@@ -318,7 +333,13 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
       query.fecha = { $lte: hasta };
     }
 
-    const costumers = await Costumer.find(query).lean();
+    let costumers = await Costumer.find(query).lean();
+
+    // Unifica alias antes de enviar el Excel
+    costumers = costumers.map(c => ({
+      ...c,
+      agente: nombreFinalAgente(c.agente)
+    }));
 
     const excelData = costumers.map(c => ({
       Fecha: c.fecha || '',
@@ -357,7 +378,7 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     const nuevoCostumer = {
       fecha: fechaCostumer,
       equipo: team || '',
-      agente: agent,
+      agente: nombreFinalAgente(agent),
       telefono: telefono || '',
       producto,
       estado: estado || "Pending",
@@ -384,7 +405,14 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       query.fecha = fecha;
     }
-    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    let costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+
+    // Unifica alias antes de enviar la respuesta
+    costumers = costumers.map(c => ({
+      ...c,
+      agente: nombreFinalAgente(c.agente)
+    }));
+
     res.json({ costumers });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -574,31 +602,11 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
 // RANKING POR AGENTE
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
-    // Agrupar por agente y contar ventas
-    const pipeline = [
-      { $group: { _id: { nombre: "$agente", equipo: "$equipo" }, ventas: { $sum: 1 } } },
-      { $sort: { ventas: -1 } }
-    ];
-
-    // Unifica alias para nombres duplicados
-    const ALIAS_AGENTES = {
-      "Evelyn Garcia": ["Evelyn Garcia", "Estefany Garcia"],
-      // Agrega más alias aquí si es necesario
-    };
-    function nombreFinal(nombre) {
-      for (const [final, aliasArr] of Object.entries(ALIAS_AGENTES)) {
-        if (aliasArr.map(a => a.toLowerCase().trim()).includes((nombre||"").toLowerCase().trim())) {
-          return final;
-        }
-      }
-      return nombre;
-    }
-
     // Traer todos los costumers para re-agrupar
     const docs = await Costumer.find({}, { agente: 1, equipo: 1 }).lean();
     const ranking = {};
     for (const venta of docs) {
-      const nombreAgente = nombreFinal(venta.agente || "Sin nombre");
+      const nombreAgente = nombreFinalAgente(venta.agente || "Sin nombre");
       const equipo = venta.equipo || "Sin equipo";
       if (!ranking[nombreAgente]) {
         ranking[nombreAgente] = { nombre: nombreAgente, equipo, ventas: 0, avatar: "" };
@@ -631,29 +639,13 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
 // RANKING POR PUNTOS (SUMA PUNTOS Y UNIFICA ALIAS DE AGENTES)
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   try {
-    // Define aquí los alias/manualmente o puedes cargar de BD
-    const ALIAS_AGENTES = {
-      "Evelyn Garcia": ["Evelyn Garcia", "Estefany Garcia"],
-      // ...agrega más alias si es necesario
-    };
-
-    // Función que retorna el nombre final para cualquier nombre (alias)
-    function nombreFinal(nombre) {
-      for (const [final, aliasArr] of Object.entries(ALIAS_AGENTES)) {
-        if (aliasArr.map(a => a.toLowerCase().trim()).includes((nombre||"").toLowerCase().trim())) {
-          return final;
-        }
-      }
-      return nombre;
-    }
-
     // Trae todas las ventas individuales
     const docs = await Costumer.find({}, { agente: 1, equipo: 1, puntaje: 1 }).lean();
 
     // Agrupa sumando puntos por agente (unificando alias)
     const ranking = {};
     for (const venta of docs) {
-      const nombreAgente = nombreFinal(venta.agente || "Sin nombre");
+      const nombreAgente = nombreFinalAgente(venta.agente || "Sin nombre");
       const equipo = venta.equipo || "Sin equipo";
       if (!ranking[nombreAgente]) {
         ranking[nombreAgente] = { nombre: nombreAgente, equipo, puntos: 0 };
