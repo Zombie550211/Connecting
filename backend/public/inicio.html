@@ -176,25 +176,41 @@
     }
     .rankings-wrapper {
       display: flex;
-      gap: 38px;
-      flex-wrap: wrap;
+      flex-direction: row;
+      gap: 36px;
       justify-content: center;
+      align-items: stretch;
       width: 100%;
       max-width: 980px;
+      margin-bottom: 0;
     }
     .ranking-panel {
-      flex: 1;
-      min-width: 320px;
+      flex: 1 1 0px;
+      min-width: 280px;
+      max-width: 340px;
       background: var(--panel-bg);
       border-radius: 15px;
       box-shadow: 0 3px 18px #209dd524;
-      padding: 32px;
-      margin-bottom: 24px;
-      max-width: 420px;
+      padding: 32px 18px 36px 22px;
+      margin-bottom: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       position: relative;
+      min-height: 260px;
+    }
+    @media (max-width: 1100px) {
+      .dashboard-container, .rankings-wrapper, .panel-bienvenida-admin { max-width: 99vw; }
+      .rankings-wrapper { gap: 20px;}
+      .ranking-panel { min-width: 210px; max-width: 330px; }
+    }
+    @media (max-width: 900px) {
+      .rankings-wrapper { gap: 10px;}
+      .ranking-panel { min-width: 170px; max-width: 98vw;}
+    }
+    @media (max-width: 850px) {
+      .rankings-wrapper { flex-direction: column; gap: 18px;}
+      .ranking-panel { width: 100%; max-width: 99vw; min-width: unset; min-height: 0;}
     }
     .ranking-panel h3 {
       color: #209dd5;
@@ -298,17 +314,6 @@
       align-items: center;
       gap: 12px;
     }
-    @media (max-width: 1100px) {
-      .dashboard-container, .rankings-wrapper, .panel-bienvenida-admin { max-width: 99vw; }
-    }
-    @media (max-width: 900px) {
-      .main-content {
-        padding: 18px 0;
-      }
-      .panel-bienvenida-admin, .rankings-wrapper { max-width: 99vw; }
-      .rankings-wrapper { flex-direction: column; gap: 18px;}
-      .ranking-panel { max-width: 99vw; }
-    }
     @media (max-width: 700px) {
       .layout { flex-direction: column;}
       .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
@@ -387,23 +392,24 @@
             Connecting CRM Administrativo
           </div>
         </div>
-   <div class="rankings-wrapper">
-  <div class="ranking-panel" id="ranking-equipos-panel">
-    <h3>🏆 Ranking por Equipo</h3>
-    <ol id="ranking-equipos-list"></ol>
-    <button class="ver-todo-link" onclick="abrirModal('equipos')">Ver todo</button>
-  </div>
-  <div class="ranking-panel" id="ranking-agentes-panel">
-    <h3>🌟 Ranking por Agente</h3>
-    <ol id="ranking-agentes-list"></ol>
-    <button class="ver-todo-link" onclick="abrirModal('agentes')">Ver todo</button>
-  </div>
-  <div class="ranking-panel" id="ranking-puntos-panel">
-    <h3>⭐ Ranking por Puntos</h3>
-    <ol id="ranking-puntos-list"></ol>
-    <button class="ver-todo-link" onclick="abrirModal('puntos')">Ver todo</button>
-  </div>
-</div>
+        <div class="rankings-wrapper">
+          <div class="ranking-panel" id="ranking-equipos-panel">
+            <h3>🏆 Ranking por Equipo</h3>
+            <ol id="ranking-equipos-list"></ol>
+            <button class="ver-todo-link" onclick="abrirModal('equipos')">Ver todo</button>
+          </div>
+          <div class="ranking-panel" id="ranking-agentes-panel">
+            <h3>🌟 Ranking por Agente</h3>
+            <ol id="ranking-agentes-list"></ol>
+            <button class="ver-todo-link" onclick="abrirModal('agentes')">Ver todo</button>
+          </div>
+          <div class="ranking-panel" id="ranking-puntos-panel">
+            <h3>⭐ Ranking por Puntos</h3>
+            <ol id="ranking-puntos-list"></ol>
+            <button class="ver-todo-link" onclick="abrirModal('puntos')">Ver todo</button>
+          </div>
+        </div>
+      </div>
       <!-- MODAL -->
       <div id="modal-overlay" class="modal-overlay" style="display:none;">
         <div class="modal-content">
