@@ -773,6 +773,33 @@ app.delete('/api/agente/costumer-eliminar-todo', protegerAgente, async (req, res
     res.status(500).json({ success: false, error: err.message });
   }
 });
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  res.json({ nombre: req.session.usuario || "Equipo administrativo", frase: "¡Bienvenido!" });
+});
+
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  const equipos = await Costumer.aggregate([
+    { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+    { $sort: { ventas: -1 } }
+  ]);
+  res.json(equipos);
+});
+
+app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
+  const agentes = await Costumer.aggregate([
+    { $group: { _id: "$agente", ventas: { $sum: 1 } } },
+    { $sort: { ventas: -1 } }
+  ]);
+  res.json(agentes);
+});
+
+app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
+  const puntos = await Costumer.aggregate([
+    { $group: { _id: "$agente", puntos: { $sum: "$puntaje" } } },
+    { $sort: { puntos: -1 } }
+  ]);
+  res.json(puntos);
+});
 
 // Exportar Excel de costumers del agente
 app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
