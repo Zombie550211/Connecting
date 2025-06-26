@@ -777,30 +777,83 @@ app.get('/api/welcome', protegerRuta, async (req, res) => {
   res.json({ nombre: req.session.usuario || "Equipo administrativo", frase: "¡Bienvenido!" });
 });
 
+// ENDPOINTS PARA DASHBOARD ADMIN - COPIA Y PEGA ESTO EN TU backend
+
+// Ranking por EQUIPO
 app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
-  const equipos = await Costumer.aggregate([
-    { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
-    { $sort: { ventas: -1 } }
-  ]);
-  res.json(equipos);
+  try {
+    const equipos = await Costumer.aggregate([
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(equipos.map((e, idx) => ({
+      nombre: e._id || "Sin equipo",
+      ventas: e.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
 });
 
+// Ranking por AGENTE
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
-  const agentes = await Costumer.aggregate([
-    { $group: { _id: "$agente", ventas: { $sum: 1 } } },
-    { $sort: { ventas: -1 } }
-  ]);
-  res.json(agentes);
+  try {
+    const agentes = await Costumer.aggregate([
+      { $group: { _id: "$agente", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(agentes.map((a, idx) => ({
+      nombre: a._id || "Sin agente",
+      ventas: a.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
 });
 
+// Ranking por PUNTOS
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
-  const puntos = await Costumer.aggregate([
-    { $group: { _id: "$agente", puntos: { $sum: "$puntaje" } } },
-    { $sort: { puntos: -1 } }
-  ]);
-  res.json(puntos);
+  try {
+    const puntos = await Costumer.aggregate([
+      { $group: { _id: "$agente", puntos: { $sum: "$puntaje" } } },
+      { $sort: { puntos: -1 } }
+    ]);
+    res.json(puntos.map((a, idx) => ({
+      nombre: a._id || "Sin agente",
+      puntos: Math.round(a.puntos * 100) / 100,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
 });
 
+// Saludo de bienvenida
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  try {
+    let nombre = "Equipo administrativo";
+    if (req.session && req.session.usuario) {
+      const user = await User.findOne({ usuario: req.session.usuario });
+      if (user && user.nombre) nombre = user.nombre;
+      else nombre = req.session.usuario;
+    }
+    const frases = [
+      "Liderar con integridad y visión: eso es Connecting.",
+      "El éxito administrativo se construye con disciplina y pasión.",
+      "Cada gestión es un paso hacia la excelencia.",
+      "La confianza y la transparencia son nuestro mejor activo.",
+      "¡Gracias por ser parte de nuestro crecimiento diario!",
+      "El profesionalismo conecta sueños con resultados.",
+      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
+    ];
+    const frase = frases[Math.floor(Math.random() * frases.length)];
+    res.json({ nombre, frase });
+  } catch (err) {
+    res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
+  }
+});
 // Exportar Excel de costumers del agente
 app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
   try {
