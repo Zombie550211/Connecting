@@ -38,7 +38,6 @@
       display: flex;
       min-height: 100vh;
     }
-    /* SIDEBAR - NEGRITA */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       min-width: 180px;
@@ -112,8 +111,6 @@
       text-align: center;
       font-weight: 600;
     }
-
-    /* MAIN CONTENT */
     .main-content {
       flex: 1;
       padding: 40px 50px;
@@ -123,7 +120,6 @@
       flex-direction: column;
       gap: 24px;
     }
-    /* KPI CARDS */
     .kpi-cards {
       display: flex;
       gap: 30px;
@@ -155,8 +151,6 @@
       font-weight: bold;
       color: var(--azul-oscuro);
     }
-    /* FIN KPI CARDS */
-    /* FILTROS MODERNOS */
     .filters-download-bar {
       display: flex;
       flex-wrap: wrap;
@@ -341,7 +335,6 @@
     }
     .btn-editar:hover { color: #FFD600; }
     .btn-eliminar:hover { color: #ff5252; }
-
     .estado-select {
       font-weight: bold;
       border-radius: 6px;
@@ -489,7 +482,7 @@
             <th>Sistema</th>
             <th>Riesgo</th>
             <th>Día de venta</th>
-            <th>Dia de Instalacion</th></thZ>
+            <th>Dia de Instalacion</th>
             <th>Status</th>
             <th>Servicios</th>
             <th>Mercado</th>
@@ -509,8 +502,49 @@
   </main>
 </div>
 <script>
-// ... (todo tu JS igual, pero la tabla y el formulario usan el orden y campos pedidos) ...
-// (por límite de espacio, si necesitas el JS completo aquí, dímelo y te lo envío separado, pero ya tienes arriba todos los fragmentos integrados)
+// Mostrar el nombre del archivo seleccionado
+document.querySelector('.custom-file-input').addEventListener('change', function(){
+  const name = this.files[0] ? this.files[0].name : "Ningún archivo seleccionado";
+  document.getElementById('file-selected-name').textContent = name;
+});
+
+// Importar Excel
+document.getElementById('form-importar-excel').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const input = this.querySelector('input[type="file"]');
+  if (!input.files.length) {
+    alert('Debe seleccionar un archivo Excel');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('archivo', input.files[0]);
+
+  // Mostrar estado de carga
+  const status = document.getElementById('import-status-costumer');
+  status.textContent = 'Importando...';
+  status.style.color = "#209dd5";
+
+  try {
+    const resp = await fetch('/api/leads/import', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+    const data = await resp.json();
+    if (data.success) {
+      status.textContent = `Importación exitosa: ${data.count} registros importados`;
+      status.style.color = "#4CAF50";
+      // Si tienes una función para recargar la tabla, la puedes ejecutar aquí:
+      // cargarClientes();
+    } else {
+      status.textContent = "Error: " + (data.error || "No se pudo importar el archivo");
+      status.style.color = "#B71C1C";
+    }
+  } catch (err) {
+    status.textContent = "Error al conectar con el servidor";
+    status.style.color = "#B71C1C";
+  }
+});
 </script>
 </body>
 </html>
