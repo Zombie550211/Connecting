@@ -392,6 +392,14 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
     }
   }
 });
+app.get("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    let costumers = await Costumer.find({}).sort({ _id: -1 }).lean();
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
   try {
