@@ -19,6 +19,7 @@ const Facturacion = require('./models/Facturacion');
 const User = require('./models/user');
 
 const app = express();
+exports.app = app;
 const PORT = process.env.PORT || 3000;
 
 const MONGO_URL = process.env.MONGO_URL;
@@ -59,6 +60,7 @@ function nombreFinalAgente(nombre) {
   }
   return nombre;
 }
+exports.nombreFinalAgente = nombreFinalAgente;
 // ========== FIN ALIAS DE AGENTES ===========
 
 function protegerRuta(req, res, next) {
@@ -102,6 +104,7 @@ function protegerRuta(req, res, next) {
   }
   return res.redirect("/login.html");
 }
+exports.protegerRuta = protegerRuta;
 
 function protegerAgente(req, res, next) {
   if (req.session && req.session.agente) return next();
@@ -368,31 +371,11 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
 
 // ====================== COSTUMER ENDPOINTS GLOBALES =========================
 const COSTUMER_HEADER = [
-  "agente", "nombre_cliente", "telefono", "telefono_alterno", "numero_de_cuenta", "autopaquete",
-  "direccion", "tipo_de_serv", "sistema", "riesgo", "dia_venta_a_instalacion", "estado",
-  "servicios", "mercado", "supervisor", "comentario", "motivo_llamada", "zip", "puntaje"
+  "agente", "nombre_cliente", "telefono", "telefono_alterno", "numero_de_cuenta", "autopago",
+  "direccion", "tipo_de_servicio","sistema","riesgo","dia_de_venta","dia_de_instalacion", "estado",
+  "servicios", "mercado","Team","supervisor", "comentario", "motivo_de_llamada", "zip", "puntaje"
 ];
-
-app.get("/api/costumer", protegerRuta, async (req, res) => {
-  try {
-    const { fecha } = req.query;
-    const query = {};
-    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      query.fecha = fecha;
-    }
-    let costumers = await Costumer.find(query).sort({ _id: -1 }).lean();
-    costumers = costumers.map(c => {
-      let obj = {};
-      COSTUMER_HEADER.forEach(k => obj[k] = c[k] || "");
-      obj.agente = nombreFinalAgente(obj.agente);
-      obj._id = c._id; // Para edición
-      return obj;
-    });
-    res.json({ costumers });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+exports.COSTUMER_HEADER = COSTUMER_HEADER;
 
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
