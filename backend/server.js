@@ -799,38 +799,48 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
 // Ranking por AGENTE
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
-    const agentes = await Costumer.aggregate([
-      { $group: { _id: "$agente", ventas: { $sum: 1 } } },
-      { $sort: { ventas: -1 } }
-    ]);
-    res.json(agentes.map((a, idx) => ({
-      nombre: a._id || "Sin agente",
-      ventas: a.ventas,
-      posicion: idx + 1
-    })));
+    const docs = await Costumer.find({}, { agente: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, ventas: 0 };
+      ranking[nombreAgente].ventas += 1;
+    }
+    const resultado = Object.values(ranking).sort((a, b) => b.ventas - a.ventas);
+    res.json(resultado);
   } catch (err) {
     res.status(500).json([]);
   }
 });
 
-// Ranking por PUNTOS
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   try {
-    const puntos = await Costumer.aggregate([
-      { $group: { _id: "$agente", puntos: { $sum: "$puntaje" } } },
-      { $sort: { puntos: -1 } }
-    ]);
-    res.json(puntos.map((a, idx) => ({
-      nombre: a._id || "Sin agente",
-      puntos: Math.round(a.puntos * 100) / 100,
-      posicion: idx + 1
-    })));
+    const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, puntos: 0 };
+      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
+    }
+    const resultado = Object.values(ranking)
+      .sort((a, b) => b.puntos - a.puntos)
+      .map(r => ({
+        ...r,
+        puntos: Number(r.puntos.toFixed(2))
+      }));
+    res.json(resultado);
   } catch (err) {
     res.status(500).json([]);
   }
 });
-
-// Saludo de bienvenida
+function aliasAgente(nombre) {
+  // Normaliza el nombre para evitar problemas de mayúsculas, tildes, etc.
+  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
+  // Puedes agregar más alias aquí
+  return nombre;
+}
+ // Saludo de bienvenida
 app.get('/api/welcome', protegerRuta, async (req, res) => {
   try {
     let nombre = "Equipo administrativo";
