@@ -797,6 +797,16 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
 });
 
 // Ranking por AGENTE
+// Función para aplicar alias a los agentes
+function aliasAgente(nombre) {
+  // Normaliza el nombre para evitar problemas de mayúsculas, tildes, etc.
+  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
+  // Puedes agregar más alias aquí si necesitas unificar más nombres
+  return nombre;
+}
+
+// Ranking por AGENTE (sumando alias)
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
     const docs = await Costumer.find({}, { agente: 1 }).lean();
@@ -813,6 +823,7 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   }
 });
 
+// Ranking por PUNTOS (sumando alias)
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   try {
     const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
@@ -833,13 +844,23 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
     res.status(500).json([]);
   }
 });
-function aliasAgente(nombre) {
-  // Normaliza el nombre para evitar problemas de mayúsculas, tildes, etc.
-  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
-  // Puedes agregar más alias aquí
-  return nombre;
-}
+
+// (Opcional) Ranking por EQUIPO - sin alias, pero puedes agregar función similar si lo necesitas
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  try {
+    const equipos = await Costumer.aggregate([
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(equipos.map((e, idx) => ({
+      nombre: e._id || "Sin equipo",
+      ventas: e.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
  // Saludo de bienvenida
 app.get('/api/welcome', protegerRuta, async (req, res) => {
   try {
