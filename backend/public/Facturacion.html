@@ -325,6 +325,34 @@
       font-size: 0.98em;
       white-space: pre-line;
     }
+    /* --- SECCIONES CON BORDE NEGRO --- */
+    /* ALEXIS: columnas 2-4 */
+    .tabla-excel-editable td:nth-child(2),
+    .tabla-excel-editable th:nth-child(2) {
+      border-left: 3px solid #000 !important;
+    }
+    .tabla-excel-editable td:nth-child(4),
+    .tabla-excel-editable th:nth-child(4) {
+      border-right: 3px solid #000 !important;
+    }
+    /* CUENTA ALTERNA: columnas 5-7 */
+    .tabla-excel-editable td:nth-child(5),
+    .tabla-excel-editable th:nth-child(5) {
+      border-left: 3px solid #000 !important;
+    }
+    .tabla-excel-editable td:nth-child(7),
+    .tabla-excel-editable th:nth-child(7) {
+      border-right: 3px solid #000 !important;
+    }
+    /* LINEAS: columnas 8-10 */
+    .tabla-excel-editable td:nth-child(8),
+    .tabla-excel-editable th:nth-child(8) {
+      border-left: 3px solid #000 !important;
+    }
+    .tabla-excel-editable td:nth-child(10),
+    .tabla-excel-editable th:nth-child(10) {
+      border-right: 3px solid #000 !important;
+    }
     /* --- PAGINACION TABLA --- */
     .tabla-paginacion {
       width: 100%;
@@ -529,7 +557,8 @@
         <div class="facturacion-toolbar">
           <button id="btnGuardarFacturacion">Guardar</button>
         </div>
-      </div>      <div class="modal-bg" id="modalTablaCompleta">
+      </div>      
+      <div class="modal-bg" id="modalTablaCompleta">
         <div class="modal-content">
           <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
           <div class="modal-title">Tabla completa de facturación del mes</div>
