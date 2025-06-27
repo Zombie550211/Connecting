@@ -327,32 +327,25 @@
     }
     /* --- SECCIONES CON BORDE NEGRO --- */
     /* ALEXIS: columnas 2-4 */
-    .tabla-excel-editable td:nth-child(2),
-    .tabla-excel-editable th:nth-child(2) {
-      border-left: 3px solid #000 !important;
-    }
-    .tabla-excel-editable td:nth-child(4),
-    .tabla-excel-editable th:nth-child(4) {
-      border-right: 3px solid #000 !important;
-    }
-    /* CUENTA ALTERNA: columnas 5-7 */
-    .tabla-excel-editable td:nth-child(5),
-    .tabla-excel-editable th:nth-child(5) {
-      border-left: 3px solid #000 !important;
-    }
-    .tabla-excel-editable td:nth-child(7),
-    .tabla-excel-editable th:nth-child(7) {
-      border-right: 3px solid #000 !important;
-    }
-    /* LINEAS: columnas 8-10 */
-    .tabla-excel-editable td:nth-child(8),
-    .tabla-excel-editable th:nth-child(8) {
-      border-left: 3px solid #000 !important;
-    }
-    .tabla-excel-editable td:nth-child(10),
-    .tabla-excel-editable th:nth-child(10) {
-      border-right: 3px solid #000 !important;
-    }
+  /* Borde izquierdo de cada sección */
+.tabla-excel-editable td:nth-child(2),
+.tabla-excel-editable th:nth-child(2),
+.tabla-excel-editable td:nth-child(5),
+.tabla-excel-editable th:nth-child(5),
+.tabla-excel-editable td:nth-child(8),
+.tabla-excel-editable th:nth-child(8) {
+    border-left: 2px solid #000;
+}
+
+/* Borde derecho de cada sección */
+.tabla-excel-editable td:nth-child(4),
+.tabla-excel-editable th:nth-child(4),
+.tabla-excel-editable td:nth-child(7),
+.tabla-excel-editable th:nth-child(7),
+.tabla-excel-editable td:nth-child(10),
+.tabla-excel-editable th:nth-child(10) {
+    border-right: 2px solid #000;
+}
     /* --- PAGINACION TABLA --- */
     .tabla-paginacion {
       width: 100%;
