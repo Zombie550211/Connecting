@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Iniciar sesión</title>
+  <title>CRM Lunar - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Tipografía -->
+  <!-- Orbitron para el toque lunar/futurista -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -17,19 +17,7 @@
       overflow: hidden;
       position: relative;
     }
-    body {
-      width: 100vw;
-      height: 100vh;
-      min-height: 100vh;
-      min-width: 100vw;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-    }
-    /* Estrellas */
+    /* Estrellas animadas */
     .stars-bg {
       position: fixed;
       left: 0; top: 0;
@@ -49,27 +37,23 @@
     @keyframes twinkle {
       to { opacity: .33; }
     }
-
     /* Contenedor login centrado */
     .center-container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100vw;
-      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 2;
       pointer-events: none;
     }
-    .login-box {
-      background: rgba(30, 31, 68, 0.92);
-      border-radius: 16px;
-      box-shadow: 0 12px 48px 0 #2a1a59cc, 0 1.5px 16px #31ffd733;
+    .login-container {
+      background: rgba(30, 31, 68, 0.96);
       padding: 38px 33px 28px 33px;
-      width: 365px;
+      border-radius: 18px;
+      box-shadow: 0 12px 48px 0 #2a1a59cc, 0 1.5px 16px #31ffd733;
+      width: 370px;
       max-width: 95vw;
       display: flex;
       flex-direction: column;
@@ -103,13 +87,13 @@
     }
     .login-title {
       font-family: 'Orbitron', Arial, sans-serif;
-      font-size: 1.36em;
+      font-size: 1.3em;
       text-transform: uppercase;
       color: #70ffe7;
       font-weight: 800;
       letter-spacing: 2px;
       margin-bottom: 7px;
-      margin-top: 30px;
+      margin-top: 32px;
       text-align: center;
       text-shadow: 0 0 12px #31ffd7cc, 0 2px 18px #7f37ff77;
     }
@@ -127,15 +111,6 @@
       display: flex;
       flex-direction: column;
       gap: 13px;
-    }
-    .login-form label {
-      color: #fff6;
-      font-size: .98em;
-      font-weight: 700;
-      margin-bottom: 2px;
-      margin-left: 2px;
-      letter-spacing: .01em;
-      text-shadow: 0 1.5px 4px #7f37ff55;
     }
     .login-form input {
       padding: 11px 13px;
@@ -156,17 +131,17 @@
       background: #fff;
     }
     .login-btn {
+      margin-top: 12px;
       background: linear-gradient(90deg, #7f37ff 0%, #31ffd7 100%);
       color: #fff;
-      font-size: 1.07em;
-      font-weight: 800;
+      font-size: 1.08rem;
+      font-weight: 700;
       border: none;
       border-radius: 8px;
-      padding: 11px;
-      margin-top: 6px;
+      padding: 12px;
       cursor: pointer;
       letter-spacing: .5px;
-      box-shadow: 0 2px 12px #31ffd788;
+      box-shadow: 0 2px 8px #31ffd788;
       transition: background .18s, box-shadow .18s, transform .12s;
       text-transform: uppercase;
       text-shadow: 0 2px 10px #31ffd755;
@@ -176,48 +151,147 @@
       box-shadow: 0 10px 32px #ff5fafaa,0 2.5px 12px #ffd60055;
       transform: translateY(-1px) scale(1.007);
     }
-    .login-error {
-      color: #fff;
-      background: #ff5fafcc;
-      padding: 10px 0;
-      width: 100%;
-      border-radius: 7px;
-      text-align: center;
-      margin-bottom: 8px;
-      font-size: .99em;
-      font-weight: 700;
-      box-shadow: 0 2px 10px #ff5faf44;
-      display: none;
-      animation: shake .23s;
-    }
-    @keyframes shake {
-      10%, 90% { transform: translateX(-2px);}
-      20%, 80% { transform: translateX(4px);}
-      30%, 50%, 70% { transform: translateX(-6px);}
-      40%, 60% { transform: translateX(6px);}
+    .create-account-link {
+      color: #70ffe7;
+      margin-top: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 1rem;
     }
     .login-footer {
-      margin-top: 22px;
-      font-size: .95rem;
-      color: #ffd600dd;
+      margin-top: 20px;
+      font-size: .97rem;
+      color: #ffd600bb;
       text-align: center;
-      letter-spacing: .02em;
       font-weight: 700;
       text-shadow: 0 1.5px 8px #22005744;
     }
-    @media (max-width: 600px) {
-      .center-container { height: 100vh;}
-      .login-box { padding: 12px 2vw 20px 2vw; width: 99vw;}
-      .astro-logo { width: 38px; height: 38px; top: -19px;}
-      .astro-logo svg {width:22px; height:22px;}
-      .login-title { font-size: .99em; margin-top: 8px;}
+    .login-error {
+      color: #fff;
+      background: #e74c3c;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+      display: none;
+      font-size: 1rem;
+    }
+    /* Modal styles */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(44, 83, 100, 0.32);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-bg.active { display: flex; }
+    .modal-content {
+      background: #fff;
+      padding: 32px 24px 24px 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(44,83,100,0.19);
+      width: 96%;
+      max-width: 370px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: modalIn .25s;
+    }
+    @keyframes modalIn {
+      from { transform: translateY(-40px) scale(0.98); opacity: 0.3;}
+      to   { transform: none; opacity: 1;}
+    }
+    .close-modal {
+      position: absolute;
+      top: 10px; right: 14px;
+      font-size: 1.5rem;
+      color: #2c5364;
+      cursor: pointer;
+    }
+    .register-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #2c5364;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .register-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .register-form input {
+      padding: 12px 14px;
+      border: 1px solid #d1d9de;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border .2s;
+    }
+    .register-form input:focus {
+      border: 1.5px solid #2c5364;
+      outline: none;
+    }
+    .register-btn {
+      margin-top: 10px;
+      background: linear-gradient(90deg, #2c5364 60%, #0f2027 100%);
+      color: #fff;
+      font-size: 1.08rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      cursor: pointer;
+      letter-spacing: .5px;
+      box-shadow: 0 2px 8px rgba(44,83,100,0.08);
+      transition: background .2s;
+    }
+    .register-btn:hover {
+      background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
+    }
+    .register-error {
+      color: #fff;
+      background: #e74c3c;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 7px;
+      display: none;
+      font-size: 1rem;
+    }
+    .register-success {
+      color: #fff;
+      background: #06c24f;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 7px;
+      display: none;
+      font-size: 1rem;
+    }
+    @media (max-width: 480px) {
+      .login-container, .modal-content {
+        padding: 25px 10px;
+        max-width: 95vw;
+      }
+      .login-title {
+        font-size: 1.1rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="stars-bg" id="stars"></div>
   <div class="center-container">
-    <div class="login-box">
+    <div class="login-container">
       <div class="astro-logo">
         <!-- Astronauta SVG -->
         <svg viewBox="0 0 100 100" fill="none">
@@ -235,22 +309,40 @@
           <rect x="67" y="57" width="13" height="32" rx="6.5" transform="rotate(15 67 57)" fill="#ff5faf"/>
         </svg>
       </div>
-      <div class="login-title">Bienvenid@</div>
+      <div class="login-title">CRM Lunar</div>
       <div class="login-subtitle">
         El universo de tus clientes, en un solo lugar.<br>
-
+        ¡Inicia sesión y conquista la galaxia!
       </div>
       <div id="loginError" class="login-error"></div>
       <form id="loginForm" class="login-form" autocomplete="off">
-        <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" name="usuario" placeholder="Tu usuario" required>
-        <label for="contrasena">Contraseña</label>
-        <input type="password" id="contrasena" name="contrasena" placeholder="Tu contraseña" required>
-        <button class="login-btn" type="submit">INGRESAR</button>
+        <input type="text" name="usuario" placeholder="Usuario galáctico" required>
+        <input type="password" name="contrasena" placeholder="Contraseña secreta" required>
+        <button class="login-btn" type="submit">Ingresar</button>
       </form>
+      <div class="create-account-link" id="openRegister">¿Crear cuenta nueva?</div>
       <div class="login-footer">
-        &copy; 2025 Todos los derechos reservados - “El futuro de la gestión,<br>hoy en la galaxia”
+        &copy; 2025 CRM Lunar. “El futuro de la gestión, hoy en la galaxia”
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Registro -->
+  <div class="modal-bg" id="registerModal">
+    <div class="modal-content">
+      <div class="close-modal" id="closeRegister" title="Cerrar">&times;</div>
+      <div class="register-title">Crear cuenta</div>
+      <div id="registerError" class="register-error"></div>
+      <div id="registerSuccess" class="register-success"></div>
+      <form id="registerForm" class="register-form" autocomplete="off">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="apellido" placeholder="Apellido" required>
+        <input type="text" name="usuario" placeholder="Usuario" required>
+        <input type="email" name="email" placeholder="Correo electrónico" required>
+        <input type="password" name="contrasena" placeholder="Contraseña" required>
+        <input type="password" name="confirmar" placeholder="Confirmar contraseña" required>
+        <button class="register-btn" type="submit">Crear cuenta</button>
+      </form>
     </div>
   </div>
   <script>
@@ -264,36 +356,98 @@
       star.style.animationDelay = (Math.random()*2.5) + 's';
       stars.appendChild(star);
     }
+    // Modal control
+    const openRegister = document.getElementById('openRegister');
+    const closeRegister = document.getElementById('closeRegister');
+    const registerModal = document.getElementById('registerModal');
+    openRegister.onclick = () => registerModal.classList.add('active');
+    closeRegister.onclick = () => registerModal.classList.remove('active');
+    window.onclick = function(e) {
+      if (e.target === registerModal) registerModal.classList.remove('active');
+    };
+
     // Login
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
-      const usuario = form.usuario.value;
-      const contrasena = form.contrasena.value;
+      const formData = new FormData(form);
+      const data = {
+        usuario: formData.get('usuario'),
+        contrasena: formData.get('contrasena')
+      };
       try {
         const res = await fetch('/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario, contrasena })
+          body: JSON.stringify(data)
         });
+        if (res.redirected) {
+          window.location.href = res.url;
+          return;
+        }
         const result = await res.json();
         if (result.success && result.token) {
           localStorage.setItem('token', result.token);
           window.location.href = '/lead.html';
         } else {
-          mostrarError('Usuario o contraseña incorrectos');
+          mostrarError('loginError', 'Usuario o contraseña incorrectos');
         }
       } catch (err) {
-        mostrarError('Error de conexión. Intenta de nuevo.');
+        mostrarError('loginError', 'Error en el servidor. Intente de nuevo.');
       }
     });
-    function mostrarError(msg) {
-      const div = document.getElementById('loginError');
-      div.textContent = msg;
-      div.style.display = 'block';
-      div.classList.remove('shake');
-      setTimeout(() => div.classList.add('shake'), 10);
-      setTimeout(() => { div.style.display = 'none'; }, 3600);
+
+    // Registro
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const nombre = formData.get('nombre');
+      const apellido = formData.get('apellido');
+      const usuario = formData.get('usuario');
+      const email = formData.get('email');
+      const contrasena = formData.get('contrasena');
+      const confirmar = formData.get('confirmar');
+
+      if (!nombre || !apellido || !usuario || !email || !contrasena || !confirmar) {
+        mostrarError('registerError', 'Todos los campos son obligatorios.');
+        return;
+      }
+      if (contrasena !== confirmar) {
+        mostrarError('registerError', 'Las contraseñas no coinciden');
+        return;
+      }
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, apellido, usuario, email, contrasena })
+        });
+        const result = await res.json();
+        if (result.success) {
+          mostrarExito('registerSuccess', '¡Usuario creado correctamente! Revisa tu correo para más detalles.');
+          form.reset();
+        } else {
+          mostrarError('registerError', result.message || 'No se pudo crear el usuario.');
+        }
+      } catch (err) {
+        mostrarError('registerError', 'Error en el servidor. Intente de nuevo.');
+      }
+    });
+
+    function mostrarError(id, msg) {
+      document.getElementById(id).textContent = msg;
+      document.getElementById(id).style.display = 'block';
+      setTimeout(() => {
+        document.getElementById(id).style.display = 'none';
+      }, 4000);
+    }
+    function mostrarExito(id, msg) {
+      document.getElementById(id).textContent = msg;
+      document.getElementById(id).style.display = 'block';
+      setTimeout(() => {
+        document.getElementById(id).style.display = 'none';
+      }, 4000);
     }
   </script>
 </body>
