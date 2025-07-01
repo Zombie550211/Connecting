@@ -2,332 +2,298 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CRM Agentes - Login</title>
+  <title>Iniciar sesión</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tipografía -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
   <style>
-    /* ... mismos estilos que tu versión ... */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: radial-gradient(circle at 55% 65%, #6e7de3 0%, #5a359c 40%, #23234e 100%);
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
     body {
-      background: linear-gradient(120deg, #0f2027, #2c5364 80%);
-      font-family: 'Segoe UI', Arial, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      min-width: 100vw;
+      padding: 0;
+      margin: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      flex-direction: column;
     }
-    .login-container {
+    /* Estrellas */
+    .stars-bg {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
       background: #fff;
-      padding: 40px 30px 30px 30px;
+      border-radius: 50%;
+      opacity: .77;
+      animation: twinkle 3.1s infinite alternate;
+    }
+    @keyframes twinkle {
+      to { opacity: .33; }
+    }
+
+    /* Contenedor login centrado */
+    .center-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .login-box {
+      background: rgba(30, 31, 68, 0.92);
       border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(44,83,100,0.18);
-      width: 100%;
-      max-width: 370px;
+      box-shadow: 0 12px 48px 0 #2a1a59cc, 0 1.5px 16px #31ffd733;
+      padding: 38px 33px 28px 33px;
+      width: 365px;
+      max-width: 95vw;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
+      z-index: 10;
+      pointer-events: auto;
+    }
+    .astro-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(120deg, #31ffd7 60%, #ff5faf 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px #31ffd7ee, 0 0 12px #ff5faf99;
+      border: 3px solid #fff;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -42px;
+      z-index: 11;
+      overflow: hidden;
+    }
+    .astro-logo svg {
+      width: 43px;
+      height: 43px;
+      display: block;
+      filter: drop-shadow(0 2px 8px #31ffd733);
     }
     .login-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2c5364;
-      margin-bottom: 24px;
-      letter-spacing: 1px;
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-size: 1.36em;
+      text-transform: uppercase;
+      color: #70ffe7;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 7px;
+      margin-top: 30px;
+      text-align: center;
+      text-shadow: 0 0 12px #31ffd7cc, 0 2px 18px #7f37ff77;
+    }
+    .login-subtitle {
+      font-size: 1.01em;
+      color: #fff;
+      margin-bottom: 19px;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: .01em;
+      text-shadow: 0 1.5px 8px #22005744;
     }
     .login-form {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 13px;
+    }
+    .login-form label {
+      color: #fff6;
+      font-size: .98em;
+      font-weight: 700;
+      margin-bottom: 2px;
+      margin-left: 2px;
+      letter-spacing: .01em;
+      text-shadow: 0 1.5px 4px #7f37ff55;
     }
     .login-form input {
-      padding: 12px 14px;
-      border: 1px solid #d1d9de;
+      padding: 11px 13px;
+      background: #fff8;
+      border: 1.3px solid #ffd60088;
       border-radius: 8px;
-      font-size: 1rem;
-      transition: border .2s;
+      font-size: 1em;
+      color: #3b1a55;
+      font-family: inherit;
+      font-weight: 600;
+      transition: border 0.18s, box-shadow .21s;
+      box-shadow: 0 1.5px 7px #ffd60022;
     }
     .login-form input:focus {
-      border: 1.5px solid #2c5364;
+      border: 2px solid #31ffd7;
       outline: none;
+      box-shadow: 0 2px 14px #31ffd799,0 1.5px 9px #ffd60044;
+      background: #fff;
     }
     .login-btn {
-      margin-top: 12px;
-      background: linear-gradient(90deg, #2c5364 60%, #0f2027 100%);
+      background: linear-gradient(90deg, #7f37ff 0%, #31ffd7 100%);
       color: #fff;
-      font-size: 1.08rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      letter-spacing: .5px;
-      box-shadow: 0 2px 8px rgba(44,83,100,0.08);
-      transition: background .2s;
-    }
-    .login-btn:hover {
-      background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
-    }
-    .create-account-link {
-      color: #2c5364;
-      margin-top: 10px;
-      cursor: pointer;
-      text-decoration: underline;
-      font-size: 1rem;
-    }
-    .login-footer {
-      margin-top: 20px;
-      font-size: .97rem;
-      color: #7d8c98;
-      text-align: center;
-    }
-    .login-error {
-      color: #fff;
-      background: #e74c3c;
-      padding: 10px 0;
-      width: 100%;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 15px;
-      display: none;
-      font-size: 1rem;
-    }
-    /* Modal styles */
-    .modal-bg {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(44, 83, 100, 0.32);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-bg.active { display: flex; }
-    .modal-content {
-      background: #fff;
-      padding: 32px 24px 24px 24px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(44,83,100,0.19);
-      width: 96%;
-      max-width: 370px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: modalIn .25s;
-    }
-    @keyframes modalIn {
-      from { transform: translateY(-40px) scale(0.98); opacity: 0.3;}
-      to   { transform: none; opacity: 1;}
-    }
-    .close-modal {
-      position: absolute;
-      top: 10px; right: 14px;
-      font-size: 1.5rem;
-      color: #2c5364;
-      cursor: pointer;
-    }
-    .register-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #2c5364;
-      margin-bottom: 16px;
-      letter-spacing: 1px;
-      text-align: center;
-    }
-    .register-form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    .register-form input {
-      padding: 12px 14px;
-      border: 1px solid #d1d9de;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border .2s;
-    }
-    .register-form input:focus {
-      border: 1.5px solid #2c5364;
-      outline: none;
-    }
-    .register-btn {
-      margin-top: 10px;
-      background: linear-gradient(90deg, #2c5364 60%, #0f2027 100%);
-      color: #fff;
-      font-size: 1.08rem;
-      font-weight: 600;
+      font-size: 1.07em;
+      font-weight: 800;
       border: none;
       border-radius: 8px;
       padding: 11px;
+      margin-top: 6px;
       cursor: pointer;
       letter-spacing: .5px;
-      box-shadow: 0 2px 8px rgba(44,83,100,0.08);
-      transition: background .2s;
+      box-shadow: 0 2px 12px #31ffd788;
+      transition: background .18s, box-shadow .18s, transform .12s;
+      text-transform: uppercase;
+      text-shadow: 0 2px 10px #31ffd755;
     }
-    .register-btn:hover {
-      background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
+    .login-btn:hover {
+      background: linear-gradient(90deg, #ff5faf 0%, #ffd600 100%);
+      box-shadow: 0 10px 32px #ff5fafaa,0 2.5px 12px #ffd60055;
+      transform: translateY(-1px) scale(1.007);
     }
-    .register-error {
+    .login-error {
       color: #fff;
-      background: #e74c3c;
+      background: #ff5fafcc;
       padding: 10px 0;
       width: 100%;
-      border-radius: 8px;
+      border-radius: 7px;
       text-align: center;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
+      font-size: .99em;
+      font-weight: 700;
+      box-shadow: 0 2px 10px #ff5faf44;
       display: none;
-      font-size: 1rem;
+      animation: shake .23s;
     }
-    .register-success {
-      color: #fff;
-      background: #06c24f;
-      padding: 10px 0;
-      width: 100%;
-      border-radius: 8px;
+    @keyframes shake {
+      10%, 90% { transform: translateX(-2px);}
+      20%, 80% { transform: translateX(4px);}
+      30%, 50%, 70% { transform: translateX(-6px);}
+      40%, 60% { transform: translateX(6px);}
+    }
+    .login-footer {
+      margin-top: 22px;
+      font-size: .95rem;
+      color: #ffd600dd;
       text-align: center;
-      margin-bottom: 7px;
-      display: none;
-      font-size: 1rem;
+      letter-spacing: .02em;
+      font-weight: 700;
+      text-shadow: 0 1.5px 8px #22005744;
     }
-    @media (max-width: 480px) {
-      .login-container, .modal-content {
-        padding: 25px 10px;
-        max-width: 95vw;
-      }
-      .login-title {
-        font-size: 1.4rem;
-      }
+    @media (max-width: 600px) {
+      .center-container { height: 100vh;}
+      .login-box { padding: 12px 2vw 20px 2vw; width: 99vw;}
+      .astro-logo { width: 38px; height: 38px; top: -19px;}
+      .astro-logo svg {width:22px; height:22px;}
+      .login-title { font-size: .99em; margin-top: 8px;}
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="login-title">CRM Agentes</div>
-    <div id="loginError" class="login-error"></div>
-    <form id="loginForm" class="login-form" autocomplete="off">
-      <input type="text" name="usuario" placeholder="Usuario" required>
-      <input type="password" name="contrasena" placeholder="Contraseña" required>
-      <button class="login-btn" type="submit">Ingresar</button>
-    </form>
-    <div class="create-account-link" id="openRegister">¿Crear cuenta nueva?</div>
-    <div class="login-footer">
-      &copy; 2025 CRM Connecting. Todos los derechos reservados.
-    </div>
-  </div>
+  <div class="stars-bg" id="stars"></div>
+  <div class="center-container">
+    <div class="login-box">
+      <div class="astro-logo">
+        <!-- Astronauta SVG -->
+        <svg viewBox="0 0 100 100" fill="none">
+          <ellipse cx="50" cy="55" rx="44" ry="42" fill="#31ffd7"/>
+          <ellipse cx="50" cy="56" rx="32" ry="33" fill="#fff"/>
+          <ellipse cx="50" cy="38" rx="23" ry="23" fill="#ffd600" opacity=".9"/>
+          <ellipse cx="50" cy="38" rx="19" ry="19" fill="#31ffd7" opacity=".30"/>
+          <ellipse cx="50" cy="38" rx="13" ry="13" fill="#fff"/>
+          <ellipse cx="47" cy="34" rx="4" ry="2" fill="#31ffd7" opacity=".8"/>
+          <ellipse cx="60" cy="30" rx="2.6" ry="1.1" fill="#fff" opacity=".6"/>
+          <rect x="34" y="60" width="32" height="20" rx="12" fill="#ffd600"/>
+          <ellipse cx="50" cy="82" rx="16" ry="8" fill="#7f37ff" opacity=".7"/>
+          <ellipse cx="50" cy="93" rx="7.5" ry="2.7" fill="#ff5faf" opacity=".6"/>
+          <rect x="20" y="51" width="13" height="32" rx="6.5" transform="rotate(-15 20 51)" fill="#ff5faf"/>
+          <rect x="67" y="57" width="13" height="32" rx="6.5" transform="rotate(15 67 57)" fill="#ff5faf"/>
+        </svg>
+      </div>
+      <div class="login-title">Bienvenid@</div>
+      <div class="login-subtitle">
+        El universo de tus clientes, en un solo lugar.<br>
 
-  <!-- Modal Registro -->
-  <div class="modal-bg" id="registerModal">
-    <div class="modal-content">
-      <div class="close-modal" id="closeRegister" title="Cerrar">&times;</div>
-      <div class="register-title">Crear cuenta</div>
-      <div id="registerError" class="register-error"></div>
-      <div id="registerSuccess" class="register-success"></div>
-      <form id="registerForm" class="register-form" autocomplete="off">
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="text" name="apellido" placeholder="Apellido" required>
-        <input type="text" name="usuario" placeholder="Usuario" required>
-        <input type="email" name="email" placeholder="Correo electrónico" required>
-        <input type="password" name="contrasena" placeholder="Contraseña" required>
-        <input type="password" name="confirmar" placeholder="Confirmar contraseña" required>
-        <button class="register-btn" type="submit">Crear cuenta</button>
+      </div>
+      <div id="loginError" class="login-error"></div>
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" name="usuario" placeholder="Tu usuario" required>
+        <label for="contrasena">Contraseña</label>
+        <input type="password" id="contrasena" name="contrasena" placeholder="Tu contraseña" required>
+        <button class="login-btn" type="submit">INGRESAR</button>
       </form>
+      <div class="login-footer">
+        &copy; 2025 Todos los derechos reservados - “El futuro de la gestión,<br>hoy en la galaxia”
+      </div>
     </div>
   </div>
   <script>
-    // Modal control
-    const openRegister = document.getElementById('openRegister');
-    const closeRegister = document.getElementById('closeRegister');
-    const registerModal = document.getElementById('registerModal');
-    openRegister.onclick = () => registerModal.classList.add('active');
-    closeRegister.onclick = () => registerModal.classList.remove('active');
-    window.onclick = function(e) {
-      if (e.target === registerModal) registerModal.classList.remove('active');
-    };
-
+    // Estrellas animadas
+    const stars = document.getElementById('stars');
+    for(let i=0;i<33;i++) {
+      let star = document.createElement('span');
+      star.className = 'star';
+      star.style.top = Math.random()*96 + '%';
+      star.style.left = Math.random()*98 + '%';
+      star.style.animationDelay = (Math.random()*2.5) + 's';
+      stars.appendChild(star);
+    }
     // Login
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
-      const formData = new FormData(form);
-      const data = {
-        usuario: formData.get('usuario'),
-        contrasena: formData.get('contrasena')
-      };
+      const usuario = form.usuario.value;
+      const contrasena = form.contrasena.value;
       try {
         const res = await fetch('/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: JSON.stringify({ usuario, contrasena })
         });
-        if (res.redirected) {
-          window.location.href = res.url;
-          return;
-        }
         const result = await res.json();
-        if (result.success) {
+        if (result.success && result.token) {
+          localStorage.setItem('token', result.token);
           window.location.href = '/lead.html';
         } else {
-          mostrarError('loginError', 'Usuario o contraseña incorrectos');
+          mostrarError('Usuario o contraseña incorrectos');
         }
       } catch (err) {
-        mostrarError('loginError', 'Error en el servidor. Intente de nuevo.');
+        mostrarError('Error de conexión. Intenta de nuevo.');
       }
     });
-
-    // Registro
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      const nombre = formData.get('nombre');
-      const apellido = formData.get('apellido');
-      const usuario = formData.get('usuario');
-      const email = formData.get('email');
-      const contrasena = formData.get('contrasena');
-      const confirmar = formData.get('confirmar');
-
-      if (!nombre || !apellido || !usuario || !email || !contrasena || !confirmar) {
-        mostrarError('registerError', 'Todos los campos son obligatorios.');
-        return;
-      }
-      if (contrasena !== confirmar) {
-        mostrarError('registerError', 'Las contraseñas no coinciden');
-        return;
-      }
-      try {
-        const res = await fetch('/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, apellido, usuario, email, contrasena })
-        });
-        const result = await res.json();
-        if (result.success) {
-          mostrarExito('registerSuccess', '¡Usuario creado correctamente! Revisa tu correo para más detalles.');
-          form.reset();
-        } else {
-          mostrarError('registerError', result.message || 'No se pudo crear el usuario.');
-        }
-      } catch (err) {
-        mostrarError('registerError', 'Error en el servidor. Intente de nuevo.');
-      }
-    });
-
-    function mostrarError(id, msg) {
-      document.getElementById(id).textContent = msg;
-      document.getElementById(id).style.display = 'block';
-      setTimeout(() => {
-        document.getElementById(id).style.display = 'none';
-      }, 4000);
-    }
-    function mostrarExito(id, msg) {
-      document.getElementById(id).textContent = msg;
-      document.getElementById(id).style.display = 'block';
-      setTimeout(() => {
-        document.getElementById(id).style.display = 'none';
-      }, 4000);
+    function mostrarError(msg) {
+      const div = document.getElementById('loginError');
+      div.textContent = msg;
+      div.style.display = 'block';
+      div.classList.remove('shake');
+      setTimeout(() => div.classList.add('shake'), 10);
+      setTimeout(() => { div.style.display = 'none'; }, 3600);
     }
   </script>
 </body>
