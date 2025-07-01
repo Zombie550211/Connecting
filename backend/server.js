@@ -46,6 +46,7 @@ function getFechaLocalHoy() {
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
+// ================= MIDDLEWARE DE PROTECCIÓN DE RUTA ADMIN =================
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000;
   const ahora = Date.now();
@@ -88,6 +89,7 @@ function protegerRuta(req, res, next) {
   return res.redirect("/login.html");
 }
 
+// ================= MIDDLEWARE DE PROTECCIÓN DE RUTA AGENTE =================
 function protegerAgente(req, res, next) {
   if (req.session && req.session.agente) return next();
   return res.redirect('/agente/login.html');
@@ -102,6 +104,30 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: MONGO_URL })
 }));
+
+// ================== PROTEGER ARCHIVOS HTML SENSIBLES DEL CRM ==================
+// Solo login.html, register.html y recursos estáticos están libres
+const PUBLIC_HTMLS = [
+  '/login.html', '/register.html', '/logo connecting.png'
+];
+app.get(/^\/[^\/]+\.html$/, (req, res, next) => {
+  if (PUBLIC_HTMLS.includes(req.path)) {
+    return next();
+  }
+  // Protege todos los HTML EXCEPTO login y register
+  if (req.path.endsWith('.html')) {
+    // Si es admin CRM
+    if (req.path.startsWith('/agente/')) {
+      // Si tienes páginas de agente en /public/agente, crea otro middleware si lo deseas
+      return next();
+    }
+    if (req.session && req.session.usuario) {
+      return next();
+    }
+    return res.redirect('/login.html');
+  }
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
