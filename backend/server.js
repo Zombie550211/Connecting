@@ -197,7 +197,7 @@ app.get("/Facturacion.html", protegerRuta, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
 });
 
-// ================== LEADS =========================
+// ...continúa en la Parte 2...// ================== LEADS =========================
 // Importar leads desde Excel
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
@@ -345,6 +345,8 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   }
 });
 
+// ...continúa en la Parte 3...// ...esto sigue de la parte anterior (Parte 2)...
+
 // ====================== COSTUMER ENDPOINTS GLOBALES =========================
 app.post("/api/costumer", protegerRuta, async (req, res) => {
   try {
@@ -474,117 +476,47 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   }
 });
 
-// ...[El resto de tus endpoints de facturación, agente y app.listen()]...
+// ...continúa (tu backend sigue aquí, incluyendo la sección de facturación, endpoints de agente, dashboard, rankings, etc.)...
 
 // ==================== FACTURACIÓN ====================
-app.post('/api/facturacion', protegerRuta, async (req, res) => {
-  const { fecha, campos } = req.body;
-  if (!fecha || !Array.isArray(campos) || campos.length !== 14) {
-    return res.status(400).json({ ok: false, error: "Datos incompletos" });
-  }
-  try {
-    const doc = await Facturacion.findOneAndUpdate(
-      { fecha },
-      { $set: { campos } },
-      { upsert: true, new: true }
-    );
-    res.json({ ok: true, doc });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
+// ...tu endpoint POST /api/facturacion...
 
-app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
-  const { ano, mes } = req.params;
-  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
-  try {
-    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
-    res.json({ ok: true, data });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
+// ...tu endpoint GET /api/facturacion/:ano/:mes...
 
-app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res) => {
-  const { ano, mes } = req.params;
-  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
-  const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
-  const diasEnMes = new Date(parseInt(ano), parseInt(mes), 0).getDate();
-  const totalesPorDia = Array(diasEnMes).fill(0);
+// ...tu endpoint GET /api/facturacion/estadistica/:ano/:mes...
 
-  data.forEach(fila => {
-    const dia = parseInt(fila.fecha.split('/')[0], 10) - 1;
-    const totalDia = Number(fila.campos[9]) || 0;
-    if (!isNaN(dia) && dia >= 0 && dia < totalesPorDia.length) {
-      totalesPorDia[dia] = totalDia;
-    }
-  });
-
-  res.json({ ok: true, totalesPorDia });
-});
-
-// === ENDPOINT ANUAL MODIFICADO PARA LA GRAFICA DE 12 BARRAS ===
+// === ENDPOINT ANUAL PARA LA GRAFICA DE 12 BARRAS ===
 app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   const { ano } = req.params;
   const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
   try {
     const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
 
-    // Construir arreglo de 12 meses (idx 0 = enero, idx 5 = junio, etc.)
     const totalesPorMes = Array(12).fill(0);
 
     data.forEach(doc => {
-      // doc.fecha: "01/06/2025"
       const partes = doc.fecha.split('/');
       if (partes.length === 3) {
-        const mes = parseInt(partes[1], 10); // "06" => 6
-        // campos[9] es el "TOTAL DEL DIA" (ajusta si tu campo total es otro)
+        const mes = parseInt(partes[1], 10);
         const totalDia = Number(doc.campos[9]) || 0;
-        // mes-1: de 0 a 11
         if (!isNaN(mes) && mes >= 1 && mes <= 12) {
           totalesPorMes[mes - 1] += totalDia;
         }
       }
     });
 
-    // Devuelve también los datos para la tabla si lo necesitas
     res.json({ ok: true, totalesPorMes, data });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// =================== UTILIDADES, LOGOUT Y MIGRACIÓN =======================
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login.html");
-  });
-});
+// ...sigue con el resto de tu backend (logout, migración, agente, dashboard, rankings, etc.)...
 
-app.post('/api/migrar-fechas-a-string', async (req, res) => {
-  try {
-    let leadsModificados = 0;
-    let costumersModificados = 0;
-
-    const leads = await Lead.find({ fecha: { $type: 'date' } });
-    for (const lead of leads) {
-      const nuevaFecha = lead.fecha.toISOString().slice(0, 10);
-      lead.fecha = nuevaFecha;
-      await lead.save();
-      leadsModificados++;
-    }
-    const costumers = await Costumer.find({ fecha: { $type: 'date' } });
-    for (const c of costumers) {
-      const nuevaFecha = c.fecha.toISOString().slice(0, 10);
-      c.fecha = nuevaFecha;
-      await c.save();
-      costumersModificados++;
-    }
-    res.json({ success: true, leadsModificados, costumersModificados });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// LISTEN FINAL
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});// ...continuación de la Parte 3...
 
 // =================== INICIO ENDPOINTS DE AGENTE ===================
 // Login de agente
@@ -777,7 +709,13 @@ app.get('/api/welcome', protegerRuta, async (req, res) => {
   res.json({ nombre: req.session.usuario || "Equipo administrativo", frase: "¡Bienvenido!" });
 });
 
-// ENDPOINTS PARA DASHBOARD ADMIN - COPIA Y PEGA ESTO EN TU backend
+// ...aquí puedes seguir agregando el resto de endpoints de dashboard, rankings, migración, exportar excel, etc...
+
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});// ...continuación de la Parte 4...
+
+// ================= DASHBOARD ADMIN / RANKINGS ==================
 
 // Ranking por EQUIPO
 app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
@@ -797,16 +735,12 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
 });
 
 // Ranking por AGENTE
-// Función para aplicar alias a los agentes
 function aliasAgente(nombre) {
-  // Normaliza el nombre para evitar problemas de mayúsculas, tildes, etc.
   const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
-  // Puedes agregar más alias aquí si necesitas unificar más nombres
   return nombre;
 }
 
-// Ranking por AGENTE (sumando alias)
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
     const docs = await Costumer.find({}, { agente: 1 }).lean();
@@ -861,7 +795,8 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
     res.status(500).json([]);
   }
 });
- // Saludo de bienvenida
+
+// Saludo de bienvenida
 app.get('/api/welcome', protegerRuta, async (req, res) => {
   try {
     let nombre = "Equipo administrativo";
@@ -885,6 +820,7 @@ app.get('/api/welcome', protegerRuta, async (req, res) => {
     res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
   }
 });
+
 // Exportar Excel de costumers del agente
 app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
   try {
@@ -965,7 +901,7 @@ app.get('/api/agente/teams', protegerAgente, async (req, res) => {
   }
 });
 
-// =================== FIN ENDPOINTS DE AGENTE ===================
+// =================== FIN ENDPOINTS DE AGENTE Y ADMIN ===================
 
 // LISTEN FINAL
 app.listen(PORT, () => {
