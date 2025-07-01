@@ -4,35 +4,97 @@
   <meta charset="UTF-8">
   <title>CRM Agentes - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fuente moderna y espacial -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* ... mismos estilos que tu versión ... */
     body {
-      background: linear-gradient(120deg, #0f2027, #2c5364 80%);
-      font-family: 'Segoe UI', Arial, sans-serif;
+      background: radial-gradient(circle at 60% 40%, #31ffd7 0%, #7f37ff 80%, #0f2027 100%);
+      min-height: 100vh;
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Estrellas animadas de fondo */
+    .stars-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: .7;
+      animation: twinkle 2.7s infinite alternate;
+    }
+    @keyframes twinkle {
+      0% { opacity: .3;}
+      100% { opacity: .9;}
     }
     .login-container {
-      background: #fff;
-      padding: 40px 30px 30px 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(44,83,100,0.18);
+      background: rgba(30,31,68,0.94);
+      padding: 48px 34px 36px 34px;
+      border-radius: 22px;
+      box-shadow: 0 12px 48px 0 #220057cc, 0 1.5px 16px #31ffd733;
       width: 100%;
       max-width: 370px;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
+      z-index: 2;
+      overflow: visible;
+      border: 3px solid transparent;
+      border-image: linear-gradient(90deg, #7f37ff, #31ffd7, #ff5faf, #ffd600, #7f37ff) 1;
+      animation: neonGlow 2.5s infinite alternate;
+    }
+    @keyframes neonGlow {
+      0% { box-shadow: 0 8px 48px 0 #220057cc, 0 1.5px 16px #31ffd733;}
+      100% { box-shadow: 0 12px 68px 0 #7f37ffcc, 0 2.5px 26px #ffd60044;}
+    }
+    .astro-logo {
+      width: 74px; height: 74px;
+      margin-top: -74px; margin-bottom: 17px;
+      background: linear-gradient(120deg, #31ffd7 60%, #ff5faf 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px #31ffd7ee, 0 0 12px #ff5faf99;
+      border: 3px solid #fff;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -37px;
+      z-index: 3;
+      overflow: hidden;
+    }
+    .astro-logo svg {
+      width: 52px;
+      height: 52px;
+      display: block;
+      filter: drop-shadow(0 2px 8px #31ffd733);
     }
     .login-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2c5364;
-      margin-bottom: 24px;
-      letter-spacing: 1px;
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-size: 1.7em;
+      text-transform: uppercase;
+      color: #70ffe7;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      margin-top: 40px;
+      text-align: center;
+      text-shadow: 0 0 12px #31ffd7cc, 0 2px 18px #7f37ff77;
     }
     .login-form {
       width: 100%;
@@ -41,56 +103,80 @@
       gap: 18px;
     }
     .login-form input {
-      padding: 12px 14px;
-      border: 1px solid #d1d9de;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border .2s;
+      padding: 13px 15px;
+      background: #fff8;
+      border: 1.7px solid #ffd60099;
+      border-radius: 11px;
+      font-size: 1.07em;
+      color: #3b1a55;
+      font-family: inherit;
+      font-weight: 600;
+      transition: border 0.18s, box-shadow .21s;
+      box-shadow: 0 1.5px 7px #ffd60022;
     }
     .login-form input:focus {
-      border: 1.5px solid #2c5364;
+      border: 2px solid #31ffd7;
       outline: none;
+      box-shadow: 0 2px 18px #31ffd799,0 1.5px 9px #ffd60044;
+      background: #fff;
     }
     .login-btn {
       margin-top: 12px;
-      background: linear-gradient(90deg, #2c5364 60%, #0f2027 100%);
+      background: linear-gradient(90deg, #7f37ff 0%, #31ffd7 100%);
       color: #fff;
-      font-size: 1.08rem;
-      font-weight: 600;
+      font-size: 1.14rem;
+      font-weight: 800;
       border: none;
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 11px;
+      padding: 13px;
       cursor: pointer;
       letter-spacing: .5px;
-      box-shadow: 0 2px 8px rgba(44,83,100,0.08);
-      transition: background .2s;
+      box-shadow: 0 2px 12px #31ffd788;
+      transition: background .18s, box-shadow .18s, transform .13s;
+      text-transform: uppercase;
+      text-shadow: 0 2px 10px #31ffd755;
     }
     .login-btn:hover {
-      background: linear-gradient(90deg, #0f2027 40%, #2c5364 100%);
+      background: linear-gradient(90deg, #ff5faf 0%, #ffd600 100%);
+      box-shadow: 0 10px 32px #ff5fafaa,0 2.5px 12px #ffd60055;
+      transform: translateY(-1px) scale(1.01);
     }
     .create-account-link {
-      color: #2c5364;
-      margin-top: 10px;
+      color: #ffd600;
+      margin-top: 13px;
       cursor: pointer;
       text-decoration: underline;
       font-size: 1rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px #31ffd755;
     }
     .login-footer {
-      margin-top: 20px;
+      margin-top: 25px;
       font-size: .97rem;
-      color: #7d8c98;
+      color: #31ffd7cc;
       text-align: center;
+      font-weight: 700;
+      text-shadow: 0 2px 10px #31ffd733;
     }
     .login-error {
       color: #fff;
       background: #e74c3c;
       padding: 10px 0;
       width: 100%;
-      border-radius: 8px;
+      border-radius: 9px;
       text-align: center;
       margin-bottom: 15px;
       display: none;
       font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 2px 10px #e74c3c44;
+      animation: shake .23s;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translateX(-2px);}
+      20%, 80% { transform: translateX(4px);}
+      30%, 50%, 70% { transform: translateX(-6px);}
+      40%, 60% { transform: translateX(6px);}
     }
     /* Modal styles */
     .modal-bg {
@@ -198,13 +284,36 @@
         max-width: 95vw;
       }
       .login-title {
-        font-size: 1.4rem;
+        font-size: 1.1em;
+        margin-top: 18px;
       }
+      .astro-logo {
+        width: 40px; height: 40px; top: -19px;
+      }
+      .astro-logo svg {width:23px; height:23px;}
     }
   </style>
 </head>
 <body>
+  <div class="stars-bg" id="stars"></div>
   <div class="login-container">
+    <div class="astro-logo">
+      <!-- Astronauta SVG -->
+      <svg viewBox="0 0 100 100" fill="none">
+        <ellipse cx="50" cy="55" rx="44" ry="42" fill="#31ffd7"/>
+        <ellipse cx="50" cy="56" rx="32" ry="33" fill="#fff"/>
+        <ellipse cx="50" cy="38" rx="23" ry="23" fill="#ffd600" opacity=".9"/>
+        <ellipse cx="50" cy="38" rx="19" ry="19" fill="#31ffd7" opacity=".30"/>
+        <ellipse cx="50" cy="38" rx="13" ry="13" fill="#fff"/>
+        <ellipse cx="47" cy="34" rx="4" ry="2" fill="#31ffd7" opacity=".8"/>
+        <ellipse cx="60" cy="30" rx="2.6" ry="1.1" fill="#fff" opacity=".6"/>
+        <rect x="34" y="60" width="32" height="20" rx="12" fill="#ffd600"/>
+        <ellipse cx="50" cy="82" rx="16" ry="8" fill="#7f37ff" opacity=".7"/>
+        <ellipse cx="50" cy="93" rx="7.5" ry="2.7" fill="#ff5faf" opacity=".6"/>
+        <rect x="20" y="51" width="13" height="32" rx="6.5" transform="rotate(-15 20 51)" fill="#ff5faf"/>
+        <rect x="67" y="57" width="13" height="32" rx="6.5" transform="rotate(15 67 57)" fill="#ff5faf"/>
+      </svg>
+    </div>
     <div class="login-title">CRM Agentes</div>
     <div id="loginError" class="login-error"></div>
     <form id="loginForm" class="login-form" autocomplete="off">
@@ -237,6 +346,18 @@
     </div>
   </div>
   <script>
+    // Estrellas animadas
+    const stars = document.createElement('div');
+    stars.className = 'stars-bg';
+    document.body.prepend(stars);
+    for(let i=0;i<28;i++) {
+      let star = document.createElement('span');
+      star.className = 'star';
+      star.style.top = Math.random()*96 + '%';
+      star.style.left = Math.random()*98 + '%';
+      star.style.animationDelay = (Math.random()*2.5) + 's';
+      stars.appendChild(star);
+    }
     // Modal control
     const openRegister = document.getElementById('openRegister');
     const closeRegister = document.getElementById('closeRegister');
