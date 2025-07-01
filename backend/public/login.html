@@ -5,7 +5,6 @@
   <title>CRM Agentes - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* ... mismos estilos que tu versión ... */
     body {
       background: linear-gradient(120deg, #0f2027, #2c5364 80%);
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -267,7 +266,8 @@
           return;
         }
         const result = await res.json();
-        if (result.success) {
+        if (result.success && result.token) {
+          localStorage.setItem('token', result.token); // GUARDA EL TOKEN EN LOCALSTORAGE
           window.location.href = '/lead.html';
         } else {
           mostrarError('loginError', 'Usuario o contraseña incorrectos');
