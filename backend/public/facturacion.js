@@ -7,6 +7,7 @@ const excelBody = document.getElementById("excelBody");
 const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
 
+// Llenar select de años
 (function(){
   const yearNow = (new Date()).getFullYear();
   let anos = '';
@@ -26,7 +27,7 @@ let currentBlock = 0;
 let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
 
-let datosFacturacionMes = []; // Aquí se guardan los datos cargados del backend
+let datosFacturacionMes = [];
 
 async function cargarFacturacionMes(ano, mes) {
   const resp = await fetch(`/api/facturacion/${ano}/${String(mes).padStart(2,'0')}`);
@@ -77,14 +78,13 @@ async function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   await renderTablaDias(currentMonth, currentYear, currentBlock);
+  actualizarGrafica();
 }
 filtroMes.addEventListener('change', async () => {
   await updateTableByFilters();
-  actualizarGrafica();
 });
 filtroAno.addEventListener('change', async () => {
   await updateTableByFilters();
-  actualizarGrafica();
 });
 async function nextBlock() {
   const numDias = daysInMonth(currentYear, currentMonth);
@@ -107,20 +107,50 @@ window.addEventListener('DOMContentLoaded', async () => {
 /* --- GRAFICA Chart.js --- */
 let grafica;
 async function actualizarGrafica() {
-  const mes = parseInt(filtroMes.value, 10);
-  const ano = parseInt(filtroAno.value, 10);
-  const resp = await fetch(`/api/facturacion/estadistica/${ano}/${String(mes).padStart(2, '0')}`);
-  const { totalesPorDia } = await resp.json();
-  const totalMes = totalesPorDia.reduce((a,b) => a + b, 0);
+  // --- Aquí está la magia para que la gráfica siempre refleje la tabla ---
+  // Toma TODOS los datos de la tabla actual del DOM y suma por mes
+  const totalesPorMes = Array(12).fill(0);
+
+  // Leer todos los datos del año actual (puede estar solo el mes en pantalla, pero leemos todos los datos del año)
+  // Si tienes todos los datos del año en datosFacturacionMes, úsalo:
+  datosFacturacionMes.forEach(fila => {
+    if (!fila.fecha || !fila.campos) return;
+    const partes = fila.fecha.split('/');
+    if (partes.length !== 3) return;
+    const mes = parseInt(partes[1], 10);
+    const totalDia = parseFloat(fila.campos[9]) || 0; // Columna "TOTAL DEL DIA"
+    if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
+  });
+
+  // Pero además suma los valores actuales editados en la tabla (en caso de que no se haya guardado aún)
+  // Lee del DOM la tabla visible y sobreescribe los valores del mes actual
+  const filasDOM = document.querySelectorAll('#excelBody tr');
+  let sumaMesActual = 0;
+  filasDOM.forEach(tr => {
+    const fecha = tr.children[0].textContent;
+    const partes = fecha.split('/');
+    if (partes.length !== 3) return;
+    const mesIdx = parseInt(partes[1], 10) - 1;
+    if (mesIdx === currentMonth - 1) {
+      // Total del día es el td 10 (índice 10)
+      const totalDia = parseFloat(tr.children[10].textContent) || 0;
+      sumaMesActual += totalDia;
+    }
+  });
+  totalesPorMes[currentMonth - 1] = sumaMesActual;
+
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
   grafica = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ["Total del mes"],
+      labels: [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ],
       datasets: [{
         label: "",
-        data: [totalMes],
+        data: totalesPorMes,
         backgroundColor: "rgba(40,181,232,0.70)",
         borderColor: "#1e293b",
         borderWidth: 2,
@@ -161,7 +191,6 @@ async function actualizarGrafica() {
 // ----------- FÓRMULAS Y TOTALES -----------
 
 function limpiarNumero(texto) {
-  // Limpia strings tipo "$2,542.00" o "2,542.00" y deja sólo el número
   if (typeof texto !== "string") texto = String(texto);
   return Number(texto.replace(/[^0-9.\-]/g, "")) || 0;
 }
@@ -187,17 +216,15 @@ function recalcularFila(tr) {
   // TOTAL DEL DIA = alexis + cuentaAlterna + lineas
   let totalDia = alexis + cuentaAlterna + lineas;
   tds[10].textContent = totalDia.toFixed(2);
-
-  // Puedes añadir aquí más cálculos automáticos si tu tabla tiene más columnas calculadas
 }
 
 excelBody.addEventListener('input', function(e) {
   const td = e.target;
   const tr = td.parentElement;
-  // Si editas cualquier celda (menos la fecha), recalcula
   if (td.cellIndex !== 0) {
     recalcularFila(tr);
     renderFilaTotalesFacturacion();
+    actualizarGrafica(); // <-- ACTUALIZA LA GRAFICA EN TIEMPO REAL AL EDITAR
   }
 });
 
@@ -240,7 +267,8 @@ async function guardarTodoFacturacion() {
       else errores++;
     }
   }
-  await actualizarGrafica();
+  await renderTablaDias(currentMonth, currentYear, currentBlock);
+  actualizarGrafica(); // <-- ACTUALIZA GRAFICA AL GUARDAR
   renderFilaTotalesFacturacion();
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
