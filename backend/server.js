@@ -46,7 +46,6 @@ function getFechaLocalHoy() {
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
-// ================= MIDDLEWARE DE PROTECCIÓN DE RUTA ADMIN =================
 function protegerRuta(req, res, next) {
   const MAX_INACTIVIDAD = 30 * 60 * 1000;
   const ahora = Date.now();
@@ -89,7 +88,6 @@ function protegerRuta(req, res, next) {
   return res.redirect("/login.html");
 }
 
-// ================= MIDDLEWARE DE PROTECCIÓN DE RUTA AGENTE =================
 function protegerAgente(req, res, next) {
   if (req.session && req.session.agente) return next();
   return res.redirect('/agente/login.html');
@@ -104,30 +102,6 @@ app.use(session({
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: MONGO_URL })
 }));
-
-// ================== PROTEGER ARCHIVOS HTML SENSIBLES DEL CRM ==================
-// Solo login.html, register.html y recursos estáticos están libres
-const PUBLIC_HTMLS = [
-  '/login.html', '/register.html', '/logo connecting.png'
-];
-app.get(/^\/[^\/]+\.html$/, (req, res, next) => {
-  if (PUBLIC_HTMLS.includes(req.path)) {
-    return next();
-  }
-  // Protege todos los HTML EXCEPTO login y register
-  if (req.path.endsWith('.html')) {
-    // Si es admin CRM
-    if (req.path.startsWith('/agente/')) {
-      // Si tienes páginas de agente en /public/agente, crea otro middleware si lo deseas
-      return next();
-    }
-    if (req.session && req.session.usuario) {
-      return next();
-    }
-    return res.redirect('/login.html');
-  }
-  next();
-});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -449,89 +423,6 @@ app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
   }
 });
 
-// =================== KPI MULTIFILTRO PARA DASHBOARD COSTUMER ===================
-app.get('/api/costumer/kpis', protegerRuta, async (req, res) => {
-  try {
-    // Filtros recibidos por query
-    const {
-      fecha,           // para ventas hoy (formato: yyyy-mm-dd)
-      fechaDesde,      // para rango
-      fechaHasta,      // para rango
-      team,            // nombre exacto o vacío
-      agente,          // nombre exacto o vacío
-      numero,          // parte del teléfono
-      direccion,       // parte de la dirección
-      zip              // parte del zip
-    } = req.query;
-
-    // Construcción de filtros dinámicos
-    const filtros = {};
-
-    // Filtro por fecha exacta (para ventas hoy)
-    if (fecha) filtros.fecha = fecha;
-
-    // Filtro por rango de fechas (para ventas mes, con o sin día)
-    if (fechaDesde && fechaHasta) {
-      filtros.fecha = { $gte: fechaDesde, $lte: fechaHasta };
-    } else if (fechaDesde) {
-      filtros.fecha = { $gte: fechaDesde };
-    } else if (fechaHasta) {
-      filtros.fecha = { $lte: fechaHasta };
-    }
-
-    if (team && team !== 'Todos') filtros.equipo = team;
-    if (agente && agente !== 'Todos') filtros.agente = agente;
-    if (numero) filtros.telefono = new RegExp(numero, "i");
-    if (direccion) filtros.direccion = new RegExp(direccion, "i");
-    if (zip) filtros.zip = new RegExp(zip, "i");
-
-    // Clonar filtros para cada KPI
-    const baseFiltros = { ...filtros };
-
-    // KPI: Ventas Hoy (si hay filtro de fecha, lo usamos; si no, usamos el día de hoy)
-    let filtroVentasHoy = { ...baseFiltros };
-    if (!fecha) {
-      const hoy = new Date();
-      const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-      filtroVentasHoy.fecha = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // KPI: Ventas Mes (si hay filtro de mes, se usa; si no, mes actual)
-    let filtroVentasMes = { ...baseFiltros };
-    if (!(fechaDesde && fechaHasta)) {
-      // Si no hay rango, usamos el mes actual
-      const hoy = new Date();
-      const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-      const inicioMes = `${year}-${month.padStart(2, '0')}-01`;
-      const finMesDate = new Date(year, parseInt(month), 0);
-      const finMes = `${year}-${month.padStart(2, '0')}-${String(finMesDate.getDate()).padStart(2, '0')}`;
-      filtroVentasMes.fecha = { $gte: inicioMes, $lte: finMes };
-    }
-
-    // KPI: Clientes Pendientes (estado = "Pending")
-    let filtroPendientes = { ...baseFiltros, estado: 'Pending' };
-    // KPI: Ventas Canceladas (estado = "Cancelado" o "Cancelled" según tu base)
-    let filtroCanceladas = { ...baseFiltros, estado: { $in: ['Cancelado', 'Cancelled'] } };
-
-    // Consultar en paralelo
-    const [ventasHoy, ventasMes, pendientes, canceladas] = await Promise.all([
-      Costumer.countDocuments(filtroVentasHoy),
-      Costumer.countDocuments(filtroVentasMes),
-      Costumer.countDocuments(filtroPendientes),
-      Costumer.countDocuments(filtroCanceladas)
-    ]);
-
-    res.json({
-      ventasHoy,
-      ventasMes,
-      pendientes,
-      canceladas
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ==================== ENDPOINTS KPI PARA COSTUMER GLOBAL ====================
 // KPI: Ventas Hoy
 app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
@@ -583,16 +474,498 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   }
 });
 
-// ...Resto de tus endpoints de facturación, agente y listen final SIN CAMBIOS...
+// ...[El resto de tus endpoints de facturación, agente y app.listen()]...
 
 // ==================== FACTURACIÓN ====================
-// ... (todo igual que tu original) ...
+app.post('/api/facturacion', protegerRuta, async (req, res) => {
+  const { fecha, campos } = req.body;
+  if (!fecha || !Array.isArray(campos) || campos.length !== 14) {
+    return res.status(400).json({ ok: false, error: "Datos incompletos" });
+  }
+  try {
+    const doc = await Facturacion.findOneAndUpdate(
+      { fecha },
+      { $set: { campos } },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true, doc });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
+  const { ano, mes } = req.params;
+  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
+  try {
+    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    res.json({ ok: true, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/facturacion/estadistica/:ano/:mes', protegerRuta, async (req, res) => {
+  const { ano, mes } = req.params;
+  const regex = new RegExp(`^\\d{2}\\/${mes.padStart(2,'0')}\\/${ano}$`);
+  const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+  const diasEnMes = new Date(parseInt(ano), parseInt(mes), 0).getDate();
+  const totalesPorDia = Array(diasEnMes).fill(0);
+
+  data.forEach(fila => {
+    const dia = parseInt(fila.fecha.split('/')[0], 10) - 1;
+    const totalDia = Number(fila.campos[9]) || 0;
+    if (!isNaN(dia) && dia >= 0 && dia < totalesPorDia.length) {
+      totalesPorDia[dia] = totalDia;
+    }
+  });
+
+  res.json({ ok: true, totalesPorDia });
+});
+
+// === ENDPOINT ANUAL MODIFICADO PARA LA GRAFICA DE 12 BARRAS ===
+app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
+  const { ano } = req.params;
+  const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
+  try {
+    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+
+    // Construir arreglo de 12 meses (idx 0 = enero, idx 5 = junio, etc.)
+    const totalesPorMes = Array(12).fill(0);
+
+    data.forEach(doc => {
+      // doc.fecha: "01/06/2025"
+      const partes = doc.fecha.split('/');
+      if (partes.length === 3) {
+        const mes = parseInt(partes[1], 10); // "06" => 6
+        // campos[9] es el "TOTAL DEL DIA" (ajusta si tu campo total es otro)
+        const totalDia = Number(doc.campos[9]) || 0;
+        // mes-1: de 0 a 11
+        if (!isNaN(mes) && mes >= 1 && mes <= 12) {
+          totalesPorMes[mes - 1] += totalDia;
+        }
+      }
+    });
+
+    // Devuelve también los datos para la tabla si lo necesitas
+    res.json({ ok: true, totalesPorMes, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // =================== UTILIDADES, LOGOUT Y MIGRACIÓN =======================
-// ... (todo igual que tu original) ...
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login.html");
+  });
+});
+
+app.post('/api/migrar-fechas-a-string', async (req, res) => {
+  try {
+    let leadsModificados = 0;
+    let costumersModificados = 0;
+
+    const leads = await Lead.find({ fecha: { $type: 'date' } });
+    for (const lead of leads) {
+      const nuevaFecha = lead.fecha.toISOString().slice(0, 10);
+      lead.fecha = nuevaFecha;
+      await lead.save();
+      leadsModificados++;
+    }
+    const costumers = await Costumer.find({ fecha: { $type: 'date' } });
+    for (const c of costumers) {
+      const nuevaFecha = c.fecha.toISOString().slice(0, 10);
+      c.fecha = nuevaFecha;
+      await c.save();
+      costumersModificados++;
+    }
+    res.json({ success: true, leadsModificados, costumersModificados });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // =================== INICIO ENDPOINTS DE AGENTE ===================
-// ... (todo igual que tu original) ...
+// Login de agente
+app.post('/agente/login', async (req, res) => {
+  const { user, pass } = req.body;
+  const usuarioDB = await User.findOne({ usuario: user });
+  if (!usuarioDB) return res.json({ success: false });
+  const match = await bcrypt.compare(pass, usuarioDB.password);
+  if (!match) return res.json({ success: false });
+  req.session.agente = usuarioDB.usuario;
+  req.session.nombreAgente = `${usuarioDB.nombre} ${usuarioDB.apellido}`;
+  res.json({ success: true });
+});
+
+// Logout de agente
+app.get('/agente/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/agente/login.html'));
+});
+
+// Info del agente actual
+app.get('/api/agente/info', protegerAgente, (req, res) => {
+  res.json({ nombre: req.session.agente, nombreCompleto: req.session.nombreAgente });
+});
+
+// Guardar lead del agente (y costumer)
+app.post('/api/agente/leads', protegerAgente, async (req, res) => {
+  try {
+    const { fecha, team, producto, puntaje, telefono, direccion, zip } = req.body;
+    const agente = req.session.nombreAgente || req.session.agente;
+    if (!producto || !agente) return res.json({ success: false, error: "Faltan datos" });
+    const nuevoLead = {
+      fecha: fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy(),
+      equipo: team || '',
+      agente: agente,
+      producto,
+      puntaje: Number(puntaje) || 0,
+      telefono: telefono || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+    await Lead.create(nuevoLead);
+    await Costumer.create(nuevoLead);
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: "Error al guardar: "+err.message });
+  }
+});
+
+// Gráficas personales del agente
+app.get('/api/agente/estadisticas-mes', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const year = new Date().getFullYear();
+    const docs = await Costumer.find({
+      agente,
+      fecha: { $gte: `${year}-01-01`, $lte: `${year}-12-31` }
+    }).lean();
+    const ventasPorMes = Array(12).fill(0), puntajePorMes = Array(12).fill(0);
+    docs.forEach(doc => {
+      const [yyyy, mm] = doc.fecha.split('-');
+      const idx = parseInt(mm, 10) - 1;
+      ventasPorMes[idx]++;
+      puntajePorMes[idx] += Number(doc.puntaje) || 0;
+    });
+    res.json({ ventasPorMes, puntajePorMes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/agente/ventas-producto', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const docs = await Costumer.find({ agente }).lean();
+    const ventasPorProducto = {};
+    docs.forEach(row => {
+      const producto = row.producto || "";
+      if (!producto) return;
+      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
+    });
+    const labels = Object.keys(ventasPorProducto);
+    const dataArr = labels.map(k => ventasPorProducto[k]);
+    res.json({ labels, data: dataArr });
+  } catch (err) {
+    res.status(500).json({ labels:[], data:[] });
+  }
+});
+
+// ==================== COSTUMER AGENTE: KPIs, FILTROS, CRUD, EXCEL ====================
+// KPIs/métricas de costumer del agente
+app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const hoy = getFechaLocalHoy();
+    const [yyyy, mm] = hoy.split('-');
+    const inicioMes = `${yyyy}-${mm}-01`;
+    const finMes = `${yyyy}-${mm}-31`;
+    const filtros = { agente };
+    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
+    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
+    if (req.query.team) filtros.equipo = req.query.team;
+    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
+    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
+    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
+
+    const [ventasHoy, leadsPendientes, clientes, ventasMes] = await Promise.all([
+      Costumer.countDocuments({ ...filtros, fecha: hoy }),
+      Costumer.countDocuments({ ...filtros, estado: 'Pending' }),
+      Costumer.countDocuments(filtros),
+      Costumer.countDocuments({ ...filtros, fecha: { $gte: inicioMes, $lte: finMes } }),
+    ]);
+    res.json({ ventasHoy, leadsPendientes, clientes, ventasMes });
+  } catch (err) {
+    res.status(500).json({ ventasHoy:0, leadsPendientes:0, clientes:0, ventasMes:0, error:err.message });
+  }
+});
+
+// Tabla con filtros (costumers del agente)
+app.get('/api/agente/costumer', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const filtros = { agente };
+    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
+    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
+    if (req.query.team) filtros.equipo = req.query.team;
+    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
+    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
+    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
+
+    const costumers = await Costumer.find(filtros).sort({ fecha: -1 }).lean();
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ costumers: [], error: err.message });
+  }
+});
+
+// Obtener costumer por ID (del agente)
+app.get('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const costumer = await Costumer.findOne({ _id: req.params.id, agente }).lean();
+    if (!costumer) return res.status(404).json({ error: "No encontrado" });
+    res.json(costumer);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Editar costumer del agente
+app.put('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const update = { ...req.body };
+    delete update._id;
+    const updated = await Costumer.findOneAndUpdate(
+      { _id: req.params.id, agente },
+      update,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, error: "No encontrado" });
+    res.json({ success: true, costumer: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar costumer por ID (solo del agente)
+app.delete('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const deleted = await Costumer.findOneAndDelete({ _id: req.params.id, agente });
+    if (!deleted) return res.status(404).json({ success: false, error: "No encontrado" });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar todos los costumers del agente
+app.delete('/api/agente/costumer-eliminar-todo', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    await Costumer.deleteMany({ agente });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  res.json({ nombre: req.session.usuario || "Equipo administrativo", frase: "¡Bienvenido!" });
+});
+
+// ENDPOINTS PARA DASHBOARD ADMIN - COPIA Y PEGA ESTO EN TU backend
+
+// Ranking por EQUIPO
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  try {
+    const equipos = await Costumer.aggregate([
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(equipos.map((e, idx) => ({
+      nombre: e._id || "Sin equipo",
+      ventas: e.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// Ranking por AGENTE
+// Función para aplicar alias a los agentes
+function aliasAgente(nombre) {
+  // Normaliza el nombre para evitar problemas de mayúsculas, tildes, etc.
+  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
+  // Puedes agregar más alias aquí si necesitas unificar más nombres
+  return nombre;
+}
+
+// Ranking por AGENTE (sumando alias)
+app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
+  try {
+    const docs = await Costumer.find({}, { agente: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, ventas: 0 };
+      ranking[nombreAgente].ventas += 1;
+    }
+    const resultado = Object.values(ranking).sort((a, b) => b.ventas - a.ventas);
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// Ranking por PUNTOS (sumando alias)
+app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
+  try {
+    const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, puntos: 0 };
+      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
+    }
+    const resultado = Object.values(ranking)
+      .sort((a, b) => b.puntos - a.puntos)
+      .map(r => ({
+        ...r,
+        puntos: Number(r.puntos.toFixed(2))
+      }));
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// (Opcional) Ranking por EQUIPO - sin alias, pero puedes agregar función similar si lo necesitas
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  try {
+    const equipos = await Costumer.aggregate([
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(equipos.map((e, idx) => ({
+      nombre: e._id || "Sin equipo",
+      ventas: e.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+ // Saludo de bienvenida
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  try {
+    let nombre = "Equipo administrativo";
+    if (req.session && req.session.usuario) {
+      const user = await User.findOne({ usuario: req.session.usuario });
+      if (user && user.nombre) nombre = user.nombre;
+      else nombre = req.session.usuario;
+    }
+    const frases = [
+      "Liderar con integridad y visión: eso es Connecting.",
+      "El éxito administrativo se construye con disciplina y pasión.",
+      "Cada gestión es un paso hacia la excelencia.",
+      "La confianza y la transparencia son nuestro mejor activo.",
+      "¡Gracias por ser parte de nuestro crecimiento diario!",
+      "El profesionalismo conecta sueños con resultados.",
+      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
+    ];
+    const frase = frases[Math.floor(Math.random() * frases.length)];
+    res.json({ nombre, frase });
+  } catch (err) {
+    res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
+  }
+});
+// Exportar Excel de costumers del agente
+app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const filtros = { agente };
+    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
+    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
+    if (req.query.team) filtros.equipo = req.query.team;
+    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
+    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
+    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
+
+    const costumers = await Costumer.find(filtros).lean();
+    const excelData = costumers.map(c => ({
+      Fecha: c.fecha || '',
+      Team: c.equipo || '',
+      Agente: c.agente || '',
+      Producto: c.producto || '',
+      Estado: c.estado || '',
+      Puntaje: c.puntaje || '',
+      Cuenta: c.cuenta || '',
+      Telefono: c.telefono || '',
+      Dirección: c.direccion || '',
+      ZIP: c.zip || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Costumers');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Disposition', 'attachment; filename="costumers.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) {
+    res.status(500).send('Error generando Excel');
+  }
+});
+
+// Importar costumers desde Excel (solo para el agente)
+app.post('/api/agente/costumer-import', protegerAgente, upload.single('excel'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const agente = req.session.nombreAgente || req.session.agente;
+    const mapped = rows.filter(row =>
+      row.equipo || row.team || row.agente || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
+    ).map(row => ({
+      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : getFechaLocalHoy(),
+      equipo: row.equipo || row.team || "",
+      agente: agente,
+      producto: row.producto || "",
+      estado: row.estado || "Pending",
+      puntaje: Number(row.puntaje) || 0,
+      cuenta: row.cuenta || "",
+      telefono: row.telefono || "",
+      direccion: row.direccion || "",
+      zip: row.zip || ""
+    }));
+
+    if (mapped.length) await Costumer.insertMany(mapped);
+    fs.unlinkSync(filePath);
+    res.json({ success: true, count: mapped.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Listar teams del agente
+app.get('/api/agente/teams', protegerAgente, async (req, res) => {
+  try {
+    const agente = req.session.nombreAgente || req.session.agente;
+    const teams = await Costumer.distinct('equipo', { agente });
+    res.json(teams.filter(Boolean));
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// =================== FIN ENDPOINTS DE AGENTE ===================
 
 // LISTEN FINAL
 app.listen(PORT, () => {
