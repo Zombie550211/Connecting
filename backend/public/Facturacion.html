@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -33,7 +32,6 @@
       display: flex;
       min-height: 100vh;
     }
-    /* SIDEBAR - ESTILO NUEVO */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       min-width: 180px;
@@ -54,9 +52,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
     }
     .sidebar-logo img {
       width: 48px;
@@ -108,8 +103,6 @@
       text-align: center;
       font-weight: 600;
     }
-
-    /* CONTENIDO PRINCIPAL */
     .main-content {
       flex: 1;
       padding: 40px 50px;
@@ -289,7 +282,6 @@
       .main-content { padding: 10px 5px; }
       .sidebar { display:none; }
     }
-    /* MODAL expandir tabla */
     #modal-bg {
       display: none;
       position: fixed;
@@ -431,28 +423,25 @@
     let datosFacturacion = [];
     const filasPorBloque = 16;
 
-    // Normaliza cualquier string de fecha a formato "DD/MM/YYYY"
     function normalizaFecha(fechaStr) {
       if (!fechaStr) return "";
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr; // Ya está bien
-      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) { // "YYYY-MM-DD"
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
         const [yyyy, mm, dd] = fechaStr.split('-');
         return `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}/${yyyy}`;
       }
-      // "D/M/YYYY" o "DD/M/YYYY" etc.
       const parts = fechaStr.split(/[\/\-]/);
       if (parts.length === 3) {
         let [a, b, c] = parts;
-        if (a.length === 4) { // YYYY/M/D
+        if (a.length === 4) {
           return `${c.padStart(2, '0')}/${b.padStart(2, '0')}/${a}`;
-        } else { // D/M/YYYY
+        } else {
           return `${a.padStart(2, '0')}/${b.padStart(2, '0')}/${c}`;
         }
       }
       return fechaStr;
     }
 
-    // ------ Render Tabla Principal ------
     async function cargarFacturacion() {
       const mes = mesSelect.value;
       const ano = anoSelect.value;
@@ -496,10 +485,9 @@
         const fecha = String(i+1).padStart(2, '0') + '/' + mes + '/' + ano;
         let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
         if (!fila) {
-          fila = { fecha, campos: Array(14).fill('') };
+          fila = { fecha, campos: Array(15).fill('') };
           datosFacturacion.push(fila);
         }
-        // Realizar cálculos automáticos aquí según las fórmulas
         recalcularFila(fila);
 
         const campos = fila.campos;
@@ -508,17 +496,14 @@
         tdFecha.textContent = fecha;
         tr.appendChild(tdFecha);
 
-        for (let c = 0; c < 14; c++) {
+        // Columnas editables: [1] ALEXIS, [2] VENTAS POR DIA (ALEXIS), [4] CUENTA ALTERNA, [5] VENTAS POR DIA (ALTERNA), [7] LINEAS, [8] VENTAS POR DIA (LINEAS), [13] PUNTOS
+        for (let c = 0; c < 15; c++) {
           const td = document.createElement('td');
-          // Solo ciertas columnas son editables, otras son automáticas
-          // Editables: 1,2,4,5,7,8,10,11,12,13 (según tus fórmulas previas)
-          // Automáticas (fórmula): 3,6,9,14
-          if ([0,2,4,5,7,8,10,11,12,13].includes(c)) {
+          if ([1,2,4,5,7,8,13].includes(c)) {
             td.contentEditable = true;
             td.textContent = campos[c] ?? '';
             td.addEventListener('blur', function() {
               guardarCelda(fecha, c, td.textContent);
-              renderTabla(); // Recalcula todo después de editar
             });
           } else {
             td.textContent = campos[c] ?? '';
@@ -531,41 +516,43 @@
       renderTotales();
     }
 
-    // ------ Fórmulas automáticas ------
-    // Columnas: 0 FECHA, 1 ALEXIS, 2 VENTAS POR DIA, 3 VALOR DE VENTA, 4 CUENTA ALTERNA, 5 VENTAS POR DIA, 6 VALOR DE VENTA, 7 LINEAS, 8 VENTAS POR DIA, 9 VALOR DE VENTA, 10 TOTAL DEL DIA, 11 TOTAL VENTAS, 12 VALOR VENTA, 13 PUNTOS, 14 CPA PUNTOS
+    // Fórmulas automáticas
     function recalcularFila(fila) {
       const f = fila.campos;
       // VALOR DE VENTA = VENTAS POR DIA * ALEXIS (col 3 = col 2 * col 1)
-      f[3] = (parseFloat(f[2]) || 0) * (parseFloat(f[1]) || 0);
-      f[6] = (parseFloat(f[5]) || 0) * (parseFloat(f[4]) || 0);
-      f[9] = (parseFloat(f[8]) || 0) * (parseFloat(f[7]) || 0);
+      f[3] = round((parseFloat(f[2]) || 0) * (parseFloat(f[1]) || 0));
+      f[6] = round((parseFloat(f[5]) || 0) * (parseFloat(f[4]) || 0));
+      f[9] = round((parseFloat(f[8]) || 0) * (parseFloat(f[7]) || 0));
       // TOTAL DEL DIA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 10 = 3 + 6 + 9)
-      f[10] = (parseFloat(f[3]) || 0) + (parseFloat(f[6]) || 0) + (parseFloat(f[9]) || 0);
+      f[10] = round((parseFloat(f[3]) || 0) + (parseFloat(f[6]) || 0) + (parseFloat(f[9]) || 0));
       // TOTAL VENTAS = VENTAS POR DIA ALEXIS + VENTAS POR DIA ALTERNA + VENTAS POR DIA LINEAS (col 11 = 2 + 5 + 8)
-      f[11] = (parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0);
+      f[11] = round((parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0));
       // VALOR VENTA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 12 = 3 + 6 + 9)
       f[12] = f[10];
       // CPA PUNTOS = PUNTOS / TOTAL VENTAS (col 14 = col 13 / col 11)
-      f[14] = (parseFloat(f[11]) || 0) ? ((parseFloat(f[13]) || 0) / parseFloat(f[11])).toFixed(2) : '';
+      f[14] = (parseFloat(f[11]) || 0) ? round((parseFloat(f[13]) || 0) / parseFloat(f[11]),2) : '';
+    }
+    function round(num, dec=0) {
+      return Number(num).toFixed(dec);
     }
 
     function renderTotales() {
-      const totales = Array(14).fill(0);
+      const totales = Array(15).fill(0);
       datosFacturacion.forEach(fila => {
         if (Array.isArray(fila.campos)) {
-          for (let c = 1; c < 14; c++) {
+          for (let c = 1; c < 15; c++) {
             totales[c] += Number(fila.campos[c]) || 0;
           }
         }
       });
       // Fórmula totales para columnas automáticas
-      totales[3] = totales[2] * totales[1];
-      totales[6] = totales[5] * totales[4];
-      totales[9] = totales[8] * totales[7];
-      totales[10] = totales[3] + totales[6] + totales[9];
-      totales[11] = totales[2] + totales[5] + totales[8];
-      totales[12] = totales[3] + totales[6] + totales[9];
-      totales[14] = totales[11] ? (totales[13] / totales[11]).toFixed(2) : '';
+      totales[3] = round(totales[2] * totales[1]);
+      totales[6] = round(totales[5] * totales[4]);
+      totales[9] = round(totales[8] * totales[7]);
+      totales[10] = round(Number(totales[3]) + Number(totales[6]) + Number(totales[9]));
+      totales[11] = round(Number(totales[2]) + Number(totales[5]) + Number(totales[8]));
+      totales[12] = totales[10];
+      totales[14] = totales[11] ? round(totales[13] / totales[11],2) : '';
 
       const filaTotales = document.getElementById('fila-totales');
       filaTotales.innerHTML = '<td>TOTALES</td>' +
@@ -575,12 +562,13 @@
     function guardarCelda(fecha, col, valor) {
       let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
       if (!fila) {
-        fila = { fecha, campos: Array(14).fill('') };
+        fila = { fecha, campos: Array(15).fill('') };
         datosFacturacion.push(fila);
       }
-      fila.campos = fila.campos || Array(14).fill('');
+      fila.campos = fila.campos || Array(15).fill('');
       fila.campos[col] = valor;
-      recalcularFila(fila); // Recalcula fórmulas en fila
+      recalcularFila(fila);
+      renderTabla();
     }
 
     // ------ Paginación ------
@@ -603,9 +591,7 @@
     // ------ Modal Tabla Expandida ------
     document.getElementById('expandir-tabla').onclick = function() {
       const modalBg = document.getElementById('modal-bg');
-      const modalContent = document.getElementById('modal-content');
       const tablaModal = document.getElementById('tabla-facturacion-modal');
-      // Copiar la tabla original
       const tabla = document.getElementById('tabla-facturacion');
       tablaModal.innerHTML = tabla.innerHTML;
       modalBg.classList.add('active');
@@ -622,12 +608,11 @@
     // ------ Gráfico de gastos (dummy data si no hay endpoint real) ------
     let chartGastos = null;
     function renderGastos() {
-      // Supón que los gastos están en la columna 10 (TOTAL DEL DIA) de cada fila
       const labels = [];
       const data = [];
       datosFacturacion.forEach(fila => {
         if (fila.fecha && Array.isArray(fila.campos)) {
-          labels.push(fila.fecha.substring(0,5)); // solo DD/MM
+          labels.push(fila.fecha.substring(0,5));
           data.push(Number(fila.campos[10]) || 0);
         }
       });
@@ -650,17 +635,12 @@
       });
     }
 
-    // ------ Guardar datos (simulación) ------
     document.getElementById('guardar-gastos').onclick = () => {
-      // Aquí podrías enviar datosFacturacion al backend con fetch
       alert('Datos guardados correctamente (simulación)');
     };
 
-    // ------ Event Listeners ------
     mesSelect.addEventListener('change', cargarFacturacion);
     anoSelect.addEventListener('change', cargarFacturacion);
-
-    // ------ Inicial ------
     window.addEventListener('DOMContentLoaded', cargarFacturacion);
   </script>
 </body>
