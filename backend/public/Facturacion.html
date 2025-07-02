@@ -4,904 +4,258 @@
   <meta charset="UTF-8">
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tipografía moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
-    :root {
-      --azul-oscuro: #1e293b;
-      --azul-acento: #28b5e8;
-      --sidebar-accent: #22b3ec;
-      --gris-bg: #f5f7fa;
-      --gris-borde: #e3e8ee;
-      --gris-titulo: #edf3fa;
-      --azul-celda: #f1f5fa;
-      --radius: 15px;
-      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
-      --trans: 0.18s;
-      --modal-bg: rgba(30,41,59,0.22);
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      min-height: 100vh;
-      background: var(--gris-bg);
-      font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif;
-      color: var(--azul-oscuro);
-    }
-    .layout {
-      display: flex;
-      min-height: 100vh;
-      width: 100vw;
-      background: var(--gris-bg);
-    }
-    /* --- SIDEBAR --- */
-    .sidebar {
-      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
-      width: 180px;
-      min-width: 180px;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 24px;
-      height: 100vh;
-      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
-      font-weight: 700;
-    }
-    .sidebar-logo {
-      width: 58px;
-      height: 58px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
-    }
-    .sidebar-logo img {
-      width: 48px;
-      height: 48px;
-      display: block;
-    }
-    .sidebar-title {
-      color: var(--sidebar-accent);
-      font-size: 1.15em;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 24px;
-      letter-spacing: .5px;
-    }
-    .sidebar-nav {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 13px;
-      margin-bottom: 18px;
-    }
-    .sidebar-nav button {
-      width: 95%;
-      margin: 0 auto;
-      padding: 12px 0;
-      background: none;
-      border: none;
-      color: #222;
-      font-size: 1em;
-      font-weight: 700;
-      border-radius: 16px;
-      text-align: left;
-      padding-left: 18px;
-      transition: background 0.15s, color 0.15s;
-      letter-spacing: 0.02em;
-    }
-    .sidebar-nav button.active, .sidebar-nav button:hover {
-      background: var(--sidebar-accent);
-      color: #222;
-    }
-    .sidebar-lema {
-      color: var(--sidebar-accent);
-      font-style: italic;
-      font-size: 0.99em;
-      opacity: 0.6;
-      margin-top: auto;
-      padding: 12px 10px 18px 10px;
-      text-align: center;
-      font-weight: 600;
-    }
-    /* MAIN CONTENT */
-    .main-content {
-      flex: 1;
-      padding: 40px 50px;
-      background: var(--gris-bg);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    /* --- FILTROS Y TITULO --- */
-    .header-reportes {
-      background: #fff;
-      width: 100%;
-      padding: 30px 0 10px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      border-bottom: 1.5px solid var(--gris-borde);
-      box-shadow: 0 4px 12px 0 rgba(40,181,232,0.07);
-      margin-bottom: 0;
-    }
-    .filtros-reportes {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 1.09em;
-      margin-left: 34px;
-      margin-bottom: 2px;
-    }
-    .filtros-reportes label {
-      font-weight: 600;
-      color: var(--azul-oscuro);
-      margin-right: 3px;
-    }
-    .filtros-reportes select {
-      padding: 4.5px 14px;
-      font-size: 1em;
-      border-radius: 7px;
-      border: 1.2px solid var(--gris-borde);
-      background: #fafcfd;
-      color: var(--azul-oscuro);
-      font-family: inherit;
-      transition: border var(--trans);
-      font-weight: 500;
-      box-shadow: 0 1px 3px 0 rgba(40,181,232,0.03);
-    }
-    .filtros-reportes select:focus {
-      outline: none;
-      border-color: var(--azul-acento);
-    }
-    .titulo-reportes {
-      text-align: center;
-      margin: 0 0 8px 0;
-      font-weight: 700;
-      font-size: 2.0em;
-      color: var(--azul-oscuro);
-      letter-spacing: .5px;
-      font-family: inherit;
-      text-shadow: 0 2px 8px rgba(40,181,232,.09);
-    }
-    /* --- BOTON EXPANDIR TABLA --- */
-    .tabla-expand-btn {
-      margin: 10px 32px 0 32px;
-      text-align: right;
-    }
-    #btnExpandirTabla {
-      background: #22b3ec;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 7px 22px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.18s;
-      box-shadow: 0 2px 8px #22b3ec22;
-    }
-    #btnExpandirTabla:hover {
-      background: #18a0d6;
-    }
-    /* --- MODAL FULL TABLE --- */
-    .modal-bg {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: var(--modal-bg);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-bg.active {
-      display: flex;
-    }
-    .modal-content {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 8px 40px #0016;
-      padding: 24px 16px 18px 16px;
-      max-width: 95vw;
-      max-height: 90vh;
-      overflow: auto;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      min-width: 400px;
-    }
-    .modal-close-btn {
-      position: absolute;
-      top: 15px; right: 22px;
-      background: #f74747;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      font-size: 1.2em;
-      font-weight: bold;
-      padding: 2px 13px 4px 13px;
-      cursor: pointer;
-      z-index: 10;
-      box-shadow: 0 1px 4px #0003;
-      transition: background 0.17s;
-    }
-    .modal-close-btn:hover {
-      background: #ca2222;
-    }
-    .modal-title {
-      font-size: 1.45em;
-      font-weight: 700;
-      color: var(--azul-oscuro);
-      margin: 0 0 18px 0;
-      text-align: center;
-    }
-    .modal-table-container {
-      overflow-y: auto;
-      max-height: 65vh;
-      min-width: 100%;
-    }
-    /* --- TABLA --- */
-    .tabla-excel-editable {
-      background: #fff;
-      border-radius: var(--radius);
-      box-shadow: var(--sombra);
-      margin: 18px 28px 0 28px;
-      width: calc(100% - 56px);
-      border: none;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      height: 490px; /* Para mostrar solo el bloque de 16 días */
-      overflow-y: auto;
-      transition: box-shadow var(--trans);
-    }
-    table {
-      border-collapse: separate;
-      border-spacing: 0;
-      width: 100%;
-      background: #fff;
-      color: var(--azul-oscuro);
-      font-size: 1em;
-      table-layout: fixed;
-      border: none;
-    }
-    th, td {
-      border: 1.5px solid var(--gris-borde);
-      text-align: center;
-      min-width: 70px;
-      max-width: 120px;
-      height: 32px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: inherit;
-      background: #fff;
-      font-size: .99em;
-      font-weight: 400;
-      padding: 0;
-      white-space: nowrap;
-      transition: background var(--trans);
-    }
-    th {
-      background: var(--gris-titulo);
-      font-weight: 700;
-      font-size: 0.97em;
-      height: 38px;
-      white-space: pre-line;
-      line-height: 1.12;
-      color: #111 !important; /* BLACK header */
-      border-bottom: 2.5px solid var(--azul-acento);
-      position: sticky;
-      top: 0;
-      z-index: 3;
-      box-shadow: 0 2px 6px rgba(40,181,232,.03);
-    }
-    tr:nth-child(even) td {
-      background: var(--azul-celda);
-    }
-    tr:hover td {
-      background: #d9f7fb;
-      transition: background var(--trans);
-    }
-    td[contenteditable="true"] {
-      background: #fff;
-      cursor: pointer;
-      transition: background var(--trans);
-    }
-    td:focus {
-      outline: 2px solid var(--azul-acento);
-    }
-    th {
-      padding: 2px 1px;
-      font-size: 0.98em;
-      white-space: pre-line;
-    }
-    /* --- SECCIONES CON BORDE NEGRO --- */
-    .tabla-excel-editable td:nth-child(2),
-    .tabla-excel-editable th:nth-child(2),
-    .tabla-excel-editable td:nth-child(5),
-    .tabla-excel-editable th:nth-child(5),
-    .tabla-excel-editable td:nth-child(8),
-    .tabla-excel-editable th:nth-child(8) {
-        border-left: 2px solid #000;
-    }
-
-    .tabla-excel-editable td:nth-child(4),
-    .tabla-excel-editable th:nth-child(4),
-    .tabla-excel-editable td:nth-child(7),
-    .tabla-excel-editable th:nth-child(7),
-    .tabla-excel-editable td:nth-child(10),
-    .tabla-excel-editable th:nth-child(10) {
-        border-right: 2px solid #000;
-    }
-    /* --- PAGINACION TABLA --- */
-    .tabla-paginacion {
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin: 10px 40px 0 0;
-    }
-    .tabla-paginacion button {
-      padding: 5px 17px;
-      border-radius: 10px;
-      background: var(--azul-acento);
-      color: #fff;
-      border: none;
-      font-weight: 600;
-      font-size: 1.07em;
-      cursor: pointer;
-      transition: background var(--trans), box-shadow var(--trans);
-      box-shadow: 0 1px 4px rgba(40,181,232,.08);
-    }
-    .tabla-paginacion button:active {
-      background: #209dd5;
-    }
-    .tabla-paginacion button:disabled {
-      background: #b7e8f5;
-      color: #eee;
-      cursor: default;
-    }
-    /* Fila de totales */
-    .fila-totales td {
-      font-weight: bold;
-      background: #e6f6fa !important;
-      border-top: 2px solid #28b5e8;
-      color: #1e293b;
-    }
-    /* --- GRAFICA --- */
-    .grafica-reporte {
-      background: #fff;
-      border-radius: var(--radius);
-      box-shadow: var(--sombra);
-      margin: 18px 28px;
-      width: calc(100% - 56px);
-      padding: 26px 0 18px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: flex-start;
-    }
-    .grafica-scroll-x {
-      width: 100%;
-      min-width: 300px;
-      max-width: 100%;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
-    .grafica-reporte h3 {
-      color: var(--azul-oscuro);
-      font-size: 1.15em;
-      margin-bottom: 10px;
-      text-align: left;
-      width: 100%;
-      font-weight: 700;
-      letter-spacing: .3px;
-      padding-left: 18px;
-    }
-    .facturacion-toolbar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin: 18px 30px 0 0;
-      gap: 16px;
-    }
-    #btnGuardarFacturacion {
-      background: #22b3ec;
-      color: #fff;
-      padding: 9px 35px;
-      font-size: 1.1em;
-      border-radius: 7px;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 8px rgba(30,41,59,0.10);
-      font-weight: bold;
-      letter-spacing: 0.03em;
-      transition: background 0.18s;
-    }
-    #btnGuardarFacturacion:hover {
-      background: #1ea1d8;
-    }
-    @media (max-width: 1300px) {
-      .tabla-excel-editable, .grafica-reporte { width: 99vw; min-width: 0; margin-left:0; margin-right:0; }
-      th, td { min-width: 54px; font-size: 0.9em;}
-      .tabla-paginacion {margin-right:10px;}
-    }
-    @media (max-width: 900px) {
-      .sidebar { min-width: 80px; width: 80px; }
-      .sidebar-title, .sidebar-lema, .sidebar-nav button { display: none; }
-      .tabla-excel-editable, .grafica-reporte { margin-left:0; margin-right:0; width:99vw;}
-      .header-reportes, .titulo-reportes { font-size:1.1em;}
-      .tabla-expand-btn {margin-left:0;margin-right:0;}
-    }
+    body { margin: 0; font-family: 'Inter', Arial, sans-serif; background: #f5f7fa; color: #1e293b; }
+    .sidebar { position: fixed; left: 0; top: 0; width: 200px; height: 100vh; background: #f4f7fb; display: flex; flex-direction: column; padding: 0 0 20px 0; z-index: 10; }
+    .sidebar .logo { font-weight: bold; color: #22b3ec; font-size: 1.3rem; text-align: center; padding: 24px 0 16px 0; letter-spacing: 1px; }
+    .sidebar nav ul { list-style: none; padding: 0 0 0 0; margin: 0; }
+    .sidebar nav ul li { margin: 0; padding: 0; }
+    .sidebar nav ul li a { display: block; padding: 12px 22px; color: #1e293b; text-decoration: none; font-weight: 600; border-left: 4px solid transparent; transition: background 0.1s, border-left 0.15s; }
+    .sidebar nav ul li a.active, .sidebar nav ul li a:hover { background: #e3e8ee; border-left: 4px solid #22b3ec; color: #0073a8; }
+    .main-content { margin-left: 200px; padding: 30px 40px; min-height: 100vh; background: #f5f7fa; }
+    .top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: #fff; padding: 16px 24px 12px 18px; border-radius: 13px; box-shadow: 0 2px 10px #0001; }
+    .top-bar label { font-weight: 600; font-size: 1.07em; }
+    .top-bar select { padding: 4px 14px; font-size: 1em; border-radius: 6px; border: 1.2px solid #e3e8ee; background: #fafcfd; color: #1e293b; font-family: inherit; font-weight: 500; box-shadow: 0 1px 3px 0 #28b5e803; }
+    h1 { text-align: center; margin: 8px 0 20px 0; font-size: 2.0em; font-weight: 700; color: #21304c; letter-spacing: .3px; }
+    .tabla-facturacion-container { background: #fff; border-radius: 15px; box-shadow: 0 4px 24px 0 rgba(30,41,59,0.09); padding: 16px 0 0 0; margin-bottom: 24px; }
+    #tabla-facturacion { border-collapse: separate; border-spacing: 0; width: 100%; background: #fff; color: #1e293b; font-size: 1em; table-layout: fixed; border: none; }
+    #tabla-facturacion th, #tabla-facturacion td { border: 1px solid #e3e8ee; text-align: center; min-width: 80px; max-width: 150px; height: 32px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; font-size: .99em; font-weight: 400; background: #fff; }
+    #tabla-facturacion th { background: #edf3fa; font-weight: 700; font-size: 0.97em; height: 36px; color: #111; }
+    #tabla-facturacion td { background: #fff; }
+    #tabla-facturacion tr:nth-child(even) td { background: #f1f5fa; }
+    #tabla-facturacion tr:hover td { background: #d9f7fb; }
+    #tabla-facturacion th:nth-child(2), #tabla-facturacion td:nth-child(2),
+    #tabla-facturacion th:nth-child(5), #tabla-facturacion td:nth-child(5),
+    #tabla-facturacion th:nth-child(8), #tabla-facturacion td:nth-child(8) { border-left: 2px solid #000; }
+    #tabla-facturacion th:nth-child(4), #tabla-facturacion td:nth-child(4),
+    #tabla-facturacion th:nth-child(7), #tabla-facturacion td:nth-child(7),
+    #tabla-facturacion th:nth-child(10), #tabla-facturacion td:nth-child(10) { border-right: 2px solid #000; }
+    #expandir-tabla { float: right; margin: 10px 30px 10px 0; background: #22b3ec; color: #fff; border: none; border-radius: 6px; padding: 7px 18px; font-size: 1em; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px #22b3ec22; transition: background 0.15s; }
+    #expandir-tabla:hover { background: #18a0d6; }
+    .tabla-paginacion { width: 100%; display: flex; justify-content: flex-end; gap: 10px; margin: 10px 40px 0 0; }
+    .tabla-paginacion button { padding: 5px 17px; border-radius: 10px; background: #28b5e8; color: #fff; border: none; font-weight: 600; font-size: 1.07em; cursor: pointer; box-shadow: 0 1px 4px #28b5e813; transition: background 0.18s; }
+    .tabla-paginacion button:disabled { background: #b7e8f5; color: #eee; cursor: default; }
+    .gastos-mes-container { background: #fff; border-radius: 15px; box-shadow: 0 4px 24px 0 rgba(30,41,59,0.09); margin-top: 28px; padding: 18px 24px 32px 24px; min-height: 160px; position: relative; }
+    .gastos-mes-container h2 { margin: 0 0 16px 0; font-size: 1.09em; font-weight: bold; color: #1e293b; letter-spacing: .2px; }
+    #gastos-mes { min-height: 72px; }
+    #guardar-gastos { position: absolute; bottom: 18px; right: 28px; background: #6dc3e1; color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 1em; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px #22b3ec22; transition: background 0.15s; }
+    #guardar-gastos:hover { background: #22b3ec; }
+    @media (max-width:900px) { .main-content { margin-left: 0; padding: 10px 5px; } .sidebar { display:none; } }
   </style>
 </head>
 <body>
-<div class="layout">
-  <nav class="sidebar">
-    <div class="sidebar-logo">
-     <img src="logo connecting.png" alt="Logo Connecting" />
+  <div class="sidebar">
+    <div class="logo">Connecting</div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="lead.html">Lead</a></li>
+        <li><a href="costumer.html">Costumer</a></li>
+        <li><a href="Facturacion.html" class="active">Facturación</a></li>
+        <li><a href="logout">Cerrar sesión</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="main-content">
+    <div class="top-bar">
+      <label for="mes">Mes:</label>
+      <select id="mes"></select>
+      <label for="ano">Año:</label>
+      <select id="ano"></select>
     </div>
-    <div class="sidebar-title">Connecting</div>
-    <div class="sidebar-nav">
-      <button onclick="location.href='inicio.html'">Inicio</button>
-      <button onclick="location.href='lead.html'">Lead</button>
-      <button onclick="location.href='costumer.html'">Costumer</button>
-      <button class="active" onclick="location.href='Facturacion.html'">Facturación</button>
-      <button onclick="logout()">Cerrar sesión</button>
-    </div>
-    <div class="sidebar-lema">
-      "Conectando tu éxito, un cliente a la vez"
-    </div>
-  </nav>
-  <main class="main-content">
-    <div class="central-container">
-      <div class="header-reportes">
-        <div class="filtros-reportes">
-          <label for="filtroMes">Mes:</label>
-          <select id="filtroMes">
-            <option value="1">Enero</option>
-            <option value="2">Febrero</option>
-            <option value="3">Marzo</option>
-            <option value="4">Abril</option>
-            <option value="5">Mayo</option>
-            <option value="6">Junio</option>
-            <option value="7">Julio</option>
-            <option value="8">Agosto</option>
-            <option value="9">Septiembre</option>
-            <option value="10">Octubre</option>
-            <option value="11">Noviembre</option>
-            <option value="12">Diciembre</option>
-          </select>
-          <label for="filtroAno">Año:</label>
-          <select id="filtroAno"></select>
-        </div>
-        <div class="titulo-reportes">Facturación</div>
-      </div>
-      <div class="tabla-expand-btn">
-        <button id="btnExpandirTabla" onclick="abrirModalTabla()">Expandir tabla</button>
-      </div>
-      <div class="tabla-excel-editable">
-        <table id="tablaExcel">
-          <thead>
-            <tr>
-              <th>FECHA</th>
-              <th>ALEXIS</th>
-              <th>VENTAS<br>POR DIA</th>
-              <th>VALOR<br>DE VENTA</th>
-              <th>CUENTA ALTERNA</th>
-              <th>VENTAS<br>POR DIA</th>
-              <th>VALOR<br>DE VENTA</th>
-              <th>LINEAS</th>
-              <th>VENTAS<br>POR DIA</th>
-              <th>VALOR<br>DE VENTA</th>
-              <th>TOTAL<br>DEL DIA</th>
-              <th>TOTAL<br>VENTAS</th>
-              <th>VALOR<br>VENTA</th>
-              <th>PUNTOS</th>
-              <th>CPA<br>PUNTOS</th>
-            </tr>
-          </thead>
-          <tbody id="excelBody"></tbody>
-          <tr class="fila-totales" id="filaTotalesFacturacion" style="position:sticky;bottom:0;z-index:2;">
-            <td>TOTALES</td>
-            <td id="total-col-1"></td>
-            <td id="total-col-2"></td>
-            <td id="total-col-3"></td>
-            <td id="total-col-4"></td>
-            <td id="total-col-5"></td>
-            <td id="total-col-6"></td>
-            <td id="total-col-7"></td>
-            <td id="total-col-8"></td>
-            <td id="total-col-9"></td>
-            <td id="total-col-10"></td>
-            <td id="total-col-11"></td>
-            <td id="total-col-12"></td>
-            <td id="total-col-13"></td>
-            <td id="total-col-14"></td>
+    <h1>Facturación</h1>
+    <div class="tabla-facturacion-container">
+      <table id="tabla-facturacion">
+        <thead>
+          <tr>
+            <th>FECHA</th>
+            <th>ALEXIS</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>CUENTA ALTERNA</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>LINEAS</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>TOTAL DEL DIA</th>
+            <th>TOTAL VENTAS</th>
+            <th>VALOR VENTA</th>
+            <th>PUNTOS</th>
+            <th>CPA PUNTOS</th>
           </tr>
-        </table>
-      </div>
-      <div class="tabla-paginacion">
-        <button onclick="prevBlock()" id="btnUp">&#8593; Arriba</button>
-        <button onclick="nextBlock()" id="btnDown">Abajo &#8595;</button>
-      </div>
-      <div class="grafica-reporte">
-        <h3>Total de gastos por mes</h3>
-        <div class="grafica-scroll-x">
-          <canvas id="graficaGastosMes" width="1200" height="260"></canvas>
-        </div>
-        <!-- BOTÓN GUARDAR (INTEGRADO) -->
-        <div class="facturacion-toolbar">
-          <button id="btnGuardarFacturacion">Guardar</button>
-        </div>
-      </div>
-      <div class="modal-bg" id="modalTablaCompleta">
-        <div class="modal-content">
-          <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
-          <div class="modal-title">Tabla completa de facturación del mes</div>
-          <div class="modal-table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>FECHA</th>
-                  <th>ALEXIS</th>
-                  <th>VENTAS<br>POR DIA</th>
-                  <th>VALOR<br>DE VENTA</th>
-                  <th>CUENTA ALTERNA</th>
-                  <th>VENTAS<br>POR DIA</th>
-                  <th>VALOR<br>DE VENTA</th>
-                  <th>LINEAS</th>
-                  <th>VENTAS<br>POR DIA</th>
-                  <th>VALOR<br>DE VENTA</th>
-                  <th>TOTAL<br>DEL DIA</th>
-                  <th>TOTAL<br>VENTAS</th>
-                  <th>VALOR<br>VENTA</th>
-                  <th>PUNTOS</th>
-                  <th>CPA<br>PUNTOS</th>
-                </tr>
-              </thead>
-              <tbody id="modalTablaBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- FIN MODAL -->
+        </thead>
+        <tbody id="facturacion-body"></tbody>
+        <tr id="fila-totales">
+          <td>TOTALES</td>
+          <td colspan="14"></td>
+        </tr>
+      </table>
+      <button id="expandir-tabla">Expandir tabla</button>
     </div>
-  </main>
-</div>
-<script>
-function logout() {
-  fetch('/logout').then(() => location.href = 'login.html');
-}
-const filtroMes = document.getElementById("filtroMes");
-const filtroAno = document.getElementById("filtroAno");
-const excelBody = document.getElementById("excelBody");
-const btnUp = document.getElementById('btnUp');
-const btnDown = document.getElementById('btnDown');
-const btnGuardar = document.getElementById('btnGuardarFacturacion');
-
-// Llenar select de años
-(function(){
-  const yearNow = (new Date()).getFullYear();
-  let anos = '';
-  for (let y = yearNow - 2; y <= yearNow + 1; y++) {
-    anos += `<option value="${y}">${y}</option>`;
-  }
-  filtroAno.innerHTML = anos;
-  filtroMes.value = (new Date()).getMonth() + 1;
-  filtroAno.value = yearNow;
-})();
-
-function daysInMonth(year, month) {
-  return new Date(year, month, 0).getDate();
-}
-
-let currentBlock = 0;
-let currentMonth = parseInt(filtroMes.value, 10);
-let currentYear = parseInt(filtroAno.value, 10);
-let datosFacturacionMes = []; // [{fecha, campos}]
-let datosFacturacionAnio = []; // [{fecha, campos}]
-
-// Cargar todos los datos del año para la gráfica
-async function cargarFacturacionAnio(ano) {
-  try {
-    const resp = await fetch(`/api/facturacion/anual/${ano}`);
-    const { ok, data } = await resp.json();
-    if (ok && Array.isArray(data)) datosFacturacionAnio = data;
-    else datosFacturacionAnio = [];
-  } catch (e) {
-    datosFacturacionAnio = [];
-  }
-}
-
-async function cargarFacturacionMes(ano, mes) {
-  const resp = await fetch(`/api/facturacion/${ano}/${String(mes).padStart(2,'0')}`);
-  const { ok, data } = await resp.json();
-  if (ok && Array.isArray(data)) {
-    datosFacturacionMes = data;
-  } else {
-    datosFacturacionMes = [];
-  }
-}
-
-function buscarCamposPorFecha(fecha) {
-  const fila = datosFacturacionMes.find(f => f.fecha === fecha);
-  return fila ? fila.campos : Array(14).fill("");
-}
-
-async function renderTablaDias(mes, ano, block=0) {
-  await cargarFacturacionMes(ano, mes);
-
-  excelBody.innerHTML = "";
-  const numDias = daysInMonth(ano, mes);
-  const start = block * 16;
-  const end = Math.min(start + 16, numDias);
-  for (let i = start; i < end; i++) {
-    const tr = document.createElement("tr");
-    const fecha = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
-    const campos = buscarCamposPorFecha(fecha);
-    for (let c = 0; c < 15; c++) {
-      const td = document.createElement("td");
-      if (c === 0) {
-        td.textContent = fecha;
-        td.contentEditable = false;
-      } else {
-        td.contentEditable = true;
-        td.textContent = campos[c-1] ?? "";
-      }
-      tr.appendChild(td);
-    }
-    excelBody.appendChild(tr);
-  }
-  btnUp.disabled = (block === 0);
-  btnDown.disabled = ((block + 1) * 16 >= numDias);
-  renderFilaTotalesFacturacion();
-  await actualizarGrafica();
-}
-
-async function updateTableByFilters() {
-  currentBlock = 0;
-  currentMonth = parseInt(filtroMes.value, 10);
-  currentYear = parseInt(filtroAno.value, 10);
-  await cargarFacturacionAnio(currentYear); // Siempre cargar el año para la gráfica
-  await renderTablaDias(currentMonth, currentYear, currentBlock);
-}
-filtroMes.addEventListener('change', async () => {
-  await updateTableByFilters();
-});
-filtroAno.addEventListener('change', async () => {
-  await updateTableByFilters();
-});
-async function nextBlock() {
-  const numDias = daysInMonth(currentYear, currentMonth);
-  if ((currentBlock + 1) * 16 < numDias) {
-    currentBlock++;
-    await renderTablaDias(currentMonth, currentYear, currentBlock);
-  }
-}
-async function prevBlock() {
-  if (currentBlock > 0) {
-    currentBlock--;
-    await renderTablaDias(currentMonth, currentYear, currentBlock);
-  }
-}
-window.addEventListener('DOMContentLoaded', async () => {
-  await cargarFacturacionAnio(currentYear);
-  await renderTablaDias(currentMonth, currentYear, currentBlock);
-  await actualizarGrafica();
-});
-
-/* --- GRAFICA Chart.js --- */
-let grafica;
-async function actualizarGrafica() {
-  // 1. Sumar por mes todos los datos del año (incluyendo cambios no guardados del mes visible)
-  const totalesPorMes = Array(12).fill(0);
-
-  // Sumar datos del backend del año entero
-  datosFacturacionAnio.forEach(fila => {
-    if (!fila.fecha || !fila.campos) return;
-    const partes = fila.fecha.split('/');
-    if (partes.length !== 3) return;
-    const mes = parseInt(partes[1], 10);
-    const totalDia = parseFloat(fila.campos[9]) || 0;
-    if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
-  });
-
-  // Sumar datos visibles (no guardados) del mes actual
-  const filasDOM = document.querySelectorAll('#excelBody tr');
-  let sumaMesActual = 0;
-  filasDOM.forEach(tr => {
-    const fecha = tr.children[0].textContent;
-    const partes = fecha.split('/');
-    if (partes.length !== 3) return;
-    const mesIdx = parseInt(partes[1], 10) - 1;
-    if (mesIdx === currentMonth - 1) {
-      const totalDia = parseFloat(tr.children[10].textContent) || 0;
-      sumaMesActual += totalDia;
-    }
-  });
-  totalesPorMes[currentMonth - 1] = sumaMesActual;
-
-  if (grafica) grafica.destroy();
-  const ctx = document.getElementById('graficaGastosMes').getContext('2d');
-  grafica = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-      ],
-      datasets: [{
-        label: "",
-        data: totalesPorMes,
-        backgroundColor: "rgba(40,181,232,0.70)",
-        borderColor: "#1e293b",
-        borderWidth: 2,
-        borderRadius: 8,
-        datalabels: {
-          anchor: 'end',
-          align: 'start',
-          color: '#23485d',
-          font: { weight: 'bold', size: 16 },
-          formatter: v => v === 0 ? "" : "$" + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        }
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        title: { display: false },
-        datalabels: { display: true }
-      },
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 20 } },
-      scales: {
-        x: {
-          grid: { display: false, drawBorder: false },
-          ticks: { display: true, color: "#204052", font: { weight: "bold", size: 15 } }
-        },
-        y: {
-          grid: { display: false, drawBorder: false },
-          ticks: { display: false }
-        }
-      }
-    },
-    plugins: [window.ChartDataLabels || {}]
-  });
-}
-
-// ----------- FÓRMULAS Y TOTALES -----------
-
-function limpiarNumero(texto) {
-  if (typeof texto !== "string") texto = String(texto);
-  return Number(texto.replace(/[^0-9.\-]/g, "")) || 0;
-}
-
-function recalcularFila(tr) {
-  const tds = Array.from(tr.children);
-
-  // Alexis
-  let alexis = limpiarNumero(tds[1].textContent);
-  let ventasAlexis = limpiarNumero(tds[2].textContent);
-  tds[3].textContent = ventasAlexis > 0 ? (alexis / ventasAlexis).toFixed(2) : "";
-
-  // Cuenta Alterna
-  let cuentaAlterna = limpiarNumero(tds[4].textContent);
-  let ventasCA = limpiarNumero(tds[5].textContent);
-  tds[6].textContent = ventasCA > 0 ? (cuentaAlterna / ventasCA).toFixed(2) : "";
-
-  // Lineas
-  let lineas = limpiarNumero(tds[7].textContent);
-  let ventasLineas = limpiarNumero(tds[8].textContent);
-  tds[9].textContent = ventasLineas > 0 ? (lineas / ventasLineas).toFixed(2) : "";
-
-  // TOTAL DEL DIA = alexis + cuentaAlterna + lineas
-  let totalDia = alexis + cuentaAlterna + lineas;
-  tds[10].textContent = totalDia.toFixed(2);
-}
-
-excelBody.addEventListener('input', function(e) {
-  const td = e.target;
-  const tr = td.parentElement;
-  if (td.cellIndex !== 0) {
-    recalcularFila(tr);
-    renderFilaTotalesFacturacion();
-    actualizarGrafica(); // <-- ACTUALIZA LA GRAFICA EN TIEMPO REAL AL EDITAR
-  }
-});
-
-function renderFilaTotalesFacturacion() {
-  const numCols = 15;
-  const totales = Array(numCols).fill(0);
-  const filas = Array.from(excelBody.querySelectorAll('tr'));
-  filas.forEach(tr => {
-    Array.from(tr.children).forEach((td, i) => {
-      if (i === 0) return;
-      const val = limpiarNumero(td.textContent) || 0;
-      totales[i] += val;
+    <div class="tabla-paginacion">
+      <button onclick="subirTabla()" id="btnUp">&#8593; Arriba</button>
+      <button onclick="bajarTabla()" id="btnDown">Abajo &#8595;</button>
+    </div>
+    <div class="gastos-mes-container">
+      <h2>Total de gastos por mes</h2>
+      <div id="gastos-mes"></div>
+      <button id="guardar-gastos">Guardar</button>
+    </div>
+  </div>
+  <script>
+    // ------ Selects de Mes y Año ------
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const mesSelect = document.getElementById('mes');
+    const anoSelect = document.getElementById('ano');
+    const hoy = new Date();
+    meses.forEach((m, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx + 1).padStart(2, '0');
+      opt.textContent = m;
+      if (idx === hoy.getMonth()) opt.selected = true;
+      mesSelect.appendChild(opt);
     });
-  });
-  for (let i = 1; i < numCols; i++) {
-    const el = document.getElementById('total-col-' + i);
-    if (el) el.textContent = totales[i].toFixed(2);
-  }
-}
-
-// ------------------ GUARDAR TODO -------------------
-document.getElementById('btnGuardarFacturacion').addEventListener('click', guardarTodoFacturacion);
-
-async function guardarTodoFacturacion() {
-  const filas = Array.from(document.querySelectorAll('#excelBody tr'));
-  let guardados = 0, errores = 0;
-  for (const tr of filas) {
-    recalcularFila(tr);
-    const tds = Array.from(tr.children);
-    const fecha = tds[0].textContent.trim();
-    const campos = tds.slice(1).map(td => td.textContent.trim());
-    if (campos.some(val => val !== "")) {
-      const res = await fetch('/api/facturacion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fecha, campos })
-      });
-      const data = await res.json();
-      if (data.ok) guardados++;
-      else errores++;
+    for (let y = hoy.getFullYear(); y >= 2022; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === hoy.getFullYear()) opt.selected = true;
+      anoSelect.appendChild(opt);
     }
-  }
-  await cargarFacturacionAnio(currentYear); // Refresca el año completo para gráfica
-  await renderTablaDias(currentMonth, currentYear, currentBlock);
-  await actualizarGrafica(); // <-- ACTUALIZA GRAFICA AL GUARDAR
-  renderFilaTotalesFacturacion();
-  alert(`Guardados: ${guardados}. Errores: ${errores}`);
-}
 
-// --- MODAL LÓGICA ---
-async function abrirModalTabla() {
-  await renderTablaCompleta(currentMonth, currentYear);
-  document.getElementById('modalTablaCompleta').classList.add('active');
-  document.body.style.overflow = "hidden";
-}
-function cerrarModalTabla() {
-  document.getElementById('modalTablaCompleta').classList.remove('active');
-  document.body.style.overflow = "";
-}
-async function renderTablaCompleta(mes, ano) {
-  await cargarFacturacionMes(ano, mes);
+    // ------ Variables de paginación ------
+    let bloque = 0;
+    let datosFacturacion = [];
+    const filasPorBloque = 16;
 
-  const modalBody = document.getElementById("modalTablaBody");
-  modalBody.innerHTML = "";
-  const numDias = daysInMonth(ano, mes);
-  for (let i = 0; i < numDias; i++) {
-    const tr = document.createElement("tr");
-    for (let c = 0; c < 15; c++) {
-      const td = document.createElement("td");
-      if (c === 0) {
-        td.textContent = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
-      } else {
-        const fecha = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
-        const campos = buscarCamposPorFecha(fecha);
-        td.textContent = campos[c-1] ?? '';
+    // Normaliza cualquier string de fecha a formato "DD/MM/YYYY"
+    function normalizaFecha(fechaStr) {
+      if (!fechaStr) return "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr; // Ya está bien
+      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) { // "YYYY-MM-DD"
+        const [yyyy, mm, dd] = fechaStr.split('-');
+        return `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}/${yyyy}`;
       }
-      tr.appendChild(td);
+      // "D/M/YYYY" o "DD/M/YYYY" etc.
+      const parts = fechaStr.split(/[\/\-]/);
+      if (parts.length === 3) {
+        let [a, b, c] = parts;
+        if (a.length === 4) { // YYYY/M/D
+          return `${c.padStart(2, '0')}/${b.padStart(2, '0')}/${a}`;
+        } else { // D/M/YYYY
+          return `${a.padStart(2, '0')}/${b.padStart(2, '0')}/${c}`;
+        }
+      }
+      return fechaStr;
     }
-    modalBody.appendChild(tr);
-  }
-}
-</script>
+
+    // ------ Render Tabla Principal ------
+    async function cargarFacturacion() {
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      bloque = 0;
+      await fetchDatos(mes, ano);
+      renderTabla();
+    }
+
+    async function fetchDatos(mes, ano) {
+      try {
+        const res = await fetch(`/api/facturacion/${ano}/${mes}`);
+        const json = await res.json();
+        if (json.ok && Array.isArray(json.data)) {
+          datosFacturacion = json.data.map(row => {
+            row.fecha = normalizaFecha(row.fecha);
+            return row;
+          });
+        } else {
+          datosFacturacion = [];
+        }
+      } catch {
+        datosFacturacion = [];
+      }
+    }
+
+    function diasEnMes(ano, mes) {
+      return new Date(Number(ano), Number(mes), 0).getDate();
+    }
+
+    function renderTabla() {
+      const body = document.getElementById('facturacion-body');
+      body.innerHTML = "";
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      const dias = diasEnMes(ano, mes);
+      const start = bloque * filasPorBloque;
+      const end = Math.min(start + filasPorBloque, dias);
+
+      for (let i = start; i < end; i++) {
+        const fecha = String(i+1).padStart(2, '0') + '/' + mes + '/' + ano;
+        const fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
+        const campos = fila && Array.isArray(fila.campos) ? fila.campos : Array(14).fill('');
+        const tr = document.createElement('tr');
+        const tdFecha = document.createElement('td');
+        tdFecha.textContent = fecha;
+        tr.appendChild(tdFecha);
+        for (let c = 0; c < 14; c++) {
+          const td = document.createElement('td');
+          td.textContent = campos[c] ?? '';
+          tr.appendChild(td);
+        }
+        body.appendChild(tr);
+      }
+      renderTotales();
+    }
+
+    function renderTotales() {
+      const totales = Array(14).fill(0);
+      datosFacturacion.forEach(fila => {
+        if (Array.isArray(fila.campos)) {
+          for (let c = 0; c < 14; c++) {
+            totales[c] += Number(fila.campos[c]) || 0;
+          }
+        }
+      });
+      const filaTotales = document.getElementById('fila-totales');
+      filaTotales.innerHTML = '<td>TOTALES</td>' +
+        totales.map(t => `<td>${t !== 0 ? t : ''}</td>`).join('');
+    }
+
+    // ------ Paginación ------
+    function bajarTabla() {
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      const dias = diasEnMes(ano, mes);
+      if ((bloque + 1) * filasPorBloque < dias) {
+        bloque++;
+        renderTabla();
+      }
+    }
+    function subirTabla() {
+      if (bloque > 0) {
+        bloque--;
+        renderTabla();
+      }
+    }
+
+    // ------ Event Listeners ------
+    mesSelect.addEventListener('change', cargarFacturacion);
+    anoSelect.addEventListener('change', cargarFacturacion);
+
+    document.getElementById('guardar-gastos').onclick = () => {
+      alert('Funcionalidad de guardar gastos próximamente...');
+    };
+
+    // ------ Inicial ------
+    window.addEventListener('DOMContentLoaded', cargarFacturacion);
+
+    document.getElementById('expandir-tabla').onclick = () => {
+      alert('Función de expandir tabla no implementada en este demo.');
+    };
+  </script>
 </body>
 </html>
