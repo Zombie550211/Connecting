@@ -613,19 +613,6 @@ let currentBlock = 0;
 let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
 let datosFacturacionMes = []; // [{fecha, campos}]
-let datosFacturacionAnio = []; // [{fecha, campos}]
-
-// Cargar todos los datos del año para la gráfica
-async function cargarFacturacionAnio(ano) {
-  try {
-    const resp = await fetch(`/api/facturacion/anual/${ano}`);
-    const { ok, data } = await resp.json();
-    if (ok && Array.isArray(data)) datosFacturacionAnio = data;
-    else datosFacturacionAnio = [];
-  } catch (e) {
-    datosFacturacionAnio = [];
-  }
-}
 
 async function cargarFacturacionMes(ano, mes) {
   const resp = await fetch(`/api/facturacion/${ano}/${String(mes).padStart(2,'0')}`);
@@ -669,14 +656,13 @@ async function renderTablaDias(mes, ano, block=0) {
   btnUp.disabled = (block === 0);
   btnDown.disabled = ((block + 1) * 16 >= numDias);
   renderFilaTotalesFacturacion();
-  await actualizarGrafica();
+  actualizarGrafica();
 }
 
 async function updateTableByFilters() {
   currentBlock = 0;
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
-  await cargarFacturacionAnio(currentYear); // Siempre cargar el año para la gráfica
   await renderTablaDias(currentMonth, currentYear, currentBlock);
 }
 filtroMes.addEventListener('change', async () => {
@@ -699,28 +685,28 @@ async function prevBlock() {
   }
 }
 window.addEventListener('DOMContentLoaded', async () => {
-  await cargarFacturacionAnio(currentYear);
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  await actualizarGrafica();
+  actualizarGrafica();
 });
 
 /* --- GRAFICA Chart.js --- */
 let grafica;
 async function actualizarGrafica() {
-  // 1. Sumar por mes todos los datos del año (incluyendo cambios no guardados del mes visible)
+  // --- Toma TODOS los datos de la tabla actual del DOM y suma por mes ---
   const totalesPorMes = Array(12).fill(0);
 
-  // Sumar datos del backend del año entero
-  datosFacturacionAnio.forEach(fila => {
+  // Lee todos los datos del año desde el backend
+  // Si tienes todos los datos del año en datosFacturacionMes, úsalo:
+  datosFacturacionMes.forEach(fila => {
     if (!fila.fecha || !fila.campos) return;
     const partes = fila.fecha.split('/');
     if (partes.length !== 3) return;
     const mes = parseInt(partes[1], 10);
-    const totalDia = parseFloat(fila.campos[9]) || 0;
+    const totalDia = parseFloat(fila.campos[9]) || 0; // Columna "TOTAL DEL DIA"
     if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
   });
 
-  // Sumar datos visibles (no guardados) del mes actual
+  // Además suma los valores actuales editados en la tabla (en caso de que no se haya guardado aún)
   const filasDOM = document.querySelectorAll('#excelBody tr');
   let sumaMesActual = 0;
   filasDOM.forEach(tr => {
@@ -863,9 +849,8 @@ async function guardarTodoFacturacion() {
       else errores++;
     }
   }
-  await cargarFacturacionAnio(currentYear); // Refresca el año completo para gráfica
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  await actualizarGrafica(); // <-- ACTUALIZA GRAFICA AL GUARDAR
+  actualizarGrafica(); // <-- ACTUALIZA GRAFICA AL GUARDAR
   renderFilaTotalesFacturacion();
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
@@ -904,5 +889,4 @@ async function renderTablaCompleta(mes, ano) {
 }
 </script>
 </body>
-</html>
 </html>
