@@ -203,7 +203,7 @@
     #tabla-facturacion th:nth-child(10), #tabla-facturacion td:nth-child(10) {
       border-right: 2px solid #000;
     }
-    #expandir-tabla {
+    #btnGuardarFacturacion {
       float: right;
       margin: 10px 30px 10px 0;
       background: #22b3ec;
@@ -217,7 +217,7 @@
       box-shadow: 0 2px 8px #22b3ec22;
       transition: background 0.15s;
     }
-    #expandir-tabla:hover { background: #18a0d6; }
+    #btnGuardarFacturacion:hover { background: #18a0d6; }
     .tabla-paginacion {
       width: 100%;
       display: flex;
@@ -258,61 +258,13 @@
       color: #1e293b;
       letter-spacing: .2px;
     }
-    #gastos-mes {
+    #graficaGastosMes {
       min-height: 72px;
       margin-bottom: 10px;
     }
-    #guardar-gastos {
-      position: absolute;
-      bottom: 18px;
-      right: 28px;
-      background: #6dc3e1;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 22px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 8px #22b3ec22;
-      transition: background 0.15s;
-    }
-    #guardar-gastos:hover { background: #22b3ec; }
     @media (max-width:900px) {
       .main-content { padding: 10px 5px; }
       .sidebar { display:none; }
-    }
-    #modal-bg {
-      display: none;
-      position: fixed;
-      z-index: 1200;
-      left: 0; top: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(44, 83, 100, 0.18);
-      align-items: center;
-      justify-content: center;
-    }
-    #modal-bg.active { display: flex; }
-    #modal-content {
-      background: #fff;
-      border-radius: 17px;
-      box-shadow: 0 8px 32px rgba(44,83,100,0.13);
-      padding: 28px 20px 18px 20px;
-      max-width: 90vw;
-      max-height: 90vh;
-      overflow: auto;
-      position: relative;
-      min-width: 750px;
-    }
-    #modal-close {
-      position: absolute;
-      top: 10px; right: 18px;
-      font-size: 1.3em;
-      color: #22b3ec;
-      cursor: pointer;
-      background: none;
-      border: none;
-      outline: none;
     }
   </style>
 </head>
@@ -337,10 +289,10 @@
   </nav>
   <main class="main-content">
     <div class="top-bar">
-      <label for="mes">Mes:</label>
-      <select id="mes"></select>
-      <label for="ano">Año:</label>
-      <select id="ano"></select>
+      <label for="filtroMes">Mes:</label>
+      <select id="filtroMes"></select>
+      <label for="filtroAno">Año:</label>
+      <select id="filtroAno"></select>
     </div>
     <h1>Facturación</h1>
     <div class="tabla-facturacion-container">
@@ -364,284 +316,41 @@
             <th>CPA PUNTOS</th>
           </tr>
         </thead>
-        <tbody id="facturacion-body"></tbody>
-        <tr id="fila-totales">
-          <td>TOTALES</td>
-          <td colspan="14"></td>
-        </tr>
+        <tbody id="excelBody"></tbody>
+        <tfoot>
+          <tr>
+            <td>TOTALES</td>
+            <td id="total-col-1"></td>
+            <td id="total-col-2"></td>
+            <td id="total-col-3"></td>
+            <td id="total-col-4"></td>
+            <td id="total-col-5"></td>
+            <td id="total-col-6"></td>
+            <td id="total-col-7"></td>
+            <td id="total-col-8"></td>
+            <td id="total-col-9"></td>
+            <td id="total-col-10"></td>
+            <td id="total-col-11"></td>
+            <td id="total-col-12"></td>
+            <td id="total-col-13"></td>
+            <td id="total-col-14"></td>
+          </tr>
+        </tfoot>
       </table>
-      <button id="expandir-tabla">Expandir tabla</button>
+      <button id="btnGuardarFacturacion">Guardar</button>
     </div>
     <div class="tabla-paginacion">
-      <button onclick="subirTabla()" id="btnUp">&#8593; Arriba</button>
-      <button onclick="bajarTabla()" id="btnDown">Abajo &#8595;</button>
+      <button onclick="prevBlock()" id="btnUp">&#8593; Arriba</button>
+      <button onclick="nextBlock()" id="btnDown">Abajo &#8595;</button>
     </div>
     <div class="gastos-mes-container">
       <h2>Total de gastos por mes</h2>
-      <canvas id="gastos-mes" height="70"></canvas>
-      <button id="guardar-gastos">Guardar</button>
+      <canvas id="graficaGastosMes" height="70"></canvas>
     </div>
   </main>
 </div>
-  <!-- Modal tabla expandida -->
-  <div id="modal-bg">
-    <div id="modal-content">
-      <button id="modal-close" title="Cerrar">&times;</button>
-      <h2 style="text-align:center">Tabla de Facturación Completa</h2>
-      <div style="overflow:auto; max-width:100%">
-        <table id="tabla-facturacion-modal"></table>
-      </div>
-    </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // ------ Selects de Mes y Año ------
-    const meses = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-    const mesSelect = document.getElementById('mes');
-    const anoSelect = document.getElementById('ano');
-    const hoy = new Date();
-    meses.forEach((m, idx) => {
-      const opt = document.createElement('option');
-      opt.value = String(idx + 1).padStart(2, '0');
-      opt.textContent = m;
-      if (idx === hoy.getMonth()) opt.selected = true;
-      mesSelect.appendChild(opt);
-    });
-    for (let y = hoy.getFullYear(); y >= 2022; y--) {
-      const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = y;
-      if (y === hoy.getFullYear()) opt.selected = true;
-      anoSelect.appendChild(opt);
-    }
-
-    // ------ Variables de paginación ------
-    let bloque = 0;
-    let datosFacturacion = [];
-    const filasPorBloque = 16;
-
-    function normalizaFecha(fechaStr) {
-      if (!fechaStr) return "";
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
-        const [yyyy, mm, dd] = fechaStr.split('-');
-        return `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}/${yyyy}`;
-      }
-      const parts = fechaStr.split(/[\/\-]/);
-      if (parts.length === 3) {
-        let [a, b, c] = parts;
-        if (a.length === 4) {
-          return `${c.padStart(2, '0')}/${b.padStart(2, '0')}/${a}`;
-        } else {
-          return `${a.padStart(2, '0')}/${b.padStart(2, '0')}/${c}`;
-        }
-      }
-      return fechaStr;
-    }
-
-    async function cargarFacturacion() {
-      const mes = mesSelect.value;
-      const ano = anoSelect.value;
-      bloque = 0;
-      await fetchDatos(mes, ano);
-      renderTabla();
-      renderGastos();
-    }
-
-    async function fetchDatos(mes, ano) {
-      try {
-        const res = await fetch(`/api/facturacion/${ano}/${mes}`);
-        const json = await res.json();
-        if (json.ok && Array.isArray(json.data)) {
-          datosFacturacion = json.data.map(row => {
-            row.fecha = normalizaFecha(row.fecha);
-            return row;
-          });
-        } else {
-          datosFacturacion = [];
-        }
-      } catch {
-        datosFacturacion = [];
-      }
-    }
-
-    function diasEnMes(ano, mes) {
-      return new Date(Number(ano), Number(mes), 0).getDate();
-    }
-
-    function renderTabla() {
-      const body = document.getElementById('facturacion-body');
-      body.innerHTML = "";
-      const mes = mesSelect.value;
-      const ano = anoSelect.value;
-      const dias = diasEnMes(ano, mes);
-      const start = bloque * filasPorBloque;
-      const end = Math.min(start + filasPorBloque, dias);
-
-      for (let i = start; i < end; i++) {
-        const fecha = String(i+1).padStart(2, '0') + '/' + mes + '/' + ano;
-        let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
-        if (!fila) {
-          fila = { fecha, campos: Array(15).fill('') };
-          datosFacturacion.push(fila);
-        }
-        recalcularFila(fila);
-
-        const campos = fila.campos;
-        const tr = document.createElement('tr');
-        const tdFecha = document.createElement('td');
-        tdFecha.textContent = fecha;
-        tr.appendChild(tdFecha);
-
-        // Columnas editables: [1] ALEXIS, [2] VENTAS POR DIA (ALEXIS), [4] CUENTA ALTERNA, [5] VENTAS POR DIA (ALTERNA), [7] LINEAS, [8] VENTAS POR DIA (LINEAS), [13] PUNTOS
-        for (let c = 0; c < 15; c++) {
-          const td = document.createElement('td');
-          if ([1,2,4,5,7,8,13].includes(c)) {
-            td.contentEditable = true;
-            td.textContent = campos[c] ?? '';
-            td.addEventListener('blur', function() {
-              guardarCelda(fecha, c, td.textContent);
-            });
-          } else {
-            td.textContent = campos[c] ?? '';
-            td.style.background = "#f7fafd";
-          }
-          tr.appendChild(td);
-        }
-        body.appendChild(tr);
-      }
-      renderTotales();
-    }
-
-    // Fórmulas automáticas
-    function recalcularFila(fila) {
-      const f = fila.campos;
-      // VALOR DE VENTA = VENTAS POR DIA * ALEXIS (col 3 = col 2 * col 1)
-      f[3] = round((parseFloat(f[2]) || 0) * (parseFloat(f[1]) || 0));
-      f[6] = round((parseFloat(f[5]) || 0) * (parseFloat(f[4]) || 0));
-      f[9] = round((parseFloat(f[8]) || 0) * (parseFloat(f[7]) || 0));
-      // TOTAL DEL DIA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 10 = 3 + 6 + 9)
-      f[10] = round((parseFloat(f[3]) || 0) + (parseFloat(f[6]) || 0) + (parseFloat(f[9]) || 0));
-      // TOTAL VENTAS = VENTAS POR DIA ALEXIS + VENTAS POR DIA ALTERNA + VENTAS POR DIA LINEAS (col 11 = 2 + 5 + 8)
-      f[11] = round((parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0));
-      // VALOR VENTA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 12 = 3 + 6 + 9)
-      f[12] = f[10];
-      // CPA PUNTOS = PUNTOS / TOTAL VENTAS (col 14 = col 13 / col 11)
-      f[14] = (parseFloat(f[11]) || 0) ? round((parseFloat(f[13]) || 0) / parseFloat(f[11]),2) : '';
-    }
-    function round(num, dec=0) {
-      return Number(num).toFixed(dec);
-    }
-
-    function renderTotales() {
-      const totales = Array(15).fill(0);
-      datosFacturacion.forEach(fila => {
-        if (Array.isArray(fila.campos)) {
-          for (let c = 1; c < 15; c++) {
-            totales[c] += Number(fila.campos[c]) || 0;
-          }
-        }
-      });
-      // Fórmula totales para columnas automáticas
-      totales[3] = round(totales[2] * totales[1]);
-      totales[6] = round(totales[5] * totales[4]);
-      totales[9] = round(totales[8] * totales[7]);
-      totales[10] = round(Number(totales[3]) + Number(totales[6]) + Number(totales[9]));
-      totales[11] = round(Number(totales[2]) + Number(totales[5]) + Number(totales[8]));
-      totales[12] = totales[10];
-      totales[14] = totales[11] ? round(totales[13] / totales[11],2) : '';
-
-      const filaTotales = document.getElementById('fila-totales');
-      filaTotales.innerHTML = '<td>TOTALES</td>' +
-        totales.map((t,i) => i===0 ? '' : (t !== 0 ? t : '')).map((t,i) => `<td>${t}</td>`).join('');
-    }
-
-    function guardarCelda(fecha, col, valor) {
-      let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
-      if (!fila) {
-        fila = { fecha, campos: Array(15).fill('') };
-        datosFacturacion.push(fila);
-      }
-      fila.campos = fila.campos || Array(15).fill('');
-      fila.campos[col] = valor;
-      recalcularFila(fila);
-      renderTabla();
-    }
-
-    // ------ Paginación ------
-    function bajarTabla() {
-      const mes = mesSelect.value;
-      const ano = anoSelect.value;
-      const dias = diasEnMes(ano, mes);
-      if ((bloque + 1) * filasPorBloque < dias) {
-        bloque++;
-        renderTabla();
-      }
-    }
-    function subirTabla() {
-      if (bloque > 0) {
-        bloque--;
-        renderTabla();
-      }
-    }
-
-    // ------ Modal Tabla Expandida ------
-    document.getElementById('expandir-tabla').onclick = function() {
-      const modalBg = document.getElementById('modal-bg');
-      const tablaModal = document.getElementById('tabla-facturacion-modal');
-      const tabla = document.getElementById('tabla-facturacion');
-      tablaModal.innerHTML = tabla.innerHTML;
-      modalBg.classList.add('active');
-    };
-    document.getElementById('modal-close').onclick = function() {
-      document.getElementById('modal-bg').classList.remove('active');
-    };
-    window.addEventListener('click', function(e) {
-      if (e.target === document.getElementById('modal-bg')) {
-        document.getElementById('modal-bg').classList.remove('active');
-      }
-    });
-
-    // ------ Gráfico de gastos (dummy data si no hay endpoint real) ------
-    let chartGastos = null;
-    function renderGastos() {
-      const labels = [];
-      const data = [];
-      datosFacturacion.forEach(fila => {
-        if (fila.fecha && Array.isArray(fila.campos)) {
-          labels.push(fila.fecha.substring(0,5));
-          data.push(Number(fila.campos[10]) || 0);
-        }
-      });
-      const ctx = document.getElementById('gastos-mes').getContext('2d');
-      if (chartGastos) chartGastos.destroy();
-      chartGastos = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total del Día',
-            data: data,
-            backgroundColor: '#22b3ec88'
-          }]
-        },
-        options: {
-          plugins: { legend: { display: false }},
-          scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
-        }
-      });
-    }
-
-    document.getElementById('guardar-gastos').onclick = () => {
-      alert('Datos guardados correctamente (simulación)');
-    };
-
-    mesSelect.addEventListener('change', cargarFacturacion);
-    anoSelect.addEventListener('change', cargarFacturacion);
-    window.addEventListener('DOMContentLoaded', cargarFacturacion);
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="facturacion.js"></script>
 </body>
 </html>
