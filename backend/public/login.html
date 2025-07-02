@@ -115,6 +115,20 @@
       text-decoration: underline;
       color: #7b2054;
     }
+    .login-error {
+      color: #fff;
+      background: #e74c3c;
+      padding: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+      display: none;
+      font-size: 1rem;
+      position: absolute;
+      top: 8px;
+      left: 0;
+    }
     /* Modal styles */
     .modal-bg {
       display: none;
@@ -201,16 +215,17 @@
 </head>
 <body>
   <!-- Login Card -->
-  <form class="login-card" autocomplete="off">
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <div class="login-error" id="loginError"></div>
     <div class="user-avatar">
       <!-- User SVG icon -->
       <svg fill="none" viewBox="0 0 64 64"><circle cx="32" cy="24" r="16" fill="#bbb"/><ellipse cx="32" cy="48" rx="16" ry="10" fill="#bbb"/></svg>
     </div>
     <div class="neumorph-input">
-      <input type="text" placeholder="Email" required>
+      <input type="text" name="usuario" placeholder="Email" required autocomplete="username">
     </div>
     <div class="neumorph-input">
-      <input type="password" placeholder="Password" required>
+      <input type="password" name="contrasena" placeholder="Password" required autocomplete="current-password">
     </div>
     <button type="submit" class="neumorph-btn">Login</button>
     <div class="register-link">
@@ -225,10 +240,10 @@
       <button class="close-modal" id="closeRegister" title="Cerrar" type="button">&times;</button>
       <div class="register-title">Crear Cuenta</div>
       <div class="neumorph-input">
-        <input type="text" placeholder="Usuario" required>
+        <input type="text" name="usuario" placeholder="Usuario" required>
       </div>
       <div class="neumorph-input">
-        <input type="password" placeholder="Contraseña" required>
+        <input type="password" name="contrasena" placeholder="Contraseña" required>
       </div>
       <div class="login-link-row">
         <a id="volverLogin">Iniciar sesión</a>
@@ -237,7 +252,7 @@
     </form>
   </div>
   <script>
-    // Abrir y cerrar el modal del registro
+    // Modal registro
     const openRegister = document.getElementById('openRegister');
     const closeRegister = document.getElementById('closeRegister');
     const registerModal = document.getElementById('registerModal');
@@ -248,6 +263,40 @@
     window.onclick = function(e) {
       if (e.target === registerModal) registerModal.classList.remove('active');
     };
+    // LOGIN AJAX
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const usuario = form.usuario.value;
+      const contrasena = form.contrasena.value;
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, contrasena })
+        });
+        if (res.redirected) {
+          window.location.href = res.url;
+          return;
+        }
+        const result = await res.json();
+        if (result.success) {
+          window.location.href = '/lead.html'; // Cambia aquí si tu ruta de inicio es otra
+        } else {
+          mostrarError('loginError', 'Usuario o contraseña incorrectos');
+        }
+      } catch (err) {
+        mostrarError('loginError', 'Error de conexión o servidor');
+      }
+    });
+    function mostrarError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => {
+        el.style.display = 'none';
+      }, 3500);
+    }
   </script>
 </body>
 </html>
