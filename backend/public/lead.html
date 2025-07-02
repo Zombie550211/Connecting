@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title> Connecting </title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <meta charset="UTF-8">
+  <title>Facturación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -34,7 +33,7 @@
       display: flex;
       min-height: 100vh;
     }
-    /* SIDEBAR - ESTILO REPORTS, NEGRITA */
+    /* SIDEBAR - ESTILO NUEVO */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       min-width: 180px;
@@ -93,6 +92,7 @@
       padding-left: 18px;
       transition: background 0.15s, color 0.15s;
       letter-spacing: 0.02em;
+      cursor: pointer;
     }
     .sidebar-nav button.active, .sidebar-nav button:hover {
       background: var(--sidebar-accent);
@@ -109,7 +109,7 @@
       font-weight: 600;
     }
 
-    /* MAIN CONTENT */
+    /* CONTENIDO PRINCIPAL */
     .main-content {
       flex: 1;
       padding: 40px 50px;
@@ -119,121 +119,208 @@
       flex-direction: column;
       gap: 24px;
     }
-    /* LEAD FORM */
-    .lead-content-row {
+    .top-bar {
       display: flex;
-      gap: 30px;
-      width: 100%;
-      align-items: flex-start;
-    }
-    .form-section {
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
       background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px #0001;
-      padding: 42px 38px 36px 38px;
-      max-width: 480px;
-      width: 100%;
-      margin: 44px auto;
-      flex: 1;
-      align-self: flex-start;
-      display: flex;
-      flex-direction: column;
+      padding: 16px 24px 12px 18px;
+      border-radius: 13px;
+      box-shadow: 0 2px 10px #0001;
     }
-    .form-section h2 {
+    .top-bar label {
+      font-weight: 600;
+      font-size: 1.07em;
+    }
+    .top-bar select {
+      padding: 4px 14px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1.2px solid #e3e8ee;
+      background: #fafcfd;
+      color: #1e293b;
+      font-family: inherit;
+      font-weight: 500;
+      box-shadow: 0 1px 3px 0 #28b5e803;
+    }
+    h1 {
+      text-align: center;
+      margin: 8px 0 20px 0;
+      font-size: 2.0em;
       font-weight: 700;
-      font-size: 2em;
-      color: #183153;
-      margin-bottom: 28px;
-      margin-top: 0;
+      color: #21304c;
+      letter-spacing: .3px;
     }
-    .form-group { margin-bottom: 18px;}
-    .form-section label {
-      color: #25a9dd;
-      font-weight: 700;
-      margin-bottom: 7px;
-      display: block;
+    .tabla-facturacion-container {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: var(--sombra);
+      padding: 16px 0 0 0;
+      margin-bottom: 24px;
     }
-    .form-section label[for="fecha-lead"] {
-      color: #183153;
-    }
-    .form-section input, .form-section select {
-      background: #f8fcff;
-      border-radius: 7px;
-      border: 1.5px solid #e4e6f1;
-      padding: 13px 15px;
-      font-size: 1.12em;
+    #tabla-facturacion {
+      border-collapse: separate;
+      border-spacing: 0;
       width: 100%;
-      margin-top: 2px;
-    }
-    .form-section button[type="submit"] {
-      background: #25a9dd;
-      color: #fff;
-      border-radius: 9px;
+      background: #fff;
+      color: #1e293b;
+      font-size: 1em;
+      table-layout: fixed;
       border: none;
+    }
+    #tabla-facturacion th, #tabla-facturacion td {
+      border: 1px solid #e3e8ee;
+      text-align: center;
+      min-width: 80px;
+      max-width: 150px;
+      height: 32px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0;
+      font-size: .99em;
+      font-weight: 400;
+      background: #fff;
+    }
+    #tabla-facturacion th {
+      background: #edf3fa;
       font-weight: 700;
-      font-size: 1.18em;
-      padding: 16px 0;
+      font-size: 0.97em;
+      height: 36px;
+      color: #111;
+    }
+    #tabla-facturacion td {
+      background: #fff;
+      cursor: pointer;
+    }
+    #tabla-facturacion tr:nth-child(even) td {
+      background: #f1f5fa;
+    }
+    #tabla-facturacion tr:hover td {
+      background: #d9f7fb;
+    }
+    #tabla-facturacion th:nth-child(2), #tabla-facturacion td:nth-child(2),
+    #tabla-facturacion th:nth-child(5), #tabla-facturacion td:nth-child(5),
+    #tabla-facturacion th:nth-child(8), #tabla-facturacion td:nth-child(8) {
+      border-left: 2px solid #000;
+    }
+    #tabla-facturacion th:nth-child(4), #tabla-facturacion td:nth-child(4),
+    #tabla-facturacion th:nth-child(7), #tabla-facturacion td:nth-child(7),
+    #tabla-facturacion th:nth-child(10), #tabla-facturacion td:nth-child(10) {
+      border-right: 2px solid #000;
+    }
+    #expandir-tabla {
+      float: right;
+      margin: 10px 30px 10px 0;
+      background: #22b3ec;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 18px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #22b3ec22;
+      transition: background 0.15s;
+    }
+    #expandir-tabla:hover { background: #18a0d6; }
+    .tabla-paginacion {
       width: 100%;
-      margin-top: 9px;
-      transition: background 0.2s;
-    }
-    .form-section button[type="submit"]:hover {
-      background: #183153;
-    }
-    /* CHARTS SECTION */
-    .charts-section {
-      flex: 2;
       display: flex;
-      flex-direction: column;
-      gap: 22px;
-      height: 100%;
-      min-width: 0;
-    }
-    .charts-section .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
-    .charts-section .charts-filter label { font-weight: 600; margin-bottom: 0;}
-    .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
-    .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
-    .charts-section .charts-filter button:hover { background: #126de4; }
-    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
-    .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
-    .chart-container {
-      position: relative;
-      width: 100%;
-      min-height: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
       justify-content: flex-end;
+      gap: 10px;
+      margin: 10px 40px 0 0;
     }
-    .chart-canvas {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100%;
-      max-height: 100%;
-      aspect-ratio: 16 / 5;
-      display: block;
-      background: transparent;
+    .tabla-paginacion button {
+      padding: 5px 17px;
+      border-radius: 10px;
+      background: #28b5e8;
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      font-size: 1.07em;
+      cursor: pointer;
+      box-shadow: 0 1px 4px #28b5e813;
+      transition: background 0.18s;
     }
-    .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
-    @media (max-width: 1100px) {
-      .charts-section .charts-filter, .form-section { padding: 12px 7vw; }
-      .lead-content-row { flex-direction: column; gap: 13px; }
-      .main-content { padding: 14px 2vw; }
+    .tabla-paginacion button:disabled {
+      background: #b7e8f5;
+      color: #eee;
+      cursor: default;
     }
-    @media (max-width: 700px) {
-      .layout { flex-direction: column;}
-      .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
-      .sidebar-logo { margin: 0 12px 0 0; }
-      .sidebar-title { font-size: 1em; margin-bottom: 0;}
-      .sidebar-nav { flex-direction: row; gap: 0; }
-      .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
-      .sidebar-lema { display: none;}
-      .main-content { padding: 12px 2px; }
-      .lead-content-row { flex-direction: column; gap: 7px;}
-      .form-section { padding: 13px 7px;}
-      .chart-container {padding: 7px 2vw;}
-      .charts-section .charts-filter {padding: 7px 2vw;}
-      .chart-canvas { aspect-ratio: 16/12; }
+    .gastos-mes-container {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: var(--sombra);
+      margin-top: 28px;
+      padding: 18px 24px 32px 24px;
+      min-height: 160px;
+      position: relative;
+    }
+    .gastos-mes-container h2 {
+      margin: 0 0 16px 0;
+      font-size: 1.09em;
+      font-weight: bold;
+      color: #1e293b;
+      letter-spacing: .2px;
+    }
+    #gastos-mes {
+      min-height: 72px;
+      margin-bottom: 10px;
+    }
+    #guardar-gastos {
+      position: absolute;
+      bottom: 18px;
+      right: 28px;
+      background: #6dc3e1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #22b3ec22;
+      transition: background 0.15s;
+    }
+    #guardar-gastos:hover { background: #22b3ec; }
+    @media (max-width:900px) {
+      .main-content { padding: 10px 5px; }
+      .sidebar { display:none; }
+    }
+    /* MODAL expandir tabla */
+    #modal-bg {
+      display: none;
+      position: fixed;
+      z-index: 1200;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(44, 83, 100, 0.18);
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-bg.active { display: flex; }
+    #modal-content {
+      background: #fff;
+      border-radius: 17px;
+      box-shadow: 0 8px 32px rgba(44,83,100,0.13);
+      padding: 28px 20px 18px 20px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      position: relative;
+      min-width: 750px;
+    }
+    #modal-close {
+      position: absolute;
+      top: 10px; right: 18px;
+      font-size: 1.3em;
+      color: #22b3ec;
+      cursor: pointer;
+      background: none;
+      border: none;
+      outline: none;
     }
   </style>
 </head>
@@ -246,405 +333,291 @@
     </div>
     <div class="sidebar-title">Connecting</div>
     <div class="sidebar-nav">
-      <button onclick="location.href='inicio.html'">Inicio</button>
-      <button class="active" onclick="location.href='lead.html'">Lead</button>
+      <button onclick="location.href='index.html'">Inicio</button>
+      <button onclick="location.href='lead.html'">Lead</button>
       <button onclick="location.href='costumer.html'">Costumer</button>
-      <button onclick="location.href='Facturacion.html'">Facturacion</button>
-      <button onclick="logout()">Cerrar sesión</button>
+      <button class="active" onclick="location.href='Facturacion.html'">Facturación</button>
+      <button onclick="location.href='logout'">Cerrar sesión</button>
     </div>
     <div class="sidebar-lema">
       "Conectando tu éxito, un cliente a la vez"
     </div>
   </nav>
   <main class="main-content">
-    <div class="lead-content-row">
-      <!-- FORMULARIO -->
-      <section class="form-section" id="form-panel">
-        <h2>Formulario de Registro</h2>
-        <form id="crmForm">
-          <div class="form-group">
-            <label for="fecha-lead" style="color: #183153;">Fecha</label>
-            <input type="date" id="fecha-lead" name="fecha-lead" />
-          </div>
-          <div class="form-group">
-            <label for="team">Team</label>
-            <select id="team" required>
-              <option value="">Seleccione team</option>
-              <option value="Team Irania">Team Irania</option>
-              <option value="Team Pleitez">Team Pleitez</option>
-              <option value="Team Roberto">Team Roberto</option>
-              <option value="Team Lineas">Team Lineas</option>
-              <option value="Team Randal">Team Randal</option>
-              <option value="Team Marisol">Team Marisol</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="agent">Agente</label>
-            <select id="agent" required>
-              <option>Seleccione Agente</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="producto">Producto</label>
-            <select id="producto" required>
-              <option>Seleccione Producto</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="puntaje">Puntaje</label>
-            <select id="puntaje" required>
-              <option>Seleccione Puntaje</option>
-              <option>Sin Puntaje</option>
-              <option>0.25</option>
-              <option>0.35</option>
-              <option>1.0</option>
-              <option>1.25</option>
-              <option>1.50</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="cuenta">Cuenta Google</label>
-            <select id="cuenta" required>
-              <option>Seleccione Cuenta</option>
-              <option>Cuenta Alexis</option>
-              <option>Cuenta Eduardo</option>
-              <option>Cuenta Israel</option>
-              <option>Cuenta Lineas</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="telefono">Teléfono</label>
-            <input type="text" id="telefono" placeholder="(XXX) XXX-XXXX" required/>
-          </div>
-          <div class="form-group">
-            <label for="direccion">Dirección</label>
-            <input type="text" id="direccion" placeholder="Dirección del cliente" required/>
-          </div>
-          <div class="form-group" style="margin-bottom: 26px;">
-            <label for="zip">ZIP Code</label>
-            <input type="text" id="zip" placeholder="Código ZIP" required/>
-          </div>
-          <button type="submit">Guardar Lead</button>
-        </form>
-      </section>
-      <section class="charts-section" id="charts-panel">
-        <div class="charts-filter">
-          <label for="fechaGraficas">Filtrar gráficas por fecha:</label>
-          <input type="date" id="fechaGraficas" />
-          <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
-        </div>
-        <div class="chart-container">
-          <canvas id="ventasTeamChart" class="chart-canvas"></canvas>
-          <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
-        </div>
-        <div class="chart-container">
-          <canvas id="productosChart" class="chart-canvas"></canvas>
-          <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
-        </div>
-      </section>
+    <div class="top-bar">
+      <label for="mes">Mes:</label>
+      <select id="mes"></select>
+      <label for="ano">Año:</label>
+      <select id="ano"></select>
+    </div>
+    <h1>Facturación</h1>
+    <div class="tabla-facturacion-container">
+      <table id="tabla-facturacion">
+        <thead>
+          <tr>
+            <th>FECHA</th>
+            <th>ALEXIS</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>CUENTA ALTERNA</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>LINEAS</th>
+            <th>VENTAS POR DIA</th>
+            <th>VALOR DE VENTA</th>
+            <th>TOTAL DEL DIA</th>
+            <th>TOTAL VENTAS</th>
+            <th>VALOR VENTA</th>
+            <th>PUNTOS</th>
+            <th>CPA PUNTOS</th>
+          </tr>
+        </thead>
+        <tbody id="facturacion-body"></tbody>
+        <tr id="fila-totales">
+          <td>TOTALES</td>
+          <td colspan="14"></td>
+        </tr>
+      </table>
+      <button id="expandir-tabla">Expandir tabla</button>
+    </div>
+    <div class="tabla-paginacion">
+      <button onclick="subirTabla()" id="btnUp">&#8593; Arriba</button>
+      <button onclick="bajarTabla()" id="btnDown">Abajo &#8595;</button>
+    </div>
+    <div class="gastos-mes-container">
+      <h2>Total de gastos por mes</h2>
+      <canvas id="gastos-mes" height="70"></canvas>
+      <button id="guardar-gastos">Guardar</button>
     </div>
   </main>
 </div>
-<script>
-  // SIDEBAR logout
-  function logout() {
-    fetch('/logout', { credentials: 'include' })
-      .then(() => window.location.href = '/login.html');
-  }
-
-  // --- ARRAYS ---
-  const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-  const productos = [
-    "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "2G AT&T",
-    "2GB SPECTRUM", "1GB SPECTRUM", "500 SPECTRUM", "200 SPECTRUM", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM BUSSINES", "SPECTRUM PREMIER", "SPECTRUM ADVENTAGE",
-    "5GB FRONTIER", "2GB FRONTIER", "1GB FRONTIER", "500 FRONTIER", "200 FRONTIER",
-    "OPTIMO MAS", "MAS LATINO", "MAS ULTRA", "DIRECTV BUSSINES", "HUGHESNET", "OPTIMUM", "VIASAT", "WINDSTREAM",
-    "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
-  ];
-
-  // --- AGENTES POR TEAM ---
-  const agentesPorTeam = {
-    "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz","Tatiana Ayala"],
-    "Team Pleitez": ["Diego Mejia", "Ellen Diaz", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Evelyn Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
-    "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren","David Quinteros"],
-    "Team Lineas": ["Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R", "Lineas-Diego.O", "Lineas-Edward","Lineas-Luis G", "Lineas-Oscar R", "Lineas-Ricardo"],
-    "Team Randal": ["Anderson Guzman", "Carlos Grande", "Johana Santana", "Julio Chavez",  "Priscila Hernandez", "Randal Martinez"],
-    "Team Marisol": ["Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"],
-  };
-
-  document.getElementById("team").addEventListener("change", function () {
-    const team = this.value;
-    const selectAgente = document.getElementById("agent");
-    selectAgente.innerHTML = "<option>Seleccione Agente</option>";
-    if (agentesPorTeam[team]) {
-      agentesPorTeam[team].forEach(agente => {
-        const option = document.createElement("option");
-        option.value = agente;
-        option.textContent = agente;
-        selectAgente.appendChild(option);
-      });
-    }
-  });
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const selectProducto = document.getElementById("producto");
-    productos.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p;
-      opt.textContent = p;
-      selectProducto.appendChild(opt);
+  <!-- Modal tabla expandida -->
+  <div id="modal-bg">
+    <div id="modal-content">
+      <button id="modal-close" title="Cerrar">&times;</button>
+      <h2 style="text-align:center">Tabla de Facturación Completa</h2>
+      <div style="overflow:auto; max-width:100%">
+        <table id="tabla-facturacion-modal"></table>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ------ Selects de Mes y Año ------
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const mesSelect = document.getElementById('mes');
+    const anoSelect = document.getElementById('ano');
+    const hoy = new Date();
+    meses.forEach((m, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx + 1).padStart(2, '0');
+      opt.textContent = m;
+      if (idx === hoy.getMonth()) opt.selected = true;
+      mesSelect.appendChild(opt);
     });
-
-    // Selecciona la fecha de hoy por defecto al cargar la página
-    const hoy = new Date().toISOString().slice(0,10);
-    document.getElementById('fechaGraficas').value = hoy;
-    document.getElementById('fecha-lead').value = hoy;
-
-    iniciarGraficas();
-    actualizarGraficas();
-
-    setInterval(actualizarGraficas, 30000);
-  });
-
-  let ventasTeamChart, productosChart;
-
-  function destroyChart(chart) {
-    if (chart && typeof chart.destroy === 'function') chart.destroy();
-  }
-
-  // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
-  function iniciarGraficas() {
-    // Limpia si ya existen
-    destroyChart(ventasTeamChart);
-    destroyChart(productosChart);
-
-    // Calcula dimensiones reales del contenedor
-    const teamCanvas = document.getElementById("ventasTeamChart");
-    const prodCanvas = document.getElementById("productosChart");
-    const teamParent = teamCanvas.parentElement;
-    const prodParent = prodCanvas.parentElement;
-
-    // Usa getBoundingClientRect para obtener tamaño real responsivo
-    const teamRect = teamParent.getBoundingClientRect();
-    const prodRect = prodParent.getBoundingClientRect();
-
-    const width1 = Math.max(600, teamRect.width || 1200);
-    const height1 = Math.max(200, teamRect.height || 400);
-    const width2 = Math.max(600, prodRect.width || 1200);
-    const height2 = Math.max(200, prodRect.height || 400);
-
-    // Ajusta el canvas para pantallas retina/4K (HiDPI)
-    function setHiDPICanvas(canvas, width, height) {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      return ctx;
+    for (let y = hoy.getFullYear(); y >= 2022; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === hoy.getFullYear()) opt.selected = true;
+      anoSelect.appendChild(opt);
     }
 
-    // Canvas 1
-    const ctxTeam = setHiDPICanvas(teamCanvas, width1, height1);
-    ventasTeamChart = new Chart(ctxTeam, {
-      type: 'bar',
-      data: {
-        labels: equipos,
-        datasets: [
-          {
-            label: 'Ventas',
-            data: equipos.map(() => 0),
-            backgroundColor: '#007bff',
-            borderRadius: 6
-          },
-          {
-            label: 'Puntaje',
-            data: equipos.map(() => 0),
-            backgroundColor: '#dc3545',
-            borderRadius: 6
-          }
-        ]
-      },
-      options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'top',
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { position: 'top' }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
+    // ------ Variables de paginación ------
+    let bloque = 0;
+    let datosFacturacion = [];
+    const filasPorBloque = 16;
+
+    // Normaliza cualquier string de fecha a formato "DD/MM/YYYY"
+    function normalizaFecha(fechaStr) {
+      if (!fechaStr) return "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr; // Ya está bien
+      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) { // "YYYY-MM-DD"
+        const [yyyy, mm, dd] = fechaStr.split('-');
+        return `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}/${yyyy}`;
+      }
+      // "D/M/YYYY" o "DD/M/YYYY" etc.
+      const parts = fechaStr.split(/[\/\-]/);
+      if (parts.length === 3) {
+        let [a, b, c] = parts;
+        if (a.length === 4) { // YYYY/M/D
+          return `${c.padStart(2, '0')}/${b.padStart(2, '0')}/${a}`;
+        } else { // D/M/YYYY
+          return `${a.padStart(2, '0')}/${b.padStart(2, '0')}/${c}`;
         }
-      },
-      plugins: [ChartDataLabels]
-    });
-
-    // Canvas 2
-    const ctxProducto = setHiDPICanvas(prodCanvas, width2, height2);
-    productosChart = new Chart(ctxProducto, {
-      type: 'bar',
-      data: {
-        labels: productos,
-        datasets: [{
-          label: 'Ventas por Producto',
-          data: productos.map(() => 0),
-          backgroundColor: '#007bff',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'start',
-            offset: -5,
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
-      },
-      plugins: [ChartDataLabels]
-    });
-  }
-
-  // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
-  window.addEventListener('resize', () => {
-    setTimeout(() => {
-      iniciarGraficas();
-    }, 150);
-  });
-
-  function actualizarGraficas() {
-    const fecha = document.getElementById('fechaGraficas').value;
-    fetch(`/api/graficas?fecha=${fecha}`, {
-      credentials: 'include'
-    })
-      .then(res => res.json())
-      .then(data => {
-        // Ventas y puntaje por equipo
-        let hayDataTeam = false;
-        equipos.forEach((team, i) => {
-          const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
-          const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
-          ventasTeamChart.data.datasets[0].data[i] = ventas;
-          ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
-          if (ventas > 0 || puntos > 0) hayDataTeam = true;
-        });
-        ventasTeamChart.update();
-        mostrarNoData(!hayDataTeam, false);
-
-        // Ventas por producto: SIEMPRE usa el array productos como labels.
-        productosChart.data.labels = productos;
-        productosChart.data.datasets[0].data = productos.map(
-          prod => {
-            if (!data.ventasPorProducto) return 0;
-            if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
-            // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
-            const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
-            return key ? data.ventasPorProducto[key] : 0;
-          }
-        );
-        productosChart.update();
-
-        let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
-        mostrarNoData(false, !hayDataProd);
-      })
-      .catch(err => {
-        console.error("Error al cargar gráficas:", err);
-        mostrarNoData(true, true);
-      });
-  }
-
-  function mostrarNoData(team, producto) {
-    document.getElementById('no-data-team').style.display = team ? '' : 'none';
-    document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
-  }
-
-  // --- Formulario Lead ---
-  document.getElementById("crmForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const fecha = document.getElementById("fecha-lead").value;
-    const team = document.getElementById("team").value;
-    const agent = document.getElementById("agent").value;
-    const producto = document.getElementById("producto").value;
-    const puntajeVal = document.getElementById("puntaje").value;
-    const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
-    const cuenta = document.getElementById("cuenta").value;
-    const telefono = document.getElementById("telefono").value;
-    const direccion = document.getElementById("direccion").value;
-    const zip = document.getElementById("zip").value;
-
-    if (
-      team === "" || agent === "Seleccione Agente" ||
-      producto === "Seleccione Producto" || isNaN(puntaje) ||
-      cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
-      direccion.trim() === "" || zip.trim() === ""
-    ) {
-      alert("Por favor, complete todos los campos.");
-      return;
+      }
+      return fechaStr;
     }
 
-    fetch("/api/leads", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include',
-      body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
-    })
-      .then(async res => {
-        if (res.status === 401) {
-          alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
-          window.location.href = "/login.html";
-          throw new Error("No autorizado.");
-        }
-        const contentType = res.headers.get('content-type') || '';
-        if (!res.ok) {
-          if (contentType.includes('application/json')) {
-            const errorText = await res.text();
-            console.error("Error en respuesta:", res.status, errorText);
-          } else {
-            console.error("Respuesta inesperada:", res.status, await res.text());
-          }
-          throw new Error("Error al guardar el lead.");
-        }
-        if (contentType.includes('application/json')) {
-          return res.json();
+    // ------ Render Tabla Principal ------
+    async function cargarFacturacion() {
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      bloque = 0;
+      await fetchDatos(mes, ano);
+      renderTabla();
+      renderGastos();
+    }
+
+    async function fetchDatos(mes, ano) {
+      try {
+        const res = await fetch(`/api/facturacion/${ano}/${mes}`);
+        const json = await res.json();
+        if (json.ok && Array.isArray(json.data)) {
+          datosFacturacion = json.data.map(row => {
+            row.fecha = normalizaFecha(row.fecha);
+            return row;
+          });
         } else {
-          throw new Error("Respuesta inesperada del servidor.");
+          datosFacturacion = [];
         }
-      })
-      .then(() => {
-        actualizarGraficas();
-        document.getElementById("crmForm").reset();
-        document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
-        alert("Lead guardado exitosamente.");
-      })
-      .catch(error => {
-        console.error("Error al guardar lead:", error);
-        alert("Hubo un error al guardar el lead. Revisa la consola.");
+      } catch {
+        datosFacturacion = [];
+      }
+    }
+
+    function diasEnMes(ano, mes) {
+      return new Date(Number(ano), Number(mes), 0).getDate();
+    }
+
+    function renderTabla() {
+      const body = document.getElementById('facturacion-body');
+      body.innerHTML = "";
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      const dias = diasEnMes(ano, mes);
+      const start = bloque * filasPorBloque;
+      const end = Math.min(start + filasPorBloque, dias);
+
+      for (let i = start; i < end; i++) {
+        const fecha = String(i+1).padStart(2, '0') + '/' + mes + '/' + ano;
+        const fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
+        const campos = fila && Array.isArray(fila.campos) ? fila.campos : Array(14).fill('');
+        const tr = document.createElement('tr');
+        const tdFecha = document.createElement('td');
+        tdFecha.textContent = fecha;
+        tr.appendChild(tdFecha);
+        for (let c = 0; c < 14; c++) {
+          const td = document.createElement('td');
+          td.contentEditable = true;
+          td.textContent = campos[c] ?? '';
+          // Al perder foco, guardar en datosFacturacion
+          td.addEventListener('blur', function() {
+            guardarCelda(fecha, c, td.textContent);
+          });
+          tr.appendChild(td);
+        }
+        body.appendChild(tr);
+      }
+      renderTotales();
+    }
+
+    function renderTotales() {
+      const totales = Array(14).fill(0);
+      datosFacturacion.forEach(fila => {
+        if (Array.isArray(fila.campos)) {
+          for (let c = 0; c < 14; c++) {
+            totales[c] += Number(fila.campos[c]) || 0;
+          }
+        }
       });
-  });
-</script>
+      const filaTotales = document.getElementById('fila-totales');
+      filaTotales.innerHTML = '<td>TOTALES</td>' +
+        totales.map(t => `<td>${t !== 0 ? t : ''}</td>`).join('');
+    }
+
+    function guardarCelda(fecha, col, valor) {
+      let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
+      if (!fila) {
+        fila = { fecha, campos: Array(14).fill('') };
+        datosFacturacion.push(fila);
+      }
+      fila.campos = fila.campos || Array(14).fill('');
+      fila.campos[col] = valor;
+    }
+
+    // ------ Paginación ------
+    function bajarTabla() {
+      const mes = mesSelect.value;
+      const ano = anoSelect.value;
+      const dias = diasEnMes(ano, mes);
+      if ((bloque + 1) * filasPorBloque < dias) {
+        bloque++;
+        renderTabla();
+      }
+    }
+    function subirTabla() {
+      if (bloque > 0) {
+        bloque--;
+        renderTabla();
+      }
+    }
+
+    // ------ Modal Tabla Expandida ------
+    document.getElementById('expandir-tabla').onclick = function() {
+      const modalBg = document.getElementById('modal-bg');
+      const modalContent = document.getElementById('modal-content');
+      const tablaModal = document.getElementById('tabla-facturacion-modal');
+      // Copiar la tabla original
+      const tabla = document.getElementById('tabla-facturacion');
+      tablaModal.innerHTML = tabla.innerHTML;
+      modalBg.classList.add('active');
+    };
+    document.getElementById('modal-close').onclick = function() {
+      document.getElementById('modal-bg').classList.remove('active');
+    };
+    window.addEventListener('click', function(e) {
+      if (e.target === document.getElementById('modal-bg')) {
+        document.getElementById('modal-bg').classList.remove('active');
+      }
+    });
+
+    // ------ Gráfico de gastos (dummy data si no hay endpoint real) ------
+    let chartGastos = null;
+    function renderGastos() {
+      // Supón que los gastos están en la columna 10 (TOTAL DEL DIA) de cada fila
+      const labels = [];
+      const data = [];
+      datosFacturacion.forEach(fila => {
+        if (fila.fecha && Array.isArray(fila.campos)) {
+          labels.push(fila.fecha.substring(0,5)); // solo DD/MM
+          data.push(Number(fila.campos[10]) || 0);
+        }
+      });
+      const ctx = document.getElementById('gastos-mes').getContext('2d');
+      if (chartGastos) chartGastos.destroy();
+      chartGastos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total del Día',
+            data: data,
+            backgroundColor: '#22b3ec88'
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false }},
+          scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // ------ Guardar datos (simulación) ------
+    document.getElementById('guardar-gastos').onclick = () => {
+      // Aquí podrías enviar datosFacturacion al backend con fetch
+      alert('Datos guardados correctamente (simulación)');
+    };
+
+    // ------ Event Listeners ------
+    mesSelect.addEventListener('change', cargarFacturacion);
+    anoSelect.addEventListener('change', cargarFacturacion);
+
+    // ------ Inicial ------
+    window.addEventListener('DOMContentLoaded', cargarFacturacion);
+  </script>
 </body>
 </html>
