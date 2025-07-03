@@ -5,7 +5,7 @@
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root {
+   :root {
       --sidebar-bg: #15344a;
       --sidebar-accent: #22b3ec;
       --sidebar-hover: #1ea1d8;
@@ -315,7 +315,6 @@
       outline: none;
     }
   </style>
-  <!-- Chart.js & ChartDataLabels -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
@@ -420,7 +419,6 @@
       anoSelect.appendChild(opt);
     }
 
-    // ------ Variables de paginación ------
     let bloque = 0;
     let datosFacturacion = [];
     const filasPorBloque = 16;
@@ -455,7 +453,6 @@
 
     async function fetchDatos(mes, ano) {
       try {
-        // Ahora cargamos TODO el año desde el backend para la gráfica
         const res = await fetch(`/api/facturacion/anual/${ano}`);
         const json = await res.json();
         if (json.ok && Array.isArray(json.data)) {
@@ -484,6 +481,8 @@
       const start = bloque * filasPorBloque;
       const end = Math.min(start + filasPorBloque, dias);
 
+      // Columnas editables: Alexis(1), Ventas por día(2), Cuenta alterna(4), Ventas alterna(5),
+      // Lineas(7), Ventas lineas(8), Total del día(10), Puntos(13)
       for (let i = start; i < end; i++) {
         const fecha = String(i+1).padStart(2, '0') + '/' + mes + '/' + ano;
         let fila = datosFacturacion.find(f => normalizaFecha(f.fecha) === fecha);
@@ -501,7 +500,8 @@
 
         for (let c = 0; c < 15; c++) {
           const td = document.createElement('td');
-          if ([1,2,4,5,7,8,13].includes(c)) {
+          // columnas editables: 1,2,4,5,7,8,10,13
+          if ([1,2,4,5,7,8,10,13].includes(c)) {
             td.contentEditable = true;
             td.textContent = campos[c] ?? '';
             td.addEventListener('blur', function() {
@@ -518,28 +518,14 @@
       renderTotales();
     }
 
-    // Fórmulas requeridas:
-    // 1. Valor de venta (col 3, 6, 9): Alexis / Ventas por día, Cuenta alterna / Ventas por día, Líneas / Ventas por día
-    // 2. Total del día (col 10): Alexis + Cuenta alterna + Líneas
-    // 3. Total ventas (col 11): Ventas por día (Alexis) + Ventas por día (alterna) + Ventas por día (líneas)
-    // 4. Valor venta (col 12): Total del día / Total ventas
-    // 5. CPA Puntos (col 14): Puntos / Valor venta
-
     function recalcularFila(fila) {
       const f = fila.campos;
-      // Valor de venta = Alexis / Ventas por día
       f[3] = (parseFloat(f[2]) || 0) !== 0 ? round((parseFloat(f[1]) || 0) / (parseFloat(f[2]) || 1)) : '';
-      // Valor de venta alterna
       f[6] = (parseFloat(f[5]) || 0) !== 0 ? round((parseFloat(f[4]) || 0) / (parseFloat(f[5]) || 1)) : '';
-      // Valor de venta líneas
       f[9] = (parseFloat(f[8]) || 0) !== 0 ? round((parseFloat(f[7]) || 0) / (parseFloat(f[8]) || 1)) : '';
-      // Total del día = Alexis + Cuenta alterna + Líneas
       f[10] = round((parseFloat(f[1]) || 0) + (parseFloat(f[4]) || 0) + (parseFloat(f[7]) || 0));
-      // Total ventas = ventas por día (Alexis) + ventas por día (alterna) + ventas por día (líneas)
       f[11] = round((parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0));
-      // Valor venta = Total del día / Total ventas
       f[12] = (parseFloat(f[11]) || 0) !== 0 ? round((parseFloat(f[10]) || 0) / (parseFloat(f[11]) || 1)) : '';
-      // CPA PUNTOS = Puntos / Valor venta
       f[14] = (parseFloat(f[12]) || 0) !== 0 ? round((parseFloat(f[13]) || 0) / (parseFloat(f[12]) || 1), 2) : '';
     }
     function round(num, dec=0) {
