@@ -5,7 +5,7 @@
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-     :root {
+   :root {
       --sidebar-bg: #15344a;
       --sidebar-accent: #22b3ec;
       --sidebar-hover: #1ea1d8;
@@ -367,10 +367,12 @@
           </tr>
         </thead>
         <tbody id="facturacion-body"></tbody>
-        <tr id="fila-totales">
-          <td>TOTALES</td>
-          <td colspan="14"></td>
-        </tr>
+        <tfoot>
+          <tr id="fila-totales">
+            <td>TOTALES</td>
+            <!-- JS llenará los 14 <td> restantes -->
+          </tr>
+        </tfoot>
       </table>
       <button id="expandir-tabla">Expandir tabla</button>
     </div>
@@ -396,7 +398,7 @@
     </div>
   </div>
   <script>
-    // -- Selects Mes/Año
+    // --- Selects Mes/Año
     const meses = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -492,7 +494,6 @@
 
         const campos = fila.campos;
         const tr = document.createElement('tr');
-        // FECHA editable (si quieres sólo lectura, quita el contentEditable aquí)
         const tdFecha = document.createElement('td');
         tdFecha.contentEditable = true;
         tdFecha.textContent = fecha;
@@ -501,7 +502,6 @@
         });
         tr.appendChild(tdFecha);
 
-        // Todas las columnas editables
         for (let c = 1; c < 15; c++) {
           const td = document.createElement('td');
           td.contentEditable = true;
@@ -516,20 +516,22 @@
       renderTotales();
     }
 
+    // --- Fórmulas por fila ---
     function recalcularFila(fila) {
       const f = fila.campos;
-      f[3] = (parseFloat(f[2]) || 0) !== 0 ? round((parseFloat(f[1]) || 0) / (parseFloat(f[2]) || 1)) : '';
-      f[6] = (parseFloat(f[5]) || 0) !== 0 ? round((parseFloat(f[4]) || 0) / (parseFloat(f[5]) || 1)) : '';
-      f[9] = (parseFloat(f[8]) || 0) !== 0 ? round((parseFloat(f[7]) || 0) / (parseFloat(f[8]) || 1)) : '';
+      f[3] = (parseFloat(f[2]) || 0) ? round((parseFloat(f[1]) || 0) / (parseFloat(f[2]) || 1)) : '';
+      f[6] = (parseFloat(f[5]) || 0) ? round((parseFloat(f[4]) || 0) / (parseFloat(f[5]) || 1)) : '';
+      f[9] = (parseFloat(f[8]) || 0) ? round((parseFloat(f[7]) || 0) / (parseFloat(f[8]) || 1)) : '';
       f[10] = round((parseFloat(f[1]) || 0) + (parseFloat(f[4]) || 0) + (parseFloat(f[7]) || 0));
       f[11] = round((parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0));
-      f[12] = (parseFloat(f[11]) || 0) !== 0 ? round((parseFloat(f[10]) || 0) / (parseFloat(f[11]) || 1)) : '';
-      f[14] = (parseFloat(f[12]) || 0) !== 0 ? round((parseFloat(f[13]) || 0) / (parseFloat(f[12]) || 1), 2) : '';
+      f[12] = (parseFloat(f[11]) || 0) ? round((parseFloat(f[10]) || 0) / (parseFloat(f[11]) || 1)) : '';
+      f[14] = (parseFloat(f[12]) || 0) ? round((parseFloat(f[13]) || 0) / (parseFloat(f[12]) || 1), 2) : '';
     }
     function round(num, dec=0) {
       return Number(num).toFixed(dec);
     }
 
+    // --- TOTALES: suma o fórmula según columna ---
     function renderTotales() {
       const totales = Array(15).fill(0);
       datosFacturacion.forEach(fila => {
@@ -539,6 +541,7 @@
           }
         }
       });
+      // Fórmulas en totales
       totales[3] = (totales[2] !== 0) ? round(totales[1] / totales[2]) : '';
       totales[6] = (totales[5] !== 0) ? round(totales[4] / totales[5]) : '';
       totales[9] = (totales[8] !== 0) ? round(totales[7] / totales[8]) : '';
@@ -547,9 +550,12 @@
       totales[12] = (totales[11] !== 0) ? round(totales[10] / totales[11]) : '';
       totales[14] = (totales[12] !== 0) ? round(totales[13] / totales[12], 2) : '';
 
-      const filaTotales = document.getElementById('fila-totales');
-      filaTotales.innerHTML = '<td>TOTALES</td>' +
-        totales.map((t,i) => i===0 ? '' : (t !== 0 ? t : '')).map((t,i) => `<td>${t}</td>`).join('');
+      // Rellenar fila totales
+      let filaTotales = '<td>TOTALES</td>';
+      for (let i = 1; i < 15; i++) {
+        filaTotales += `<td>${totales[i] !== 0 && totales[i] !== '' ? totales[i] : ''}</td>`;
+      }
+      document.getElementById('fila-totales').innerHTML = filaTotales;
     }
 
     function guardarCelda(fecha, col, valor) {

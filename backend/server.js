@@ -334,6 +334,7 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+// ====================== COSTUMER ========================= (continuación parte 2)
 app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
@@ -401,34 +402,80 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
   }
 });
 
-// --------- FACTURACIÓN API ---------
+// ======================= FACTURACION =======================
+// Normaliza los documentos para que siempre tengan el campo 'campos' (array de 15)
+function normalizeFacturacionDoc(doc) {
+  if (Array.isArray(doc.campos) && doc.campos.length === 15) return doc;
+  const campos = [];
+  campos[0]  = ""; // FECHA solo para formato
+  campos[1]  = doc.alexis || "";
+  campos[2]  = doc.ventasPorDia || "";
+  campos[3]  = doc.valorDeVenta || "";
+  campos[4]  = doc.cuentaAlterna || "";
+  campos[5]  = doc.ventasPorDiaAlterna || "";
+  campos[6]  = doc.valorDeVentaAlterna || "";
+  campos[7]  = doc.lineas || "";
+  campos[8]  = doc.ventasPorDiaLineas || "";
+  campos[9]  = doc.valorDeVentaLineas || "";
+  campos[10] = doc.totalDelDia || "";
+  campos[11] = doc.totalVentas || "";
+  campos[12] = doc.valorVenta || "";
+  campos[13] = doc.puntos || "";
+  campos[14] = doc.cpaPuntos || "";
+  return { ...doc, campos };
+}
+
+// GET por MES
 app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   const { ano, mes } = req.params;
   const regex = new RegExp(`^\\d{2}\\/${mes}\\/${ano}$`);
   try {
-    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    let data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    data = data.map(doc => normalizeFacturacionDoc(doc));
     res.json({ ok: true, data });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+
+// GET ANUAL (devuelve todos los datos del año, para la tabla y la gráfica)
 app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   const { ano } = req.params;
   const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
   try {
-    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    let data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    data = data.map(doc => normalizeFacturacionDoc(doc));
     const totalesPorMes = Array(12).fill(0);
     data.forEach(doc => {
       const partes = doc.fecha.split('/');
       if (partes.length === 3) {
         const mes = parseInt(partes[1], 10);
-        const totalDia = Number(doc.campos[9]) || 0;
+        const totalDia = Number(doc.campos[10]) || 0;
         if (!isNaN(mes) && mes >= 1 && mes <= 12) {
           totalesPorMes[mes - 1] += totalDia;
         }
       }
     });
     res.json({ ok: true, totalesPorMes, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST para GUARDAR/ACTUALIZAR FACTURACION de un día
+app.post('/api/facturacion', protegerRuta, async (req, res) => {
+  try {
+    const { fecha, campos } = req.body;
+    if (!fecha || !Array.isArray(campos) || campos.length !== 15) {
+      return res.status(400).json({ ok: false, error: "Datos inválidos para facturación." });
+    }
+    // upsert (update si existe, insert si no)
+    const result = await Facturacion.findOneAndUpdate(
+      { fecha },
+      { fecha, campos },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
@@ -489,7 +536,8 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   } catch (err) {
     res.status(500).json([]);
   }
-});
+});// ================== PARTE 3 ==================
+// ranking, welcome, export/import, agente, listen
 
 // --------- WELCOME ---------
 app.get('/api/welcome', protegerRuta, async (req, res) => {
