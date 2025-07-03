@@ -22,9 +22,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const MONGO_URL = process.env.MONGO_URL;
-if (!MONGO_URL) {
-  throw new Error("La variable de entorno MONGO_URL no está definida.");
-}
+if (!MONGO_URL) throw new Error("La variable de entorno MONGO_URL no está definida.");
 
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
@@ -81,13 +79,11 @@ function protegerRuta(req, res, next) {
     (req.headers['fetch-site']) ||
     (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
     req.path.startsWith('/api/');
-
   if (expectsJson) {
     return res.status(401).json({ success: false, error: "Sesión expirada o no autenticado" });
   }
   return res.redirect("/login.html");
 }
-
 function protegerAgente(req, res, next) {
   if (req.session && req.session.agente) return next();
   return res.redirect('/agente/login.html');
@@ -95,28 +91,48 @@ function protegerAgente(req, res, next) {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
   secret: "secreto_crm_conectado",
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: MONGO_URL })
 }));
-
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ------------- Rutas HTML protegidas ----------------
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+app.get("/login.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+app.get("/register.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "register.html"));
+});
+app.get("/inicio.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "inicio.html"));
+});
+app.get("/lead.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "lead.html"));
+});
+app.get("/costumer.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "costumer.html"));
+});
+app.get("/Facturacion.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
+});
+app.get("/graficas.html", protegerRuta, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "graficas.html"));
+});
 
-// LOGIN: ahora acepta admin fijo o usuarios registrados en modelo User
+// ------------ LOGIN / REGISTER / LOGOUT -------------
 app.post("/login", async (req, res) => {
   const { usuario, contrasena } = req.body;
   try {
     if (usuario === "admin" && contrasena === "1234") {
       req.session.usuario = usuario;
       req.session.ultimoLead = Date.now();
-      return res.json({ success: true });
+      return res.json({ success: true, destino: "/inicio.html" });
     }
     const usuarioDB = await User.findOne({ usuario });
     if (!usuarioDB) return res.json({ success: false });
@@ -126,26 +142,21 @@ app.post("/login", async (req, res) => {
 
     req.session.usuario = usuarioDB.usuario;
     req.session.ultimoLead = Date.now();
-    return res.json({ success: true });
+    return res.json({ success: true, destino: "/inicio.html" });
   } catch (err) {
     return res.json({ success: false, error: "Error interno" });
   }
 });
-
-// REGISTRO DE USUARIO NUEVO CON nombre, apellido, correo, usuario, password y correo de bienvenida
 app.post('/register', async (req, res) => {
   try {
     const { usuario, email, contrasena, nombre, apellido } = req.body;
     if (!usuario || !email || !contrasena || !nombre || !apellido)
       return res.json({ success: false, message: "Todos los campos son obligatorios." });
 
-    // Evita duplicados
     const existe = await User.findOne({ $or: [ { usuario }, { correo: email } ] });
     if (existe) return res.json({ success: false, message: "Usuario o correo ya registrado." });
 
     const hash = await bcrypt.hash(contrasena, 10);
-
-    // Guarda en la BD
     const nuevoUsuario = await User.create({
       usuario,
       correo: email,
@@ -154,7 +165,6 @@ app.post('/register', async (req, res) => {
       apellido
     });
 
-    // ENVÍO DE CORREO DE BIENVENIDA
     let transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -162,7 +172,6 @@ app.post('/register', async (req, res) => {
         pass: process.env.CRM_GMAIL_PASS
       }
     });
-
     let mailOptions = {
       from: '"CRM Agentes" <' + process.env.CRM_GMAIL_USER + '>',
       to: email,
@@ -174,36 +183,22 @@ app.post('/register', async (req, res) => {
              <br>
              <p style="color:gray;font-size:13px;">No respondas a este correo. Si no solicitaste esta cuenta, ignora este mensaje.</p>`
     };
-
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (e) {
-      return res.json({ success: true, message: "Usuario creado, pero no se pudo enviar el correo." });
-    }
+    try { await transporter.sendMail(mailOptions); }
+    catch (e) { return res.json({ success: true, message: "Usuario creado, pero no se pudo enviar el correo." }); }
 
     res.json({ success: true });
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
 });
-
-app.get("/lead.html", protegerRuta, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "lead.html"));
-});
-app.get("/costumer.html", protegerRuta, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "costumer.html"));
-});
-app.get("/Facturacion.html", protegerRuta, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "Facturacion.html"));
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/login.html'));
 });
 
-// ...continúa en la Parte 2...// ================== LEADS =========================
-// Importar leads desde Excel
+// ====================== LEAD =========================
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
-    }
+    if (!req.file) return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
     const filePath = req.file.path;
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
@@ -211,9 +206,7 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     const mapped = rows.filter(row =>
       row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
     ).map(row => ({
-      fecha: row.fecha
-        ? row.fecha.toString().slice(0, 10)
-        : getFechaLocalHoy(),
+      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : getFechaLocalHoy(),
       equipo: row.equipo || row.team || "",
       agente: row.agente || row.agent || "",
       telefono: row.telefono || "",
@@ -234,16 +227,12 @@ app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
-// CRUD de leads (guardar uno)
 app.post("/api/leads", protegerRuta, async (req, res) => {
   try {
     const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
-
     if (!agent || !producto) {
       return res.status(400).json({ success: false, error: "Datos incompletos" });
     }
-
     const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
       ? fecha
       : getFechaLocalHoy();
@@ -259,10 +248,8 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
       direccion: direccion || '',
       zip: zip || ''
     };
-
     await Lead.create(nuevoLead);
     await Costumer.create(nuevoLead);
-
     res.json({ success: true });
   } catch (err) {
     if (err.code === 11000) {
@@ -272,8 +259,6 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
   }
 });
-
-// Gráficas leads global
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
     const fechaFiltro = req.query.fecha;
@@ -305,7 +290,233 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
   }
 });
 
-// Descargar Excel de Costumers global
+// ====================== COSTUMER =========================
+app.post("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
+    if (!agent || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos" });
+    }
+    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
+
+    const nuevoCostumer = {
+      fecha: fechaCostumer,
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      estado: estado || "Pending",
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+    await Costumer.create(nuevoCostumer);
+    res.json({ success: true });
+  } catch (err) {
+    if (err.code === 11000) {
+      res.status(400).json({ success: false, error: "Ya existe un costumer idéntico. No se puede duplicar." });
+    } else {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+});
+app.get("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    const query = {};
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      query.fecha = fecha;
+    }
+    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    if (!estado) return res.status(400).json({ success: false, error: "El campo 'estado' es requerido." });
+    const updated = await Costumer.findByIdAndUpdate(id, { estado }, { new: true });
+    if (!updated) return res.status(404).json({ success: false, error: "Costumer no encontrado." });
+    res.json({ success: true, costumer: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Costumer.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ success: false, error: "Costumer no encontrado." });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --------- KPIs ---------
+app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
+  try {
+    const hoy = new Date();
+    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
+    const fechaHoy = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    const total = await Costumer.countDocuments({ fecha: fechaHoy });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
+  try {
+    const total = await Costumer.countDocuments({ estado: 'Pending' });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+app.get('/api/clientes', protegerRuta, async (req, res) => {
+  try {
+    const total = await Costumer.countDocuments();
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
+  try {
+    const hoy = new Date();
+    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
+    const inicioMes = `${year}-${month.padStart(2, '0')}-01`;
+    const finMesDate = new Date(year, parseInt(month), 0);
+    const finMes = `${year}-${month.padStart(2, '0')}-${String(finMesDate.getDate()).padStart(2, '0')}`;
+    const total = await Costumer.countDocuments({
+      fecha: { $gte: inicioMes, $lte: finMes }
+    });
+    res.json({ total });
+  } catch (err) {
+    res.status(500).json({ total: 0, error: err.message });
+  }
+});
+
+// --------- FACTURACIÓN API ---------
+app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
+  const { ano, mes } = req.params;
+  const regex = new RegExp(`^\\d{2}\\/${mes}\\/${ano}$`);
+  try {
+    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    res.json({ ok: true, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
+  const { ano } = req.params;
+  const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
+  try {
+    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    const totalesPorMes = Array(12).fill(0);
+    data.forEach(doc => {
+      const partes = doc.fecha.split('/');
+      if (partes.length === 3) {
+        const mes = parseInt(partes[1], 10);
+        const totalDia = Number(doc.campos[9]) || 0;
+        if (!isNaN(mes) && mes >= 1 && mes <= 12) {
+          totalesPorMes[mes - 1] += totalDia;
+        }
+      }
+    });
+    res.json({ ok: true, totalesPorMes, data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// --------- DASHBOARD, RANKINGS ---------
+function aliasAgente(nombre) {
+  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
+  return nombre;
+}
+app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+  try {
+    const equipos = await Costumer.aggregate([
+      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $sort: { ventas: -1 } }
+    ]);
+    res.json(equipos.map((e, idx) => ({
+      nombre: e._id || "Sin equipo",
+      ventas: e.ventas,
+      posicion: idx + 1
+    })));
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
+  try {
+    const docs = await Costumer.find({}, { agente: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, ventas: 0 };
+      ranking[nombreAgente].ventas += 1;
+    }
+    const resultado = Object.values(ranking).sort((a, b) => b.ventas - a.ventas);
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
+  try {
+    const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
+    const ranking = {};
+    for (const venta of docs) {
+      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, puntos: 0 };
+      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
+    }
+    const resultado = Object.values(ranking)
+      .sort((a, b) => b.puntos - a.puntos)
+      .map(r => ({
+        ...r,
+        puntos: Number(r.puntos.toFixed(2))
+      }));
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+// --------- WELCOME ---------
+app.get('/api/welcome', protegerRuta, async (req, res) => {
+  try {
+    let nombre = "Equipo administrativo";
+    if (req.session && req.session.usuario) {
+      const user = await User.findOne({ usuario: req.session.usuario });
+      if (user && user.nombre) nombre = user.nombre;
+      else nombre = req.session.usuario;
+    }
+    const frases = [
+      "Liderar con integridad y visión: eso es Connecting.",
+      "El éxito administrativo se construye con disciplina y pasión.",
+      "Cada gestión es un paso hacia la excelencia.",
+      "La confianza y la transparencia son nuestro mejor activo.",
+      "¡Gracias por ser parte de nuestro crecimiento diario!",
+      "El profesionalismo conecta sueños con resultados.",
+      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
+    ];
+    const frase = frases[Math.floor(Math.random() * frases.length)];
+    res.json({ nombre, frase });
+  } catch (err) {
+    res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
+  }
+});
+
+// --------- COSTUMER EXPORT/IMPORT ---------
 app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   try {
     const { desde, hasta } = req.query;
@@ -345,181 +556,7 @@ app.get('/descargar/costumers', protegerRuta, async (req, res) => {
   }
 });
 
-// ...continúa en la Parte 3...// ...esto sigue de la parte anterior (Parte 2)...
-
-// ====================== COSTUMER ENDPOINTS GLOBALES =========================
-app.post("/api/costumer", protegerRuta, async (req, res) => {
-  try {
-    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
-
-    const nuevoCostumer = {
-      fecha: fechaCostumer,
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      estado: estado || "Pending",
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Costumer.create(nuevoCostumer);
-    res.json({ success: true });
-  } catch (err) {
-    if (err.code === 11000) {
-      res.status(400).json({ success: false, error: "Ya existe un costumer idéntico. No se puede duplicar." });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  }
-});
-
-app.get("/api/costumer", protegerRuta, async (req, res) => {
-  try {
-    const { fecha } = req.query;
-    const query = {};
-    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      query.fecha = fecha;
-    }
-    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    res.json({ costumers });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Actualizar solo el estado del costumer por ID
-app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.body;
-    if (!estado) {
-      return res.status(400).json({ success: false, error: "El campo 'estado' es requerido." });
-    }
-    const updated = await Costumer.findByIdAndUpdate(id, { estado }, { new: true });
-    if (!updated) {
-      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
-    }
-    res.json({ success: true, costumer: updated });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Eliminar costumer global por ID
-app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = await Costumer.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ success: false, error: "Costumer no encontrado." });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ==================== ENDPOINTS KPI PARA COSTUMER GLOBAL ====================
-// KPI: Ventas Hoy
-app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
-  try {
-    const hoy = new Date();
-    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-    const fechaHoy = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const total = await Costumer.countDocuments({ fecha: fechaHoy });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-
-// KPI: Leads Pendientes
-app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
-  try {
-    const total = await Costumer.countDocuments({ estado: 'Pending' });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-
-// KPI: Total Clientes
-app.get('/api/clientes', protegerRuta, async (req, res) => {
-  try {
-    const total = await Costumer.countDocuments();
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-
-// KPI: Ventas del Mes
-app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
-  try {
-    const hoy = new Date();
-    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-    const inicioMes = `${year}-${month.padStart(2, '0')}-01`;
-    const finMesDate = new Date(year, parseInt(month), 0);
-    const finMes = `${year}-${month.padStart(2, '0')}-${String(finMesDate.getDate()).padStart(2, '0')}`;
-    const total = await Costumer.countDocuments({
-      fecha: { $gte: inicioMes, $lte: finMes }
-    });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-
-// ...continúa (tu backend sigue aquí, incluyendo la sección de facturación, endpoints de agente, dashboard, rankings, etc.)...
-
-// ==================== FACTURACIÓN ====================
-// ...tu endpoint POST /api/facturacion...
-
-// ...tu endpoint GET /api/facturacion/:ano/:mes...
-
-// ...tu endpoint GET /api/facturacion/estadistica/:ano/:mes...
-
-// === ENDPOINT ANUAL PARA LA GRAFICA DE 12 BARRAS ===
-app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
-  const { ano } = req.params;
-  const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
-  try {
-    const data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
-
-    const totalesPorMes = Array(12).fill(0);
-
-    data.forEach(doc => {
-      const partes = doc.fecha.split('/');
-      if (partes.length === 3) {
-        const mes = parseInt(partes[1], 10);
-        const totalDia = Number(doc.campos[9]) || 0;
-        if (!isNaN(mes) && mes >= 1 && mes <= 12) {
-          totalesPorMes[mes - 1] += totalDia;
-        }
-      }
-    });
-
-    res.json({ ok: true, totalesPorMes, data });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-// ...sigue con el resto de tu backend (logout, migración, agente, dashboard, rankings, etc.)...
-
-// LISTEN FINAL
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});// ...continuación de la Parte 3...
-
-// =================== INICIO ENDPOINTS DE AGENTE ===================
-// Login de agente
+// =================== AGENTE ===================
 app.post('/agente/login', async (req, res) => {
   const { user, pass } = req.body;
   const usuarioDB = await User.findOne({ usuario: user });
@@ -530,18 +567,12 @@ app.post('/agente/login', async (req, res) => {
   req.session.nombreAgente = `${usuarioDB.nombre} ${usuarioDB.apellido}`;
   res.json({ success: true });
 });
-
-// Logout de agente
 app.get('/agente/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/agente/login.html'));
 });
-
-// Info del agente actual
 app.get('/api/agente/info', protegerAgente, (req, res) => {
   res.json({ nombre: req.session.agente, nombreCompleto: req.session.nombreAgente });
 });
-
-// Guardar lead del agente (y costumer)
 app.post('/api/agente/leads', protegerAgente, async (req, res) => {
   try {
     const { fecha, team, producto, puntaje, telefono, direccion, zip } = req.body;
@@ -564,8 +595,6 @@ app.post('/api/agente/leads', protegerAgente, async (req, res) => {
     res.json({ success: false, error: "Error al guardar: "+err.message });
   }
 });
-
-// Gráficas personales del agente
 app.get('/api/agente/estadisticas-mes', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -586,7 +615,6 @@ app.get('/api/agente/estadisticas-mes', protegerAgente, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 app.get('/api/agente/ventas-producto', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -604,9 +632,6 @@ app.get('/api/agente/ventas-producto', protegerAgente, async (req, res) => {
     res.status(500).json({ labels:[], data:[] });
   }
 });
-
-// ==================== COSTUMER AGENTE: KPIs, FILTROS, CRUD, EXCEL ====================
-// KPIs/métricas de costumer del agente
 app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -633,8 +658,6 @@ app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
     res.status(500).json({ ventasHoy:0, leadsPendientes:0, clientes:0, ventasMes:0, error:err.message });
   }
 });
-
-// Tabla con filtros (costumers del agente)
 app.get('/api/agente/costumer', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -652,8 +675,6 @@ app.get('/api/agente/costumer', protegerAgente, async (req, res) => {
     res.status(500).json({ costumers: [], error: err.message });
   }
 });
-
-// Obtener costumer por ID (del agente)
 app.get('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -664,8 +685,6 @@ app.get('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Editar costumer del agente
 app.put('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -682,8 +701,6 @@ app.put('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
-// Eliminar costumer por ID (solo del agente)
 app.delete('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -694,8 +711,6 @@ app.delete('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
-// Eliminar todos los costumers del agente
 app.delete('/api/agente/costumer-eliminar-todo', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -705,123 +720,15 @@ app.delete('/api/agente/costumer-eliminar-todo', protegerAgente, async (req, res
     res.status(500).json({ success: false, error: err.message });
   }
 });
-app.get('/api/welcome', protegerRuta, async (req, res) => {
-  res.json({ nombre: req.session.usuario || "Equipo administrativo", frase: "¡Bienvenido!" });
-});
-
-// ...aquí puedes seguir agregando el resto de endpoints de dashboard, rankings, migración, exportar excel, etc...
-
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});// ...continuación de la Parte 4...
-
-// ================= DASHBOARD ADMIN / RANKINGS ==================
-
-// Ranking por EQUIPO
-app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
+app.get('/api/agente/teams', protegerAgente, async (req, res) => {
   try {
-    const equipos = await Costumer.aggregate([
-      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
-      { $sort: { ventas: -1 } }
-    ]);
-    res.json(equipos.map((e, idx) => ({
-      nombre: e._id || "Sin equipo",
-      ventas: e.ventas,
-      posicion: idx + 1
-    })));
+    const agente = req.session.nombreAgente || req.session.agente;
+    const teams = await Costumer.distinct('equipo', { agente });
+    res.json(teams.filter(Boolean));
   } catch (err) {
     res.status(500).json([]);
   }
 });
-
-// Ranking por AGENTE
-function aliasAgente(nombre) {
-  const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
-  return nombre;
-}
-
-app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
-  try {
-    const docs = await Costumer.find({}, { agente: 1 }).lean();
-    const ranking = {};
-    for (const venta of docs) {
-      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
-      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, ventas: 0 };
-      ranking[nombreAgente].ventas += 1;
-    }
-    const resultado = Object.values(ranking).sort((a, b) => b.ventas - a.ventas);
-    res.json(resultado);
-  } catch (err) {
-    res.status(500).json([]);
-  }
-});
-
-// Ranking por PUNTOS (sumando alias)
-app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
-  try {
-    const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
-    const ranking = {};
-    for (const venta of docs) {
-      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
-      if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, puntos: 0 };
-      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
-    }
-    const resultado = Object.values(ranking)
-      .sort((a, b) => b.puntos - a.puntos)
-      .map(r => ({
-        ...r,
-        puntos: Number(r.puntos.toFixed(2))
-      }));
-    res.json(resultado);
-  } catch (err) {
-    res.status(500).json([]);
-  }
-});
-
-// (Opcional) Ranking por EQUIPO - sin alias, pero puedes agregar función similar si lo necesitas
-app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
-  try {
-    const equipos = await Costumer.aggregate([
-      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
-      { $sort: { ventas: -1 } }
-    ]);
-    res.json(equipos.map((e, idx) => ({
-      nombre: e._id || "Sin equipo",
-      ventas: e.ventas,
-      posicion: idx + 1
-    })));
-  } catch (err) {
-    res.status(500).json([]);
-  }
-});
-
-// Saludo de bienvenida
-app.get('/api/welcome', protegerRuta, async (req, res) => {
-  try {
-    let nombre = "Equipo administrativo";
-    if (req.session && req.session.usuario) {
-      const user = await User.findOne({ usuario: req.session.usuario });
-      if (user && user.nombre) nombre = user.nombre;
-      else nombre = req.session.usuario;
-    }
-    const frases = [
-      "Liderar con integridad y visión: eso es Connecting.",
-      "El éxito administrativo se construye con disciplina y pasión.",
-      "Cada gestión es un paso hacia la excelencia.",
-      "La confianza y la transparencia son nuestro mejor activo.",
-      "¡Gracias por ser parte de nuestro crecimiento diario!",
-      "El profesionalismo conecta sueños con resultados.",
-      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
-    ];
-    const frase = frases[Math.floor(Math.random() * frases.length)];
-    res.json({ nombre, frase });
-  } catch (err) {
-    res.status(500).json({ nombre: "Equipo administrativo", frase: "Bienvenido", error: err.message });
-  }
-});
-
-// Exportar Excel de costumers del agente
 app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
   try {
     const agente = req.session.nombreAgente || req.session.agente;
@@ -857,8 +764,6 @@ app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
     res.status(500).send('Error generando Excel');
   }
 });
-
-// Importar costumers desde Excel (solo para el agente)
 app.post('/api/agente/costumer-import', protegerAgente, upload.single('excel'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
@@ -890,20 +795,7 @@ app.post('/api/agente/costumer-import', protegerAgente, upload.single('excel'), 
   }
 });
 
-// Listar teams del agente
-app.get('/api/agente/teams', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const teams = await Costumer.distinct('equipo', { agente });
-    res.json(teams.filter(Boolean));
-  } catch (err) {
-    res.status(500).json([]);
-  }
-});
-
-// =================== FIN ENDPOINTS DE AGENTE Y ADMIN ===================
-
-// LISTEN FINAL
+// --------- LISTEN ---------
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
