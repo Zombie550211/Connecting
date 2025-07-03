@@ -315,6 +315,9 @@
       outline: none;
     }
   </style>
+  <!-- Chart.js & ChartDataLabels -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
 <body>
 <div class="layout">
@@ -377,8 +380,8 @@
       <button onclick="bajarTabla()" id="btnDown">Abajo &#8595;</button>
     </div>
     <div class="gastos-mes-container">
-      <h2>Total de gastos por mes</h2>
-      <canvas id="gastos-mes" height="70"></canvas>
+      <h2>Total de facturación por mes (anual)</h2>
+      <canvas id="gastos-mes" height="90"></canvas>
       <button id="guardar-gastos">Guardar</button>
     </div>
   </main>
@@ -393,7 +396,6 @@
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // ------ Selects de Mes y Año ------
     const meses = [
@@ -448,12 +450,13 @@
       bloque = 0;
       await fetchDatos(mes, ano);
       renderTabla();
-      renderGastos();
+      renderGraficaAnual();
     }
 
     async function fetchDatos(mes, ano) {
       try {
-        const res = await fetch(`/api/facturacion/${ano}/${mes}`);
+        // Ahora cargamos TODO el año desde el backend para la gráfica
+        const res = await fetch(`/api/facturacion/anual/${ano}`);
         const json = await res.json();
         if (json.ok && Array.isArray(json.data)) {
           datosFacturacion = json.data.map(row => {
@@ -496,7 +499,6 @@
         tdFecha.textContent = fecha;
         tr.appendChild(tdFecha);
 
-        // Columnas editables: [1] ALEXIS, [2] VENTAS POR DIA (ALEXIS), [4] CUENTA ALTERNA, [5] VENTAS POR DIA (ALTERNA), [7] LINEAS, [8] VENTAS POR DIA (LINEAS), [13] PUNTOS
         for (let c = 0; c < 15; c++) {
           const td = document.createElement('td');
           if ([1,2,4,5,7,8,13].includes(c)) {
@@ -516,21 +518,29 @@
       renderTotales();
     }
 
-    // Fórmulas automáticas
+    // Fórmulas requeridas:
+    // 1. Valor de venta (col 3, 6, 9): Alexis / Ventas por día, Cuenta alterna / Ventas por día, Líneas / Ventas por día
+    // 2. Total del día (col 10): Alexis + Cuenta alterna + Líneas
+    // 3. Total ventas (col 11): Ventas por día (Alexis) + Ventas por día (alterna) + Ventas por día (líneas)
+    // 4. Valor venta (col 12): Total del día / Total ventas
+    // 5. CPA Puntos (col 14): Puntos / Valor venta
+
     function recalcularFila(fila) {
       const f = fila.campos;
-      // VALOR DE VENTA = VENTAS POR DIA * ALEXIS (col 3 = col 2 * col 1)
-      f[3] = round((parseFloat(f[2]) || 0) * (parseFloat(f[1]) || 0));
-      f[6] = round((parseFloat(f[5]) || 0) * (parseFloat(f[4]) || 0));
-      f[9] = round((parseFloat(f[8]) || 0) * (parseFloat(f[7]) || 0));
-      // TOTAL DEL DIA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 10 = 3 + 6 + 9)
-      f[10] = round((parseFloat(f[3]) || 0) + (parseFloat(f[6]) || 0) + (parseFloat(f[9]) || 0));
-      // TOTAL VENTAS = VENTAS POR DIA ALEXIS + VENTAS POR DIA ALTERNA + VENTAS POR DIA LINEAS (col 11 = 2 + 5 + 8)
+      // Valor de venta = Alexis / Ventas por día
+      f[3] = (parseFloat(f[2]) || 0) !== 0 ? round((parseFloat(f[1]) || 0) / (parseFloat(f[2]) || 1)) : '';
+      // Valor de venta alterna
+      f[6] = (parseFloat(f[5]) || 0) !== 0 ? round((parseFloat(f[4]) || 0) / (parseFloat(f[5]) || 1)) : '';
+      // Valor de venta líneas
+      f[9] = (parseFloat(f[8]) || 0) !== 0 ? round((parseFloat(f[7]) || 0) / (parseFloat(f[8]) || 1)) : '';
+      // Total del día = Alexis + Cuenta alterna + Líneas
+      f[10] = round((parseFloat(f[1]) || 0) + (parseFloat(f[4]) || 0) + (parseFloat(f[7]) || 0));
+      // Total ventas = ventas por día (Alexis) + ventas por día (alterna) + ventas por día (líneas)
       f[11] = round((parseFloat(f[2]) || 0) + (parseFloat(f[5]) || 0) + (parseFloat(f[8]) || 0));
-      // VALOR VENTA = VALOR DE VENTA ALEXIS + VALOR DE VENTA ALTERNA + VALOR DE VENTA LINEAS (col 12 = 3 + 6 + 9)
-      f[12] = f[10];
-      // CPA PUNTOS = PUNTOS / TOTAL VENTAS (col 14 = col 13 / col 11)
-      f[14] = (parseFloat(f[11]) || 0) ? round((parseFloat(f[13]) || 0) / parseFloat(f[11]),2) : '';
+      // Valor venta = Total del día / Total ventas
+      f[12] = (parseFloat(f[11]) || 0) !== 0 ? round((parseFloat(f[10]) || 0) / (parseFloat(f[11]) || 1)) : '';
+      // CPA PUNTOS = Puntos / Valor venta
+      f[14] = (parseFloat(f[12]) || 0) !== 0 ? round((parseFloat(f[13]) || 0) / (parseFloat(f[12]) || 1), 2) : '';
     }
     function round(num, dec=0) {
       return Number(num).toFixed(dec);
@@ -545,14 +555,13 @@
           }
         }
       });
-      // Fórmula totales para columnas automáticas
-      totales[3] = round(totales[2] * totales[1]);
-      totales[6] = round(totales[5] * totales[4]);
-      totales[9] = round(totales[8] * totales[7]);
-      totales[10] = round(Number(totales[3]) + Number(totales[6]) + Number(totales[9]));
+      totales[3] = (totales[2] !== 0) ? round(totales[1] / totales[2]) : '';
+      totales[6] = (totales[5] !== 0) ? round(totales[4] / totales[5]) : '';
+      totales[9] = (totales[8] !== 0) ? round(totales[7] / totales[8]) : '';
+      totales[10] = round(Number(totales[1]) + Number(totales[4]) + Number(totales[7]));
       totales[11] = round(Number(totales[2]) + Number(totales[5]) + Number(totales[8]));
-      totales[12] = totales[10];
-      totales[14] = totales[11] ? round(totales[13] / totales[11],2) : '';
+      totales[12] = (totales[11] !== 0) ? round(totales[10] / totales[11]) : '';
+      totales[14] = (totales[12] !== 0) ? round(totales[13] / totales[12], 2) : '';
 
       const filaTotales = document.getElementById('fila-totales');
       filaTotales.innerHTML = '<td>TOTALES</td>' +
@@ -569,9 +578,9 @@
       fila.campos[col] = valor;
       recalcularFila(fila);
       renderTabla();
+      renderGraficaAnual();
     }
 
-    // ------ Paginación ------
     function bajarTabla() {
       const mes = mesSelect.value;
       const ano = anoSelect.value;
@@ -588,7 +597,6 @@
       }
     }
 
-    // ------ Modal Tabla Expandida ------
     document.getElementById('expandir-tabla').onclick = function() {
       const modalBg = document.getElementById('modal-bg');
       const tablaModal = document.getElementById('tabla-facturacion-modal');
@@ -605,33 +613,75 @@
       }
     });
 
-    // ------ Gráfico de gastos (dummy data si no hay endpoint real) ------
+    // === GRÁFICA ANUAL LIMPIA CON BARRAS ($), SIEMPRE 12 MESES ===
     let chartGastos = null;
-    function renderGastos() {
-      const labels = [];
-      const data = [];
+    function obtenerTotalesPorMes() {
+      const mesesTotales = Array(12).fill(0);
       datosFacturacion.forEach(fila => {
         if (fila.fecha && Array.isArray(fila.campos)) {
-          labels.push(fila.fecha.substring(0,5));
-          data.push(Number(fila.campos[10]) || 0);
+          const partes = fila.fecha.split('/');
+          if (partes.length === 3) {
+            const mes = parseInt(partes[1], 10);
+            const total = Number(fila.campos[10]) || 0;
+            if (!isNaN(mes) && mes >= 1 && mes <= 12) {
+              mesesTotales[mes - 1] += total;
+            }
+          }
         }
       });
+      return mesesTotales;
+    }
+
+    function renderGraficaAnual() {
+      const totalesPorMes = obtenerTotalesPorMes();
       const ctx = document.getElementById('gastos-mes').getContext('2d');
       if (chartGastos) chartGastos.destroy();
+
       chartGastos = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: labels,
+          labels: meses,
           datasets: [{
-            label: 'Total del Día',
-            data: data,
-            backgroundColor: '#22b3ec88'
+            label: '',
+            data: totalesPorMes,
+            backgroundColor: '#22b3ec',
+            borderRadius: 8,
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: '#222',
+              font: { weight: 'bold', size: 15 },
+              formatter: (value) => '$' + (value || 0),
+              display: true
+            }
           }]
         },
         options: {
-          plugins: { legend: { display: false }},
-          scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
-        }
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              color: '#222',
+              font: { weight: 'bold', size: 15 },
+              formatter: (value) => '$' + (value || 0),
+              anchor: 'end',
+              align: 'end'
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false, drawBorder: false },
+              ticks: { display: false }
+            },
+            y: {
+              grid: { display: false, drawBorder: false },
+              ticks: { display: false }
+            }
+          },
+          layout: { padding: { top: 20 } },
+          animation: { duration: 900 }
+        },
+        plugins: [ChartDataLabels]
       });
     }
 
