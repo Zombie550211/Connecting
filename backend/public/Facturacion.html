@@ -686,22 +686,23 @@ function prevBlock() {
     renderTablaDias(currentMonth, currentYear, currentBlock);
   }
 }
+
 function recalcularFila(tr) {
   const tds = Array.from(tr.children);
 
   // ALEXIS
-  const alexis = parseFloat(tds[1].textContent) || 0;
-  const ventasAlexis = parseFloat(tds[2].textContent) || 0;
+  const alexis = parseFloat(tds[1].textContent.replace(/[^0-9.-]/g, "")) || 0;
+  const ventasAlexis = parseFloat(tds[2].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[3].textContent = ventasAlexis > 0 ? (alexis / ventasAlexis).toFixed(2) : "";
 
   // CUENTA ALTERNA
-  const cuentaAlterna = parseFloat(tds[4].textContent) || 0;
-  const ventasCA = parseFloat(tds[5].textContent) || 0;
+  const cuentaAlterna = parseFloat(tds[4].textContent.replace(/[^0-9.-]/g, "")) || 0;
+  const ventasCA = parseFloat(tds[5].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[6].textContent = ventasCA > 0 ? (cuentaAlterna / ventasCA).toFixed(2) : "";
 
   // LINEAS
-  const lineas = parseFloat(tds[7].textContent) || 0;
-  const ventasLineas = parseFloat(tds[8].textContent) || 0;
+  const lineas = parseFloat(tds[7].textContent.replace(/[^0-9.-]/g, "")) || 0;
+  const ventasLineas = parseFloat(tds[8].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[9].textContent = ventasLineas > 0 ? (lineas / ventasLineas).toFixed(2) : "";
 
   // TOTAL DEL DIA (ALEXIS + CA + LINEAS)
@@ -716,7 +717,7 @@ function recalcularFila(tr) {
   tds[12].textContent = (totalVentas > 0) ? (totalDia / totalVentas).toFixed(2) : "";
 
   // PUNTOS
-  const puntos = parseFloat(tds[13].textContent) || 0;
+  const puntos = parseFloat(tds[13].textContent.replace(/[^0-9.-]/g, "")) || 0;
 
   // CPA PUNTOS (PUNTOS / TOTAL DEL DIA)
   tds[14].textContent = (totalDia > 0) ? (puntos / totalDia).toFixed(2) : "";
@@ -731,37 +732,25 @@ excelBody.addEventListener('input', function(e) {
   }
 });
 
-function renderFilaTotalesFacturacion() {
-  const numCols = 15;
-  const totales = Array(numCols).fill(0);
-  const filas = Array.from(excelBody.querySelectorAll('tr'));
-  filas.forEach(tr => {
-    Array.from(tr.children).forEach((td, i) => {
-      if (i === 0) return;
-      const val = parseFloat(td.textContent) || 0;
-      totales[i] += val;
-    });
-  });
-  for (let i = 1; i < numCols; i++) {
-    document.getElementById('total-col-' + i).textContent = totales[i].toFixed(2);
-  }
-}
-
+// Mejorado: guarda SIEMPRE los valores recalculados y sin formato $ ni comas
 btnGuardar.addEventListener('click', guardarTodoFacturacion);
+
 async function guardarTodoFacturacion() {
   const filas = Array.from(document.querySelectorAll('#excelBody tr'));
   let guardados = 0, errores = 0;
   for (const tr of filas) {
-    recalcularFila(tr); // recalcula siempre antes de guardar
+    recalcularFila(tr); // recalcula SIEMPRE antes de guardar
     const tds = Array.from(tr.children);
     const fecha = tds[0].textContent.trim();
-    // Guardar los 15 campos (incluyendo fecha como campo 0)
-    const campos = tds.slice(1).map(td => {
+    // GUARDA los 15 campos, quitando $ y , y asegurando que los valores numéricos estén bien
+    const campos = tds.slice(1).map((td, idx) => {
       let txt = td.textContent.trim();
-      if (txt.startsWith("$")) txt = removeMoneySign(txt);
+      if (txt.startsWith("$")) txt = txt.replace(/[^0-9.-]/g, "");
+      else if (txt.includes(",")) txt = txt.replace(/,/g, "");
+      // fuerza a string vacío si no es un número relevante (excepto puntos y cpa puntos)
+      if ((txt === "" || isNaN(Number(txt))) && idx !== 12 && idx !== 13) txt = "";
       return txt;
     });
-    // SIEMPRE 15 campos
     while (campos.length < 15) campos.push("");
     if (campos.some(val => val !== "")) {
       const res = await fetch('/api/facturacion', {
@@ -780,11 +769,28 @@ async function guardarTodoFacturacion() {
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
 
+function renderFilaTotalesFacturacion() {
+  const numCols = 15;
+  const totales = Array(numCols).fill(0);
+  const filas = Array.from(excelBody.querySelectorAll('tr'));
+  filas.forEach(tr => {
+    Array.from(tr.children).forEach((td, i) => {
+      if (i === 0) return;
+      const val = parseFloat(td.textContent.replace(/[^0-9.-]/g, "")) || 0;
+      totales[i] += val;
+    });
+  });
+  for (let i = 1; i < numCols; i++) {
+    document.getElementById('total-col-' + i).textContent = totales[i].toFixed(2);
+  }
+}
+
 let grafica;
 async function actualizarGrafica() {
   const ano = parseInt(filtroAno.value, 10);
 
   const totalesPorMes = await fetchTotalesPorMes(ano);
+  //console.log('totalesPorMes', totalesPorMes);
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
