@@ -406,7 +406,7 @@ app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
 function normalizeFacturacionDoc(doc) {
   if (Array.isArray(doc.campos) && doc.campos.length === 15) return doc;
   const campos = [];
-  campos[0]  = ""; // FECHA solo para formato
+  campos[0]  = doc.fecha || ""; // FECHA lo ponemos por compatibilidad
   campos[1]  = doc.alexis || "";
   campos[2]  = doc.ventasPorDia || "";
   campos[3]  = doc.valorDeVenta || "";
@@ -424,12 +424,18 @@ function normalizeFacturacionDoc(doc) {
   return { ...doc, campos };
 }
 
-// GET por MES
+// GET por MES (robusto)
 app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   const { ano, mes } = req.params;
-  const regex = new RegExp(`^\\d{2}\\/${mes}\\/${ano}$`);
   try {
-    let data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    const regexes = [
+      new RegExp(`^\\d{2}[/-]${mes}[/-]${ano}$`),       // 01/07/2025 o 01-07-2025
+      new RegExp(`^${ano}[/-]${mes}[/-]\\d{2}$`),       // 2025-07-01 o 2025/07/01
+      new RegExp(`^${mes}[/-]\\d{2}[/-]${ano}$`),       // 07-01-2025 o 07/01/2025
+    ];
+    let data = await Facturacion.find({
+      $or: regexes.map(r => ({ fecha: { $regex: r } }))
+    }).lean();
     data = data.map(doc => normalizeFacturacionDoc(doc));
     res.json({ ok: true, data });
   } catch (err) {
@@ -437,27 +443,39 @@ app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   }
 });
 
-// GET ANUAL (devuelve todos los datos del año, para la tabla y la gráfica)
+// GET ANUAL (robusto, acepta cualquier formato de fecha)
 app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   const { ano } = req.params;
-  const regex = new RegExp(`^\\d{2}/\\d{2}/${ano}$`);
   try {
-    let data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
+    // Obtenemos TODOS los docs de ese año, sin importar el formato
+    const regexes = [
+      new RegExp(`${ano}`), // cualquier fecha que contenga el año
+    ];
+    let data = await Facturacion.find({
+      fecha: { $regex: regexes[0] }
+    }).lean();
     data = data.map(doc => normalizeFacturacionDoc(doc));
-    // -------------------
-    // MODIFICACIÓN PRINCIPAL PARA LA GRÁFICA:
-    // -------------------
     const totalesPorMes = Array(12).fill(0);
+
     data.forEach(doc => {
-      const partes = doc.fecha.split('/');
-      if (partes.length === 3) {
-        const mes = parseInt(partes[1], 10);
+      let mes = null;
+      if (doc.fecha) {
+        // dd/mm/yyyy o dd-mm-yyyy
+        let match = doc.fecha.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+        if (match) mes = parseInt(match[2], 10);
+        // yyyy-mm-dd o yyyy/mm/dd
+        match = doc.fecha.match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/);
+        if (match) mes = parseInt(match[2], 10);
+        // mm/dd/yyyy o mm-dd-yyyy
+        match = doc.fecha.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+        if (match && mes === null) mes = parseInt(match[1], 10);
+      }
+      if (!isNaN(mes) && mes >= 1 && mes <= 12) {
         const totalDia = Number(doc.campos[10]) || 0;
-        if (!isNaN(mes) && mes >= 1 && mes <= 12) {
-          totalesPorMes[mes - 1] += totalDia;
-        }
+        totalesPorMes[mes - 1] += totalDia;
       }
     });
+
     res.json({ ok: true, totalesPorMes, data });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
