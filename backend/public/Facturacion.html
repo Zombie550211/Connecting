@@ -37,7 +37,7 @@
       width: 100vw;
       background: var(--gris-bg);
     }
-    /* --- SIDEBAR --- */
+    /* Sidebar */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       width: 180px;
@@ -111,7 +111,6 @@
       text-align: center;
       font-weight: 600;
     }
-    /* MAIN CONTENT */
     .main-content {
       flex: 1;
       padding: 40px 50px;
@@ -121,7 +120,6 @@
       flex-direction: column;
       gap: 24px;
     }
-    /* --- FILTROS Y TITULO --- */
     .header-reportes {
       background: #fff;
       width: 100%;
@@ -172,7 +170,6 @@
       font-family: inherit;
       text-shadow: 0 2px 8px rgba(40,181,232,.09);
     }
-    /* --- BOTON EXPANDIR TABLA --- */
     .tabla-expand-btn {
       margin: 10px 32px 0 32px;
       text-align: right;
@@ -192,7 +189,6 @@
     #btnExpandirTabla:hover {
       background: #18a0d6;
     }
-    /* --- MODAL FULL TABLE --- */
     .modal-bg {
       display: none;
       position: fixed;
@@ -249,7 +245,6 @@
       max-height: 65vh;
       min-width: 100%;
     }
-    /* --- TABLA --- */
     .tabla-excel-editable {
       background: #fff;
       border-radius: var(--radius);
@@ -261,7 +256,7 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      height: 490px; /* Para mostrar solo el bloque de 16 días */
+      height: 490px;
       overflow-y: auto;
       transition: box-shadow var(--trans);
     }
@@ -298,7 +293,7 @@
       height: 38px;
       white-space: pre-line;
       line-height: 1.12;
-      color: #111 !important; /* BLACK header */
+      color: #111 !important;
       border-bottom: 2.5px solid var(--azul-acento);
       position: sticky;
       top: 0;
@@ -325,7 +320,6 @@
       font-size: 0.98em;
       white-space: pre-line;
     }
-    /* --- PAGINACION TABLA --- */
     .tabla-paginacion {
       width: 100%;
       display: flex;
@@ -353,14 +347,12 @@
       color: #eee;
       cursor: default;
     }
-    /* Fila de totales */
     .fila-totales td {
       font-weight: bold;
       background: #e6f6fa !important;
       border-top: 2px solid #28b5e8;
       color: #1e293b;
     }
-    /* --- GRAFICA --- */
     .grafica-reporte {
       background: #fff;
       border-radius: var(--radius);
@@ -525,11 +517,11 @@
         <div class="grafica-scroll-x">
           <canvas id="graficaGastosMes" width="1200" height="260"></canvas>
         </div>
-        <!-- BOTÓN GUARDAR (INTEGRADO) -->
         <div class="facturacion-toolbar">
           <button id="btnGuardarFacturacion">Guardar</button>
         </div>
-      </div>      <div class="modal-bg" id="modalTablaCompleta">
+      </div>
+      <div class="modal-bg" id="modalTablaCompleta">
         <div class="modal-content">
           <button class="modal-close-btn" onclick="cerrarModalTabla()">&times;</button>
           <div class="modal-title">Tabla completa de facturación del mes</div>
@@ -559,7 +551,6 @@
           </div>
         </div>
       </div>
-      <!-- FIN MODAL -->
     </div>
   </main>
 </div>
@@ -574,7 +565,6 @@ const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
 const btnGuardar = document.getElementById('btnGuardarFacturacion');
 
-// Llenar select de años
 (function(){
   const yearNow = (new Date()).getFullYear();
   let anos = '';
@@ -593,19 +583,28 @@ function daysInMonth(year, month) {
 let currentBlock = 0;
 let currentMonth = parseInt(filtroMes.value, 10);
 let currentYear = parseInt(filtroAno.value, 10);
-let datosFacturacionMes = []; // [{fecha, campos}]
+let datosFacturacionMes = [];
+const columnasConSigno = [1,3,4,6,7,9,10,12];
 
-// NUEVA función para obtener array de 12 meses directamente del endpoint actualizado
+function addMoneySign(val) {
+  if (val === "" || isNaN(val)) return "";
+  let num = parseFloat(val);
+  let options = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+  return "$" + num.toLocaleString('en-US', options);
+}
+function removeMoneySign(val) {
+  if (typeof val !== "string") return val;
+  return val.replace(/[^0-9.]/g, '');
+}
+
+// --- GRAFICA: SIEMPRE 12 MESES DEL AÑO SELECCIONADO, independiente del filtro de mes ---
 async function fetchTotalesPorMes(ano) {
   try {
-    const res = await fetch(`/api/facturacion/anual/${ano}`);
+    // Trae todos los registros del año
+    const res = await fetch(`/api/facturacion/${ano}`);
     const data = await res.json();
-    if (data.ok && Array.isArray(data.totalesPorMes)) {
-      return data.totalesPorMes;
-    }
-    // Si el backend no está actualizado, suma manualmente
-    if (Array.isArray(data.data)) {
-      const totalesPorMes = Array(12).fill(0);
+    const totalesPorMes = Array(12).fill(0);
+    if (data.ok && Array.isArray(data.data)) {
       data.data.forEach(fila => {
         if (!fila.fecha || !fila.campos) return;
         const partes = fila.fecha.split('/');
@@ -614,9 +613,8 @@ async function fetchTotalesPorMes(ano) {
         const totalDia = parseFloat(fila.campos[9]) || 0;
         if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
       });
-      return totalesPorMes;
     }
-    return Array(12).fill(0);
+    return totalesPorMes;
   } catch (e) {
     return Array(12).fill(0);
   }
@@ -653,7 +651,15 @@ async function renderTablaDias(mes, ano, block=0) {
       } else {
         const fecha = String(i+1).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
         const campos = buscarCamposPorFecha(fecha);
-        td.textContent = campos[c-1] ?? '';
+        let val = campos[c-1] ?? '';
+        if (columnasConSigno.includes(c) && val !== "") {
+          val = addMoneySign(removeMoneySign(val));
+        }
+        if (c === 11 && val !== "") {
+          val = parseInt(removeMoneySign(val), 10) || 0;
+          val = val.toLocaleString('en-US');
+        }
+        td.textContent = val;
         td.contentEditable = true;
       }
       tr.appendChild(td);
@@ -670,7 +676,7 @@ function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica(); // <--- Actualiza gráfica al cambiar filtros
+  actualizarGrafica();
 }
 filtroMes.addEventListener('change', updateTableByFilters);
 filtroAno.addEventListener('change', updateTableByFilters);
@@ -687,7 +693,7 @@ function prevBlock() {
     currentBlock--;
     renderTablaDias(currentMonth, currentYear, currentBlock);
   }
-}// --- FÓRMULAS AUTOMÁTICAS Y TOTALES ---
+}
 function recalcularFila(tr) {
   const tds = Array.from(tr.children);
 
@@ -724,18 +730,15 @@ function recalcularFila(tr) {
   tds[14].textContent = (totalDia > 0) ? (puntos / totalDia).toFixed(2) : "";
 }
 
-// Evento para recalcular al editar una celda relevante
 excelBody.addEventListener('input', function(e) {
   const td = e.target;
   const tr = td.parentElement;
-  // Si la celda no es de la columna de fecha ni de las calculadas...
   if (td.cellIndex !== 0 && ![3,6,9,10,11,12,14].includes(td.cellIndex)) {
     recalcularFila(tr);
     renderFilaTotalesFacturacion();
   }
 });
 
-// Fila de totales generales
 function renderFilaTotalesFacturacion() {
   const numCols = 15;
   const totales = Array(numCols).fill(0);
@@ -752,7 +755,6 @@ function renderFilaTotalesFacturacion() {
   }
 }
 
-// --- GUARDAR TODO ---
 btnGuardar.addEventListener('click', guardarTodoFacturacion);
 async function guardarTodoFacturacion() {
   const filas = Array.from(document.querySelectorAll('#excelBody tr'));
@@ -779,12 +781,10 @@ async function guardarTodoFacturacion() {
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
 
-// --- GRAFICA: 12 BARRAS POR MES DEL AÑO SELECCIONADO ---
 let grafica;
 async function actualizarGrafica() {
   const ano = parseInt(filtroAno.value, 10);
 
-  // USAR LA FUNCIÓN NUEVA, QUE TRAE EL ARRAY DE 12 MESES DIRECTO DEL BACKEND MODIFICADO
   const totalesPorMes = await fetchTotalesPorMes(ano);
 
   if (grafica) grafica.destroy();
@@ -836,7 +836,6 @@ async function actualizarGrafica() {
   });
 }
 
-// --- MODAL LÓGICA ---
 async function abrirModalTabla() {
   await renderTablaCompleta(currentMonth, currentYear);
   document.getElementById('modalTablaCompleta').classList.add('active');
@@ -869,7 +868,6 @@ async function renderTablaCompleta(mes, ano) {
   }
 }
 
-// --- INIT ---
 window.addEventListener('DOMContentLoaded', async () => {
   await renderTablaDias(currentMonth, currentYear, currentBlock);
   await actualizarGrafica();
