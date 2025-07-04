@@ -334,7 +334,6 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-// ====================== COSTUMER ========================= (continuación parte 2)
 app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
   try {
     const { id } = req.params;
@@ -445,6 +444,9 @@ app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   try {
     let data = await Facturacion.find({ fecha: { $regex: regex } }).lean();
     data = data.map(doc => normalizeFacturacionDoc(doc));
+    // -------------------
+    // MODIFICACIÓN PRINCIPAL PARA LA GRÁFICA:
+    // -------------------
     const totalesPorMes = Array(12).fill(0);
     data.forEach(doc => {
       const partes = doc.fecha.split('/');
@@ -536,8 +538,7 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   } catch (err) {
     res.status(500).json([]);
   }
-});// ================== PARTE 3 ==================
-// ranking, welcome, export/import, agente, listen
+});
 
 // --------- WELCOME ---------
 app.get('/api/welcome', protegerRuta, async (req, res) => {
