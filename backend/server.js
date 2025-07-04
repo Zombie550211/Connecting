@@ -443,7 +443,7 @@ app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
   }
 });
 
-// GET ANUAL (robusto, acepta cualquier formato de fecha)
+// GET ANUAL (robusto, acepta cualquier formato de fecha y asegura tipo número)
 app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
   const { ano } = req.params;
   try {
@@ -471,10 +471,16 @@ app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
         if (match && mes === null) mes = parseInt(match[1], 10);
       }
       if (!isNaN(mes) && mes >= 1 && mes <= 12) {
+        // Asegura número (aunque el campo sea string)
         const totalDia = Number(doc.campos[10]) || 0;
         totalesPorMes[mes - 1] += totalDia;
       }
     });
+
+    // ¡Asegura que el array es solo números!
+    for (let i = 0; i < totalesPorMes.length; i++) {
+      totalesPorMes[i] = Number(totalesPorMes[i]) || 0;
+    }
 
     res.json({ ok: true, totalesPorMes, data });
   } catch (err) {
