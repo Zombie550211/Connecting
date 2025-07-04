@@ -5,10 +5,11 @@
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js y Datalabels plugin primero -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
-   :root {
+    :root {
       --azul-oscuro: #1e293b;
       --azul-acento: #28b5e8;
       --sidebar-accent: #22b3ec;
@@ -441,6 +442,7 @@
   </nav>
   <main class="main-content">
     <div class="central-container">
+      <!-- Cabecera de filtros -->
       <div class="header-reportes">
         <div class="filtros-reportes">
           <label for="filtroMes">Mes:</label>
@@ -600,11 +602,13 @@ async function fetchTotalesPorMes(ano) {
   try {
     const res = await fetch(`/api/facturacion/anual/${ano}`);
     const data = await res.json();
+    console.log('Respuesta totalesPorMes:', data); // DEBUG
     if (data.ok && Array.isArray(data.totalesPorMes)) {
       return data.totalesPorMes;
     }
     return Array(12).fill(0);
   } catch (e) {
+    console.error('Error fetchTotalesPorMes:', e);
     return Array(12).fill(0);
   }
 }
@@ -787,6 +791,8 @@ async function actualizarGrafica() {
   const ano = parseInt(filtroAno.value, 10);
 
   const totalesPorMes = await fetchTotalesPorMes(ano);
+
+  console.log('Graficando:', totalesPorMes); // DEBUG
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
