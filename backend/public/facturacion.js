@@ -78,7 +78,7 @@ async function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica();
+  actualizarGrafica(true);
 }
 filtroMes.addEventListener('change', async () => {
   await updateTableByFilters();
@@ -101,14 +101,13 @@ async function prevBlock() {
 }
 window.addEventListener('DOMContentLoaded', async () => {
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica();
+  actualizarGrafica(true);
 });
 
 /* --- GRAFICA Chart.js --- */
 let grafica;
-async function actualizarGrafica() {
+async function actualizarGrafica(usarTabla = true) {
   const ano = parseInt(filtroAno.value, 10);
-  // Llama a la API del backend que da totalesPorMes ANUAL
   let totalesPorMes = Array(12).fill(0);
   try {
     const resp = await fetch(`/api/facturacion/anual/${ano}`);
@@ -120,21 +119,23 @@ async function actualizarGrafica() {
     console.error("Error obteniendo los datos para la gráfica:", e);
   }
 
-  // Además, suma los valores actuales editados en la tabla visible (en caso de que no se haya guardado aún)
-  const filasDOM = document.querySelectorAll('#excelBody tr');
-  let sumaMesActual = 0;
-  filasDOM.forEach(tr => {
-    const fecha = tr.children[0].textContent;
-    const partes = fecha.split('/');
-    if (partes.length !== 3) return;
-    const mesIdx = parseInt(partes[1], 10) - 1;
-    if (mesIdx === currentMonth - 1) {
-      // Total del día es el td 10 (índice 10)
-      const totalDia = parseFloat(tr.children[10].textContent) || 0;
-      sumaMesActual += totalDia;
-    }
-  });
-  totalesPorMes[currentMonth - 1] = sumaMesActual;
+  // SOLO suma la tabla visible si se está editando en tiempo real
+  if (usarTabla) {
+    const filasDOM = document.querySelectorAll('#excelBody tr');
+    let sumaMesActual = 0;
+    filasDOM.forEach(tr => {
+      const fecha = tr.children[0].textContent;
+      const partes = fecha.split('/');
+      if (partes.length !== 3) return;
+      const mesIdx = parseInt(partes[1], 10) - 1;
+      if (mesIdx === currentMonth - 1) {
+        // Total del día es el td 10 (índice 10)
+        const totalDia = parseFloat(tr.children[10].textContent) || 0;
+        sumaMesActual += totalDia;
+      }
+    });
+    totalesPorMes[currentMonth - 1] = sumaMesActual;
+  }
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
@@ -221,7 +222,7 @@ excelBody.addEventListener('input', function(e) {
   if (td.cellIndex !== 0) {
     recalcularFila(tr);
     renderFilaTotalesFacturacion();
-    actualizarGrafica(); // <-- ACTUALIZA LA GRAFICA EN TIEMPO REAL AL EDITAR
+    actualizarGrafica(true); // ACTUALIZA LA GRAFICA EN TIEMPO REAL AL EDITAR
   }
 });
 
@@ -265,7 +266,7 @@ async function guardarTodoFacturacion() {
     }
   }
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica(); // <-- ACTUALIZA GRAFICA AL GUARDAR
+  await actualizarGrafica(false); // SOLO backend después de guardar
   renderFilaTotalesFacturacion();
   alert(`Guardados: ${guardados}. Errores: ${errores}`);
 }
