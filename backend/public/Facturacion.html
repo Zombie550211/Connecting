@@ -600,21 +600,13 @@ function removeMoneySign(val) {
 // --- GRAFICA: SIEMPRE 12 MESES DEL AÑO SELECCIONADO, independiente del filtro de mes ---
 async function fetchTotalesPorMes(ano) {
   try {
-    // Trae todos los registros del año
-    const res = await fetch(`/api/facturacion/${ano}`);
+    // Trae todos los registros del año (modificado: endpoint anual)
+    const res = await fetch(`/api/facturacion/anual/${ano}`);
     const data = await res.json();
-    const totalesPorMes = Array(12).fill(0);
-    if (data.ok && Array.isArray(data.data)) {
-      data.data.forEach(fila => {
-        if (!fila.fecha || !fila.campos) return;
-        const partes = fila.fecha.split('/');
-        if (partes.length !== 3) return;
-        const mes = parseInt(partes[1], 10);
-        const totalDia = parseFloat(fila.campos[9]) || 0;
-        if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
-      });
+    if (data.ok && Array.isArray(data.totalesPorMes)) {
+      return data.totalesPorMes;
     }
-    return totalesPorMes;
+    return Array(12).fill(0);
   } catch (e) {
     return Array(12).fill(0);
   }
@@ -763,7 +755,14 @@ async function guardarTodoFacturacion() {
     recalcularFila(tr); // recalcula siempre antes de guardar
     const tds = Array.from(tr.children);
     const fecha = tds[0].textContent.trim();
-    const campos = tds.slice(1).map(td => td.textContent.trim());
+    // Guardar los 15 campos (incluyendo fecha como campo 0)
+    const campos = tds.slice(1).map(td => {
+      let txt = td.textContent.trim();
+      if (txt.startsWith("$")) txt = removeMoneySign(txt);
+      return txt;
+    });
+    // SIEMPRE 15 campos
+    while (campos.length < 15) campos.push("");
     if (campos.some(val => val !== "")) {
       const res = await fetch('/api/facturacion', {
         method: 'POST',
