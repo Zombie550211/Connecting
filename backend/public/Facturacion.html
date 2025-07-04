@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <title>Facturación</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tipografía moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
-    :root {
+   :root {
       --azul-oscuro: #1e293b;
       --azul-acento: #28b5e8;
       --sidebar-accent: #22b3ec;
@@ -597,10 +596,8 @@ function removeMoneySign(val) {
   return val.replace(/[^0-9.]/g, '');
 }
 
-// --- GRAFICA: SIEMPRE 12 MESES DEL AÑO SELECCIONADO, independiente del filtro de mes ---
 async function fetchTotalesPorMes(ano) {
   try {
-    // Trae todos los registros del año (modificado: endpoint anual)
     const res = await fetch(`/api/facturacion/anual/${ano}`);
     const data = await res.json();
     if (data.ok && Array.isArray(data.totalesPorMes)) {
@@ -707,7 +704,7 @@ function recalcularFila(tr) {
 
   // TOTAL DEL DIA (ALEXIS + CA + LINEAS)
   const totalDia = alexis + cuentaAlterna + lineas;
-  tds[10].textContent = totalDia.toFixed(2);
+  tds[10].textContent = totalDia > 0 ? totalDia.toFixed(2) : "";
 
   // TOTAL VENTAS (SUMA de ventas por día)
   const totalVentas = ventasAlexis + ventasCA + ventasLineas;
@@ -732,7 +729,7 @@ excelBody.addEventListener('input', function(e) {
   }
 });
 
-// Mejorado: guarda SIEMPRE los valores recalculados y sin formato $ ni comas
+// ---- GUARDADO ROBUSTO: recalcula y limpia antes de enviar ----
 btnGuardar.addEventListener('click', guardarTodoFacturacion);
 
 async function guardarTodoFacturacion() {
@@ -745,9 +742,9 @@ async function guardarTodoFacturacion() {
     // GUARDA los 15 campos, quitando $ y , y asegurando que los valores numéricos estén bien
     const campos = tds.slice(1).map((td, idx) => {
       let txt = td.textContent.trim();
-      if (txt.startsWith("$")) txt = txt.replace(/[^0-9.-]/g, "");
-      else if (txt.includes(",")) txt = txt.replace(/,/g, "");
-      // fuerza a string vacío si no es un número relevante (excepto puntos y cpa puntos)
+      if (txt.startsWith("$")) txt = txt.replace(/[^0-9.\-]/g, "");
+      if (txt.includes(",")) txt = txt.replace(/,/g, "");
+      // Si es vacío, deja vacío, excepto para PUNTOS y CPA PUNTOS
       if ((txt === "" || isNaN(Number(txt))) && idx !== 12 && idx !== 13) txt = "";
       return txt;
     });
@@ -790,7 +787,6 @@ async function actualizarGrafica() {
   const ano = parseInt(filtroAno.value, 10);
 
   const totalesPorMes = await fetchTotalesPorMes(ano);
-  //console.log('totalesPorMes', totalesPorMes);
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
