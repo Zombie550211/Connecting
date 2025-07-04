@@ -107,23 +107,20 @@ window.addEventListener('DOMContentLoaded', async () => {
 /* --- GRAFICA Chart.js --- */
 let grafica;
 async function actualizarGrafica() {
-  // --- Aquí está la magia para que la gráfica siempre refleje la tabla ---
-  // Toma TODOS los datos de la tabla actual del DOM y suma por mes
-  const totalesPorMes = Array(12).fill(0);
+  const ano = parseInt(filtroAno.value, 10);
+  // Llama a la API del backend que da totalesPorMes ANUAL
+  let totalesPorMes = Array(12).fill(0);
+  try {
+    const resp = await fetch(`/api/facturacion/anual/${ano}`);
+    const datos = await resp.json();
+    if (datos.ok && Array.isArray(datos.totalesPorMes)) {
+      totalesPorMes = datos.totalesPorMes.map(v => Number(v) || 0);
+    }
+  } catch (e) {
+    console.error("Error obteniendo los datos para la gráfica:", e);
+  }
 
-  // Leer todos los datos del año actual (puede estar solo el mes en pantalla, pero leemos todos los datos del año)
-  // Si tienes todos los datos del año en datosFacturacionMes, úsalo:
-  datosFacturacionMes.forEach(fila => {
-    if (!fila.fecha || !fila.campos) return;
-    const partes = fila.fecha.split('/');
-    if (partes.length !== 3) return;
-    const mes = parseInt(partes[1], 10);
-    const totalDia = parseFloat(fila.campos[9]) || 0; // Columna "TOTAL DEL DIA"
-    if (mes >= 1 && mes <= 12) totalesPorMes[mes - 1] += totalDia;
-  });
-
-  // Pero además suma los valores actuales editados en la tabla (en caso de que no se haya guardado aún)
-  // Lee del DOM la tabla visible y sobreescribe los valores del mes actual
+  // Además, suma los valores actuales editados en la tabla visible (en caso de que no se haya guardado aún)
   const filasDOM = document.querySelectorAll('#excelBody tr');
   let sumaMesActual = 0;
   filasDOM.forEach(tr => {
