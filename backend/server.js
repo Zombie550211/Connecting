@@ -28,6 +28,16 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
+  // --- Endpoint público para consultar leads (SOLO LECTURA) ---
+app.get('/api/leads', async (req, res) => {
+  try {
+    const leads = await Lead.find().lean();
+    res.json(leads);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.use(cors({
   origin: [
     "http://localhost:5173",
