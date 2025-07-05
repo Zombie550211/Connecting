@@ -1,3 +1,5 @@
+// == INICIO DEL CÓDIGO ==
+
 require('dotenv').config();
 
 const express = require("express");
@@ -27,6 +29,74 @@ if (!MONGO_URL) throw new Error("La variable de entorno MONGO_URL no está defin
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
+
+// ... (continúa tu código aquí, igual que lo tienes HASTA la sección COSTUMER)
+
+// Utilidad para rango de fechas por mes y año (para el filtro)
+function getRangoMes(mes, anio) {
+  mes = Number(mes);
+  anio = Number(anio);
+  if (isNaN(mes) || isNaN(anio)) return null;
+  const mesStr = String(mes + 1).padStart(2, '0');
+  const inicio = `${anio}-${mesStr}-01`;
+  const finDate = new Date(anio, mes + 1, 0);
+  const fin = `${anio}-${mesStr}-${String(finDate.getDate()).padStart(2, '0')}`;
+  return { $gte: inicio, $lte: fin };
+}
+
+// ====================== COSTUMER =========================
+app.post("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
+    if (!agent || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos" });
+    }
+    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
+
+    const nuevoCostumer = {
+      fecha: fechaCostumer,
+      equipo: team || '',
+      agente: agent,
+      telefono: telefono || '',
+      producto,
+      estado: estado || "Pending",
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '',
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+    await Costumer.create(nuevoCostumer);
+    res.json({ success: true });
+  } catch (err) {
+    if (err.code === 11000) {
+      res.status(400).json({ success: false, error: "Ya existe un costumer idéntico. No se puede duplicar." });
+    } else {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+});
+
+// MODIFICACIÓN: Aquí está la lógica correcta para filtrar por mes/año (además de por fecha o rango)
+app.get("/api/costumer", protegerRuta, async (req, res) => {
+  try {
+    const { fecha, fechaDesde, fechaHasta, mes, anio } = req.query;
+    const query = {};
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      query.fecha = fecha;
+    } else if (fechaDesde || fechaHasta) {
+      query.fecha = {};
+      if (fechaDesde) query.fecha.$gte = fechaDesde;
+      if (fechaHasta) query.fecha.$lte = fechaHasta;
+    } else if (mes !== undefined && anio !== undefined) {
+      const rango = getRangoMes(Number(mes), Number(anio));
+      if (rango) query.fecha = rango;
+    }
+    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    res.json({ costumers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
   // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 app.get('/api/leads', async (req, res) => {
