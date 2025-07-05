@@ -20,12 +20,11 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
-      --panel-bg: rgba(255,255,255,0.82);
+      --panel-bg: #fff;
       --panel-radius: 22px;
-      --panel-shadow: 0 8px 32px rgba(30,41,59,0.15);
+      --panel-shadow: 0 8px 32px rgba(30,41,59,0.12);
       --ver-todo: #22b3ec;
       --ver-todo-hover: #1ea1d8;
-      --glass-blur: blur(6px);
     }
     * { box-sizing: border-box; }
     body {
@@ -116,93 +115,64 @@
 
     .main-content {
       flex: 1;
-      padding: 42px 0 36px 0;
+      padding: 40px 0;
       background: var(--gris-bg);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
     .dashboard-container {
       width: 100%;
-      max-width: 1180px;
+      max-width: 1150px;
       margin: 0 auto;
       padding: 0 18px 24px 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 38px;
     }
+
     .panel-bienvenida-admin {
-      background: var(--panel-bg);
+      background: linear-gradient(120deg, #f1fafe 62%, #e8f0fd 100%);
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
-      padding: 0 0 38px 0;
+      padding: 0 0 36px 0;
       text-align: center;
       position: relative;
-      margin-bottom: 0;
+      overflow: hidden;
+      margin-bottom: 42px;
       width: 100%;
-      max-width: 990px;
-      backdrop-filter: var(--glass-blur);
-      border: 1.5px solid #e2eaf4;
-      transition: box-shadow 0.17s;
-    }
-    .panel-bienvenida-admin:hover {
-      box-shadow: 0 12px 48px #22b3ec1c;
+      max-width: 980px;
     }
     .panel-bienvenida-admin .panel-header-img {
       width: 100%;
       height: 180px;
       overflow: hidden;
       border-radius: 22px 22px 0 0;
-      background: linear-gradient(90deg,#22b3ec77 65%,#b7d7ef22 100%);
-      position: relative;
+      background: #209dd5;
     }
     .panel-bienvenida-admin h2 {
       margin-top: 32px;
-      color: #22b3ec;
+      color: #209dd5;
       font-weight: 900;
-      font-size: 1.53em;
+      font-size: 1.4em;
       letter-spacing: -1px;
-      text-shadow: 0 1px 0 #fff, 0 2px 8px #22b3ec18;
     }
     .panel-bienvenida-admin .valores-cultura {
       display: flex;
       justify-content: center;
-      gap: 28px;
-      margin: 18px 0 10px 0;
+      gap: 22px;
+      margin: 20px 0 12px 0;
       flex-wrap: wrap;
     }
     .valor-card {
-      background: rgba(32,179,236,0.13);
-      border-radius: 13px;
-      padding: 17px 24px 16px 24px;
-      box-shadow: 0 4px 18px #22b3ec18;
-      min-width: 105px;
+      background: rgba(32,157,213,0.09);
+      border-radius: 11px;
+      padding: 13px 20px 12px 20px;
+      box-shadow: 0 2px 6px #209dd52a;
+      min-width: 110px;
       text-align: center;
-      border: 1.5px solid #d0eafd;
-      transition: box-shadow 0.15s, border 0.13s;
-      font-size: 1.08em;
-    }
-    .valor-card:hover {
-      box-shadow: 0 6px 28px #22b3ec22;
-      border: 1.5px solid #22b3ec;
-    }
-    .panel-bienvenida-admin .frase-inspiradora {
-      font-size:1.17em;
-      color:#1e293b;
-      font-style:italic;
-      margin-bottom:18px;
-      margin-top: 8px;
-      opacity: 0.95;
-      text-shadow: 0 1px 0 #fff;
-    }
-    .panel-bienvenida-admin .panel-bajada {
-      margin-top:18px;
-      color:#b6c8d8;
-      font-size:1em;
-      font-style:italic;
-      letter-spacing: 0.015em;
     }
     .rankings-wrapper {
       display: flex;
@@ -211,39 +181,42 @@
       justify-content: center;
       align-items: stretch;
       width: 100%;
-      max-width: 990px;
+      max-width: 980px;
+      margin-bottom: 0;
     }
     .ranking-panel {
       flex: 1 1 0px;
-      min-width: 270px;
-      max-width: 332px;
+      min-width: 280px;
+      max-width: 340px;
       background: var(--panel-bg);
-      border-radius: 18px;
-      box-shadow: 0 6px 32px #22b3ec1c;
-      padding: 32px 20px 38px 28px;
+      border-radius: 15px;
+      box-shadow: 0 3px 18px #209dd524;
+      padding: 32px 18px 36px 22px;
       margin-bottom: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       position: relative;
-      min-height: 258px;
-      border: 1.2px solid #e2eaf4;
-      transition: box-shadow 0.14s;
-      backdrop-filter: blur(3.5px);
+      min-height: 260px;
     }
-    .ranking-panel:hover {
-      box-shadow: 0 10px 36px #22b3ec2c;
-      z-index: 1;
-      border: 1.2px solid #22b3ec;
+    @media (max-width: 1100px) {
+      .dashboard-container, .rankings-wrapper, .panel-bienvenida-admin { max-width: 99vw; }
+      .rankings-wrapper { gap: 20px;}
+      .ranking-panel { min-width: 210px; max-width: 330px; }
+    }
+    @media (max-width: 900px) {
+      .rankings-wrapper { gap: 10px;}
+      .ranking-panel { min-width: 170px; max-width: 98vw;}
+    }
+    @media (max-width: 850px) {
+      .rankings-wrapper { flex-direction: column; gap: 18px;}
+      .ranking-panel { width: 100%; max-width: 99vw; min-width: unset; min-height: 0;}
     }
     .ranking-panel h3 {
-      color: #22b3ec;
+      color: #209dd5;
       margin-top: 0;
       margin-bottom: 18px;
       font-weight: 800;
-      letter-spacing: -0.5px;
-      font-size: 1.16em;
-      text-shadow: 0 1px 0 #fff;
     }
     .ranking-panel ol {
       padding-left: 0;
@@ -256,15 +229,10 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.04em;
-      border-radius: 7px;
-      padding: 4px 6px 4px 2px;
-      transition: background 0.14s;
     }
-    .ranking-panel li:hover {
-      background: #f1fafe;
+    .ranking-panel li.opacity-low {
+      opacity: 0.75;
     }
-    .ranking-panel li.opacity-low { opacity: 0.75; }
     .ver-todo-link {
       position: absolute;
       bottom: 14px;
@@ -277,7 +245,6 @@
       background: none;
       outline: none;
       transition: color 0.15s;
-      letter-spacing: 0.01em;
     }
     .ver-todo-link:hover {
       color: var(--ver-todo-hover);
@@ -287,42 +254,53 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(30,41,59,0.18);
+      background: rgba(30,41,59,0.13);
       z-index: 99;
       display: flex;
       align-items: center;
       justify-content: center;
       animation: modal-fade-in 0.18s;
-      backdrop-filter: blur(2.5px);
     }
     @keyframes modal-fade-in {
       from { opacity: 0; }
       to { opacity: 1; }
     }
     .modal-content {
-      background: rgba(255,255,255,0.98);
-      border-radius: 18px;
-      box-shadow: 0 8px 52px #22b3ec19;
-      padding: 40px 28px 28px 28px;
-      max-width: 430px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 48px #15344a22;
+      padding: 38px 22px 26px 22px;
+      max-width: 420px;
       width: 94vw;
-      max-height: 82vh;
+      max-height: 80vh;
       overflow-y: auto;
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      border: 2px solid #e2eaf4;
-      backdrop-filter: blur(6px);
-      transition: box-shadow 0.15s;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      color: #15344a;
+      cursor: pointer;
+      font-weight: bold;
+      opacity: 0.7;
+      transition: opacity 0.14s;
+    }
+    .modal-close:hover {
+      opacity: 1;
     }
     .modal-content h3 {
       margin-top: 0;
       font-size: 1.25em;
-      color: #22b3ec;
+      color: #209dd5;
       margin-bottom: 18px;
       font-weight: 800;
-      letter-spacing: -0.5px;
     }
     .modal-content ol {
       padding-left: 0;
@@ -335,36 +313,6 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.04em;
-    }
-    .modal-close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      background: none;
-      border: none;
-      font-size: 1.7em;
-      color: #15344a;
-      cursor: pointer;
-      font-weight: bold;
-      opacity: 0.7;
-      transition: opacity 0.13s;
-    }
-    .modal-close:hover {
-      opacity: 1;
-    }
-    @media (max-width: 1100px) {
-      .dashboard-container, .rankings-wrapper, .panel-bienvenida-admin { max-width: 99vw; }
-      .rankings-wrapper { gap: 18px;}
-      .ranking-panel { min-width: 190px; max-width: 330px; }
-    }
-    @media (max-width: 900px) {
-      .rankings-wrapper { gap: 10px;}
-      .ranking-panel { min-width: 150px; max-width: 98vw;}
-    }
-    @media (max-width: 850px) {
-      .rankings-wrapper { flex-direction: column; gap: 18px;}
-      .ranking-panel { width: 100%; max-width: 99vw; min-width: unset; min-height: 0;}
     }
     @media (max-width: 700px) {
       .layout { flex-direction: column;}
@@ -376,9 +324,9 @@
       .sidebar-lema { display: none;}
       .main-content { padding: 12px 2px; }
       .dashboard-container { padding: 0 2vw;}
-      .panel-bienvenida-admin { padding-bottom: 18px; }
+      .panel-bienvenida-admin { padding-bottom: 20px; }
       .panel-bienvenida-admin .valores-cultura { flex-direction: column; gap: 7px; }
-      .ranking-panel { padding: 15px 5px 16px 5px; font-size: 0.98em; }
+      .ranking-panel { padding: 15px 5px 16px 5px; font-size: 0.97em; }
       .ranking-panel h3 { font-size: 1em; }
       .ranking-panel li { font-size: 0.98em; }
       .modal-content { padding: 16px 4vw 12px 4vw; max-width: 98vw;}
@@ -438,9 +386,9 @@
             </svg>
           </div>
           <h2 id="saludo"></h2>
-          <div id="frase-inspiradora" class="frase-inspiradora"></div>
+          <div id="frase-inspiradora" style="font-size:1.13em;color:#1e293b;font-style:italic;margin-bottom:18px;"></div>
           <div class="valores-cultura" id="valores-cultura"></div>
-          <div class="panel-bajada">
+          <div style="margin-top:16px;color:#b6c8d8;font-size:0.98em;font-style:italic;">
             Connecting CRM Administrativo
           </div>
         </div>
