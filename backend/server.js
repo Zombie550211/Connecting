@@ -517,15 +517,36 @@ app.post('/api/facturacion', protegerRuta, async (req, res) => {
   }
 });
 
+// Utilidad para rango de fechas por mes y año (para el filtro)
+function getRangoMes(mes, anio) {
+  mes = Number(mes);
+  anio = Number(anio);
+  if (isNaN(mes) || isNaN(anio)) return null;
+  const mesStr = String(mes + 1).padStart(2, '0');
+  const inicio = `${anio}-${mesStr}-01`;
+  const finDate = new Date(anio, mes + 1, 0);
+  const fin = `${anio}-${mesStr}-${String(finDate.getDate()).padStart(2, '0')}`;
+  return { $gte: inicio, $lte: fin };
+}
+
+
 // --------- DASHBOARD, RANKINGS ---------
 function aliasAgente(nombre) {
   const n = (nombre || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (["estefany garcia", "evelyn garcia"].includes(n)) return "Evelyn/Estefany Garcia";
   return nombre;
 }
+
 app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
   try {
+    const { mes, anio } = req.query;
+    let matchStage = {};
+    if (mes !== undefined && anio !== undefined) {
+      const filtroFecha = getRangoMes(Number(mes), Number(anio));
+      if (filtroFecha) matchStage.fecha = filtroFecha;
+    }
     const equipos = await Costumer.aggregate([
+      { $match: matchStage },
       { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
       { $sort: { ventas: -1 } }
     ]);
@@ -538,9 +559,16 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
     res.status(500).json([]);
   }
 });
+
 app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
   try {
-    const docs = await Costumer.find({}, { agente: 1 }).lean();
+    const { mes, anio } = req.query;
+    let match = {};
+    if (mes !== undefined && anio !== undefined) {
+      const filtroFecha = getRangoMes(Number(mes), Number(anio));
+      if (filtroFecha) match.fecha = filtroFecha;
+    }
+    const docs = await Costumer.find(match, { agente: 1 }).lean();
     const ranking = {};
     for (const venta of docs) {
       const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
@@ -553,9 +581,16 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
     res.status(500).json([]);
   }
 });
+
 app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
   try {
-    const docs = await Costumer.find({}, { agente: 1, puntaje: 1 }).lean();
+    const { mes, anio } = req.query;
+    let match = {};
+    if (mes !== undefined && anio !== undefined) {
+      const filtroFecha = getRangoMes(Number(mes), Number(anio));
+      if (filtroFecha) match.fecha = filtroFecha;
+    }
+    const docs = await Costumer.find(match, { agente: 1, puntaje: 1 }).lean();
     const ranking = {};
     for (const venta of docs) {
       const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
