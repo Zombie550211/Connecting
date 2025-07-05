@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title> Connecting </title>
+  <title>Connecting</title>
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -386,7 +386,6 @@
 </head>
 <body>
 <div class="layout">
-  <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sidebar-logo">
      <img src="logo connecting.png" alt="Logo Connecting" />
@@ -404,7 +403,6 @@
     </div>
   </nav>
   <main class="main-content">
-    <!-- KPI CARDS -->
     <div class="kpi-cards">
       <div class="kpi-card">
         <div class="kpi-label">Ventas Hoy</div>
@@ -423,7 +421,6 @@
         <div class="kpi-value" id="kpi-ventas-mes">0</div>
       </div>
     </div>
-    <!-- FILTRO MES/AÑO -->
     <div class="filters-row" style="margin-bottom:12px;">
       <label>Mes:
         <select id="filtro-mes"></select>
@@ -432,7 +429,7 @@
         <select id="filtro-anio"></select>
       </label>
     </div>
-        <div class="filters-download-bar">
+    <div class="filters-download-bar">
       <div class="filters-row">
         <label>Fecha desde:
           <input type="date" id="filtro-fecha-desde" />
@@ -508,60 +505,28 @@
 <script>
 const TEAMS = {
   "Team Pleitez": [
-    "Diego Mejia",
-    "Fabricio Panameño",
-    "Luis Chavarria",
-    "Mauricio Rivera",
-    "Steven Varela",
-    "Estefany Garcia",
-    "Abigail Galdamez"
+    "Diego Mejia", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera",
+    "Steven Varela", "Estefany Garcia", "Abigail Galdamez"
   ],
   "Team Irania": [
-    "Irania Serrano",
-    "Irvin Cruz",
-    "Josue Renderos",
-    "Julissa Rubio",
-    "Miguel Nunez",
-    "Pamela Urrutia",
-    "Roxana Martinez",
-    "Giselle Diaz",
-    "Estefany Amaya",
-    "Tatiana Ayala"
+    "Irania Serrano", "Irvin Cruz", "Josue Renderos", "Julissa Rubio",
+    "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Giselle Diaz",
+    "Estefany Amaya", "Tatiana Ayala"
   ],
   "Team Lineas": [
-    "Jocelyn R Lineas",
-    "Jonathan Figueroa",
-    "Lineas-Carlos",
-    "Lineas-Cristian R",
-    "Lineas-Diego.O",
-    "Lineas-Edward",
-    "Lineas-Kenia",
-    "Lineas-Luis G",
-    "Lineas-Oscar R"
+    "Jocelyn R Lineas", "Jonathan Figueroa", "Lineas-Carlos", "Lineas-Cristian R",
+    "Lineas-Diego.O", "Lineas-Edward", "Lineas-Kenia", "Lineas-Luis G", "Lineas-Oscar R"
   ],
   "Team Marisol": [
-    "Fernanda Castillo",
-    "Katerine Gomez",
-    "Kimberly Iglesias",
-    "Marisol Beltran"
+    "Fernanda Castillo", "Katerine Gomez", "Kimberly Iglesias", "Marisol Beltran"
   ],
   "Team Randal": [
-    "Abigail Morales",
-    "Alexander Montecinos",
-    "Anderson Guzman",
-    "Carlos Grande",
-    "Guadalupe Santana",
-    "Julio Chavez",
-    "Priscila Hernandez",
-    "Randal Martinez"
+    "Abigail Morales", "Alexander Montecinos", "Anderson Guzman", "Carlos Grande",
+    "Guadalupe Santana", "Julio Chavez", "Priscila Hernandez", "Randal Martinez"
   ],
   "Team Roberto": [
-    "Daniela Bonilla",
-    "Francisco Aguilar",
-    "Ingrid Garcia",
-    "Lisbeth Cortez",
-    "Nelson Ceren",
-    "Roberto Velasquez",
+    "Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez",
+    "Nelson Ceren", "Roberto Velasquez"
   ]
 };
 
@@ -575,7 +540,13 @@ const ESTADO_OPCIONES = [
   { value: "Cancelled", texto: "Cancelled", clase: "estado-cancelled" }
 ];
 
-// INICIALIZAR FILTROS MES/AÑO
+// Inicializa selects y carga datos al cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+  inicializarFiltroMesAnio();
+  agregarEventosFiltrosMesAnio();
+  cargarCostumers();
+});
+
 function inicializarFiltroMesAnio() {
   const hoy = new Date();
   const mesSelect = document.getElementById("filtro-mes");
@@ -591,7 +562,6 @@ function inicializarFiltroMesAnio() {
   anioSelect.value = hoy.getFullYear();
 }
 
-// FILTRADO POR MES/AÑO O RANGO DE FECHAS
 async function cargarCostumers() {
   try {
     const desde = document.getElementById("filtro-fecha-desde").value;
@@ -619,7 +589,7 @@ async function cargarCostumers() {
       "AGENTE": item.agente || "",
       "PRODUCTO": item.producto || "",
       "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
-      "Estado": item.estado || "Pending", // Por defecto Pending si no hay
+      "Estado": item.estado || "Pending",
       "PUNTAJE": item.puntaje || "",
       "CUENTA": item.cuenta || "",
       "TELÉFONO": item.telefono || "",
@@ -628,27 +598,20 @@ async function cargarCostumers() {
     }));
     renderizarTablaCostumers(datosCostumers);
     llenarFiltroTeamYAgente();
-    recalcularKPIsCostumer(); // ACTUALIZAR KPIs
+    recalcularKPIsCostumer();
   } catch (err) {
     console.error("Error cargando costumers:", err);
   }
 }
 
-// KPIs DINÁMICOS SEGÚN DATOS FILTRADOS
 function recalcularKPIsCostumer() {
   const hoy = new Date();
   const hoyStr = hoy.toISOString().slice(0, 10);
 
-  // Ventas hoy
   const ventasHoy = datosCostumers.filter(c => c.FECHA === hoyStr).length;
-
-  // Clientes pendientes
   const pendientes = datosCostumers.filter(c => c.Estado === "Pending").length;
-
-  // Ventas Canceladas
   const canceladas = datosCostumers.filter(c => c.Estado === "Cancelled").length;
 
-  // Ventas del mes actual/filtro (del mes visible)
   let mes, anio;
   if (datosCostumers.length > 0) {
     [anio, mes] = datosCostumers[0].FECHA.split('-');
@@ -664,14 +627,12 @@ function recalcularKPIsCostumer() {
     return Number(cyear) === anio && Number(cmes) === mes;
   }).length;
 
-  // Actualiza los recuadros
   document.getElementById('kpi-ventas-hoy').textContent = ventasHoy;
   document.getElementById('kpi-leads-pendientes').textContent = pendientes;
   document.getElementById('kpi-clientes').textContent = canceladas;
   document.getElementById('kpi-ventas-mes').textContent = ventasMes;
 }
 
-// Eventos para recargar al cambiar mes/año o filtros de fecha
 function agregarEventosFiltrosMesAnio() {
   document.getElementById("filtro-mes").addEventListener("change", ()=>{ 
     document.getElementById("filtro-fecha-desde").value = "";
@@ -687,10 +648,6 @@ function agregarEventosFiltrosMesAnio() {
   document.getElementById("filtro-fecha-hasta").addEventListener("input", cargarCostumers);
 }
 
-// ...Aquí continúa TODO tu JS restante...
-
-// (Lógica para renderizarTablaCostumers, actualizarEstadoCostumer, llenarFiltroTeamYAgente, llenarFiltroAgente, aplicarFiltros, eliminarCostumer, mostrarFormEditar, cerrarFormEditar, eventos de filtros...)
-
 function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
@@ -699,15 +656,11 @@ function renderizarTablaCostumers(filas) {
     return;
   }
   filas.forEach(fila => {
-    // Determina la clase de color para el select según estado actual
     const estadoActual = ESTADO_OPCIONES.find(e => e.value === fila.Estado) ? fila.Estado : "Pending";
     const claseColor = ESTADO_OPCIONES.find(e => e.value === estadoActual)?.clase || "estado-pending";
-
-    // Genera las opciones del select con el valor seleccionado y los colores
     const opcionesEstado = ESTADO_OPCIONES.map(op =>
       `<option value="${op.value}"${fila.Estado === op.value ? " selected" : ""}>${op.texto}</option>`
     ).join('');
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${fila.FECHA}</td>
@@ -736,7 +689,6 @@ function renderizarTablaCostumers(filas) {
 }
 
 async function actualizarEstadoCostumer(id, estado, selectEl) {
-  // Cambia el color del select automáticamente
   selectEl.classList.remove(
     "estado-pending", "estado-complete", "estado-rescheduled", "estado-pending-chargeback", "estado-cancelled"
   );
@@ -760,7 +712,6 @@ async function actualizarEstadoCostumer(id, estado, selectEl) {
   }
 }
 
-// Llena los filtros de Team y Agente FIJOS
 function llenarFiltroTeamYAgente() {
   const teamSelect = document.getElementById("filtro-team");
   teamSelect.innerHTML = `<option value="">Todos</option>` +
@@ -803,10 +754,9 @@ function aplicarFiltros() {
   if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
 
   renderizarTablaCostumers(filtrados);
-  recalcularKPIsCostumer(); // ¡LOS KPI TAMBIÉN SE RECALCULAN CON LOS FILTROS!
+  recalcularKPIsCostumer();
 }
 
-// ---- ELIMINAR COSTUMER ----
 async function eliminarCostumer(id) {
   if (!confirm("¿Seguro que deseas eliminar este costumer?")) return;
   try {
@@ -822,7 +772,6 @@ async function eliminarCostumer(id) {
   }
 }
 
-// ---- EDITAR COSTUMER ----
 function mostrarFormEditar(id) {
   const costumer = datosCostumers.find(c => c._id === id);
   if (!costumer) return alert("No se encontró el costumer");
@@ -905,7 +854,6 @@ function cerrarFormEditar() {
   document.getElementById("editar-form-container").innerHTML = "";
 }
 
-// Eventos de los filtros
 document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
 document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarFiltros);
@@ -913,10 +861,6 @@ document.getElementById("filtro-telefono").addEventListener("input", aplicarFilt
 document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
 
-// ---- INICIALIZACIÓN ----
-inicializarFiltroMesAnio();
-agregarEventosFiltrosMesAnio();
-cargarCostumers();
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
