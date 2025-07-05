@@ -460,9 +460,10 @@ async function actualizarGrafica() {
         borderRadius: 8,
         datalabels: {
           anchor: 'end',
-          align: 'start', // <-- Así queda POR ENCIMA de la barra
+          align: 'end',
           color: '#23485d',
           font: { weight: 'bold', size: 16 },
+          // Mostramos el total encima de cada barra (todas las barras)
           formatter: function(value) {
             return value === 0 ? "" : "$" + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           }
