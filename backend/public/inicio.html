@@ -392,6 +392,26 @@
             Connecting CRM Administrativo
           </div>
         </div>
+        <!-- FILTROS DE MES/AÑO PARA RANKING -->
+        <div class="filtros-ranking" style="margin-bottom:30px; display:flex; gap:16px; align-items:center;">
+          <label for="filtroRankingMes">Mes:</label>
+          <select id="filtroRankingMes">
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <label for="filtroRankingAno">Año:</label>
+          <select id="filtroRankingAno"></select>
+        </div>
         <div class="rankings-wrapper">
           <div class="ranking-panel" id="ranking-equipos-panel">
             <h3>🏆 Ranking por Equipo</h3>
@@ -420,130 +440,205 @@
       </div>
     </main>
   </div>
-  <script>
-    const valores = [
-      { emoji: "🤝", valor: "Colaboración" },
-      { emoji: "🏆", valor: "Excelencia" },
-      { emoji: "💡", valor: "Innovación" }
-    ];
-    const frases = [
-      "Liderar con integridad y visión: eso es Connecting.",
-      "El éxito administrativo se construye con disciplina y pasión.",
-      "Cada gestión es un paso hacia la excelencia.",
-      "La confianza y la transparencia son nuestro mejor activo.",
-      "¡Gracias por ser parte de nuestro crecimiento diario!",
-      "El profesionalismo conecta sueños con resultados.",
-      "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
-    ];
+<script>
+  // Valores y frases
+  const valores = [
+    { emoji: "🤝", valor: "Colaboración" },
+    { emoji: "🏆", valor: "Excelencia" },
+    { emoji: "💡", valor: "Innovación" }
+  ];
+  const frases = [
+    "Liderar con integridad y visión: eso es Connecting.",
+    "El éxito administrativo se construye con disciplina y pasión.",
+    "Cada gestión es un paso hacia la excelencia.",
+    "La confianza y la transparencia son nuestro mejor activo.",
+    "¡Gracias por ser parte de nuestro crecimiento diario!",
+    "El profesionalismo conecta sueños con resultados.",
+    "Alcanzar la luna comienza con un primer paso, ¡gracias por darlo cada día!"
+  ];
 
-    function getSaludo(nombre) {
-      const hora = new Date().getHours();
-      let base = nombre ? `, ${nombre}` : "";
-      if (hora < 12) return "¡Buenos días" + base + "!";
-      if (hora < 19) return "¡Buenas tardes" + base + "!";
-      return "¡Buenas noches" + base + "!";
-    }
-    function renderValores() {
-      const cont = document.getElementById('valores-cultura');
-      cont.innerHTML = valores.map(v =>
-        `<div class="valor-card">
-          <span style="font-size:1.4em;">${v.emoji}</span><br>
-          <span style="color:#209dd5;font-weight:700;">${v.valor}</span>
-        </div>`
-      ).join('');
-    }
-    function renderRankingEquipos(equipos, mostrarTodos) {
-      const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-equipos-list');
-      const cantidad = mostrarTodos ? equipos.length : Math.min(4, equipos.length);
-      ol.innerHTML = equipos.slice(0, cantidad).map((eq, idx) => `
-        <li>
-          <span style="font-size:1.3em;margin-right:8px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
-          <span style="font-weight:700;">${eq.nombre}</span>
-          <div style="flex:1;margin:0 7px;">
-            <div style="height:8px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
-              <div style="width:${Math.min(100,eq.porc)}%;background:${idx==0?'#22b3ec':'#b6e0fb'};height:100%;border-radius:4px;"></div>
-            </div>
-          </div>
-          <span style="font-weight:600;color:#209dd5;">${eq.ventas} ventas</span>
-        </li>
-      `).join('');
-    }
-    function renderRankingAgentes(agentes, mostrarTodos) {
-      const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-agentes-list');
-      const cantidad = mostrarTodos ? agentes.length : Math.min(4, agentes.length);
-      ol.innerHTML = agentes.slice(0, cantidad).map((ag, idx) => `
-        <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
-          <div style="flex:1;">
-            <div style="font-weight:700;">${ag.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${ag.equipo}</div>
-          </div>
-          <span style="font-weight:600;color:#209dd5;">${ag.ventas} ventas</span>
-        </li>
-      `).join('');
-    }
-    function renderRankingPuntos(puntos, mostrarTodos) {
-      const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-puntos-list');
-      const cantidad = mostrarTodos ? puntos.length : Math.min(4, puntos.length);
-      ol.innerHTML = puntos.slice(0, cantidad).map((p, idx) => `
-        <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
-          <div style="flex:1;">
-            <div style="font-weight:700;">${p.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${p.equipo}</div>
-          </div>
-          <span style="font-weight:600;color:#209dd5;">${p.puntos} pts</span>
-        </li>
-      `).join('');
-    }
+  function getSaludo(nombre) {
+    const hora = new Date().getHours();
+    let base = nombre ? `, ${nombre}` : "";
+    if (hora < 12) return "¡Buenos días" + base + "!";
+    if (hora < 19) return "¡Buenas tardes" + base + "!";
+    return "¡Buenas noches" + base + "!";
+  }
+  function renderValores() {
+    const cont = document.getElementById('valores-cultura');
+    cont.innerHTML = valores.map(v =>
+      `<div class="valor-card">
+        <span style="font-size:1.4em;">${v.emoji}</span><br>
+        <span style="color:#209dd5;font-weight:700;">${v.valor}</span>
+      </div>`
+    ).join('');
+  }
 
-    // MODAL LÓGICA
-    let currentModal = null;
-    function abrirModal(tipo) {
-      currentModal = tipo;
-      document.getElementById('modal-overlay').style.display = "flex";
-      if (tipo === "equipos") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Equipo";
-        renderRankingEquipos(window.equiposRanking, true);
-      } else if (tipo === "agentes") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Agente";
-        renderRankingAgentes(window.agentesRanking, true);
-      } else if (tipo === "puntos") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Puntos";
-        renderRankingPuntos(window.puntosRanking, true);
-      }
+  // Filtro año automático
+  (function(){
+    const yearNow = (new Date()).getFullYear();
+    let anos = '';
+    for (let y = yearNow - 2; y <= yearNow + 1; y++) {
+      anos += `<option value="${y}">${y}</option>`;
     }
-    function cerrarModal() {
-      document.getElementById('modal-overlay').style.display = "none";
-      currentModal = null;
-    }
-    async function cargarDashboard() {
-      const bienvenida = await fetch('/api/welcome').then(r=>r.json())
-        .catch(()=>({nombre:'Equipo administrativo'}));
-      document.getElementById('saludo').textContent = getSaludo(bienvenida.nombre);
-      document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random()*frases.length)];
-      renderValores();
-      window.equiposRanking = await fetch('/api/ranking-equipos').then(r=>r.json()).catch(()=>[]);
-      renderRankingEquipos(window.equiposRanking, false);
-      window.agentesRanking = await fetch('/api/ranking-agentes').then(r=>r.json()).catch(()=>[]);
-      renderRankingAgentes(window.agentesRanking, false);
-      window.puntosRanking = await fetch('/api/ranking-puntos').then(r=>r.json()).catch(()=>[]);
-      renderRankingPuntos(window.puntosRanking, false);
-    }
-    cargarDashboard();
-    function logout() {
-      window.location.href = 'logout';
-    }
-    document.addEventListener('keydown', function(e){
-      if (e.key === "Escape") cerrarModal();
+    document.getElementById('filtroRankingAno').innerHTML = anos;
+    document.getElementById('filtroRankingMes').value = (new Date()).getMonth() + 1;
+    document.getElementById('filtroRankingAno').value = yearNow;
+  })();
+
+  // Ranking mensual filtrable
+  let leadsOriginal = [];
+  let equiposRanking = [], agentesRanking = [], puntosRanking = [];
+
+  async function cargarDashboard() {
+    const bienvenida = await fetch('/api/welcome').then(r=>r.json())
+      .catch(()=>({nombre:'Equipo administrativo'}));
+    document.getElementById('saludo').textContent = getSaludo(bienvenida.nombre);
+    document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random()*frases.length)];
+    renderValores();
+
+    leadsOriginal = await fetch('/api/leads').then(r=>r.json()).catch(()=>[]);
+    actualizarRankingPorFiltro();
+  }
+
+  function filtrarPorMes(leads, mes, ano) {
+    return leads.filter(doc => {
+      // doc.fecha debe ser tipo "YYYY-MM-DD" o similar
+      const fecha = new Date(doc.fecha);
+      return (fecha.getMonth() + 1) === mes && fecha.getFullYear() === ano;
     });
-    document.getElementById('modal-overlay').addEventListener('click', function(e){
-      if (e.target === this) cerrarModal();
+  }
+
+  function calcularRankingEquipos(leadsMes) {
+    const mapeo = {};
+    leadsMes.forEach(l => {
+      if (!mapeo[l.equipo]) mapeo[l.equipo] = 0;
+      mapeo[l.equipo]++;
     });
-  </script>
+    let arr = Object.entries(mapeo).map(([nombre, ventas])=>({nombre, ventas}));
+    arr.sort((a,b)=>b.ventas-a.ventas);
+    const max = arr[0] ? arr[0].ventas : 1;
+    arr.forEach(a => a.porc = Math.round((a.ventas/max)*100));
+    return arr;
+  }
+  function calcularRankingAgentes(leadsMes) {
+    const mapeo = {};
+    leadsMes.forEach(l => {
+      if (!mapeo[l.agente]) mapeo[l.agente] = {nombre:l.agente, equipo:l.equipo, ventas:0};
+      mapeo[l.agente].ventas++;
+    });
+    let arr = Object.values(mapeo);
+    arr.sort((a,b)=>b.ventas-a.ventas);
+    return arr;
+  }
+  function calcularRankingPuntos(leadsMes) {
+    const mapeo = {};
+    leadsMes.forEach(l => {
+      if (!mapeo[l.agente]) mapeo[l.agente] = {nombre:l.agente, equipo:l.equipo, puntos:0};
+      mapeo[l.agente].puntos += (parseFloat(l.puntos)||0);
+    });
+    let arr = Object.values(mapeo);
+    arr.sort((a,b)=>b.puntos-a.puntos);
+    return arr;
+  }
+
+  function renderRankingEquipos(equipos, mostrarTodos) {
+    const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-equipos-list');
+    const cantidad = mostrarTodos ? equipos.length : Math.min(4, equipos.length);
+    ol.innerHTML = equipos.slice(0, cantidad).map((eq, idx) => `
+      <li>
+        <span style="font-size:1.3em;margin-right:8px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
+        <span style="font-weight:700;">${eq.nombre}</span>
+        <div style="flex:1;margin:0 7px;">
+          <div style="height:8px;background:#e6f5fb;border-radius:4px;overflow:hidden;">
+            <div style="width:${Math.min(100,eq.porc)}%;background:${idx==0?'#22b3ec':'#b6e0fb'};height:100%;border-radius:4px;"></div>
+          </div>
+        </div>
+        <span style="font-weight:600;color:#209dd5;">${eq.ventas} ventas</span>
+      </li>
+    `).join('');
+  }
+  function renderRankingAgentes(agentes, mostrarTodos) {
+    const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-agentes-list');
+    const cantidad = mostrarTodos ? agentes.length : Math.min(4, agentes.length);
+    ol.innerHTML = agentes.slice(0, cantidad).map((ag, idx) => `
+      <li>
+        <span style="font-size:1.3em;margin-right:8px;">
+          ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
+        </span>
+        <div style="flex:1;">
+          <div style="font-weight:700;">${ag.nombre}</div>
+          <div style="font-size:0.97em;color:#209dd5;">${ag.equipo}</div>
+        </div>
+        <span style="font-weight:600;color:#209dd5;">${ag.ventas} ventas</span>
+      </li>
+    `).join('');
+  }
+  function renderRankingPuntos(puntos, mostrarTodos) {
+    const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-puntos-list');
+    const cantidad = mostrarTodos ? puntos.length : Math.min(4, puntos.length);
+    ol.innerHTML = puntos.slice(0, cantidad).map((p, idx) => `
+      <li>
+        <span style="font-size:1.3em;margin-right:8px;">
+          ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
+        </span>
+        <div style="flex:1;">
+          <div style="font-weight:700;">${p.nombre}</div>
+          <div style="font-size:0.97em;color:#209dd5;">${p.equipo}</div>
+        </div>
+        <span style="font-weight:600;color:#209dd5;">${p.puntos} pts</span>
+      </li>
+    `).join('');
+  }
+
+  function actualizarRankingPorFiltro() {
+    const mes = parseInt(document.getElementById('filtroRankingMes').value, 10);
+    const ano = parseInt(document.getElementById('filtroRankingAno').value, 10);
+    const leadsMes = filtrarPorMes(leadsOriginal, mes, ano);
+
+    window.equiposRanking = calcularRankingEquipos(leadsMes);
+    window.agentesRanking = calcularRankingAgentes(leadsMes);
+    window.puntosRanking = calcularRankingPuntos(leadsMes);
+
+    renderRankingEquipos(window.equiposRanking, false);
+    renderRankingAgentes(window.agentesRanking, false);
+    renderRankingPuntos(window.puntosRanking, false);
+  }
+
+  document.getElementById('filtroRankingMes').addEventListener('change', actualizarRankingPorFiltro);
+  document.getElementById('filtroRankingAno').addEventListener('change', actualizarRankingPorFiltro);
+
+  // MODAL LÓGICA
+  let currentModal = null;
+  function abrirModal(tipo) {
+    currentModal = tipo;
+    document.getElementById('modal-overlay').style.display = "flex";
+    if (tipo === "equipos") {
+      document.getElementById('modal-title').textContent = "Ranking completo por Equipo";
+      renderRankingEquipos(window.equiposRanking, true);
+    } else if (tipo === "agentes") {
+      document.getElementById('modal-title').textContent = "Ranking completo por Agente";
+      renderRankingAgentes(window.agentesRanking, true);
+    } else if (tipo === "puntos") {
+      document.getElementById('modal-title').textContent = "Ranking completo por Puntos";
+      renderRankingPuntos(window.puntosRanking, true);
+    }
+  }
+  function cerrarModal() {
+    document.getElementById('modal-overlay').style.display = "none";
+    currentModal = null;
+  }
+  function logout() {
+    window.location.href = 'logout';
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.key === "Escape") cerrarModal();
+  });
+  document.getElementById('modal-overlay').addEventListener('click', function(e){
+    if (e.target === this) cerrarModal();
+  });
+
+  cargarDashboard();
+</script>
 </body>
 </html>
