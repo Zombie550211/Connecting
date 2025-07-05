@@ -423,9 +423,16 @@
         <div class="kpi-value" id="kpi-ventas-mes">0</div>
       </div>
     </div>
-    <!-- FIN KPI CARDS -->
-
-    <div class="filters-download-bar">
+    <!-- FILTRO MES/AÑO -->
+    <div class="filters-row" style="margin-bottom:12px;">
+      <label>Mes:
+        <select id="filtro-mes"></select>
+      </label>
+      <label>Año:
+        <select id="filtro-anio"></select>
+      </label>
+    </div>
+        <div class="filters-download-bar">
       <div class="filters-row">
         <label>Fecha desde:
           <input type="date" id="filtro-fecha-desde" />
@@ -555,7 +562,6 @@ const TEAMS = {
     "Lisbeth Cortez",
     "Nelson Ceren",
     "Roberto Velasquez",
-
   ]
 };
 
@@ -569,29 +575,38 @@ const ESTADO_OPCIONES = [
   { value: "Cancelled", texto: "Cancelled", clase: "estado-cancelled" }
 ];
 
-// --- INICIO KPIs FUNCIONALES ---
-async function cargarKPIsCostumer() {
-  const [
-    ventasHoy,
-    leadsPendientes,
-    clientes,
-    ventasMes
-  ] = await Promise.all([
-    fetch('/api/ventas/hoy').then(r => r.json()).catch(() => ({total:0})),
-    fetch('/api/leads/pendientes').then(r => r.json()).catch(() => ({total:0})),
-    fetch('/api/clientes').then(r => r.json()).catch(() => ({total:0})),
-    fetch('/api/ventas/mes').then(r => r.json()).catch(() => ({total:0}))
-  ]);
-  document.getElementById('kpi-ventas-hoy').textContent = ventasHoy.total ?? 0;
-  document.getElementById('kpi-leads-pendientes').textContent = leadsPendientes.total ?? 0;
-  document.getElementById('kpi-clientes').textContent = clientes.total ?? 0;
-  document.getElementById('kpi-ventas-mes').textContent = ventasMes.total ?? 0;
+// INICIALIZAR FILTROS MES/AÑO
+function inicializarFiltroMesAnio() {
+  const hoy = new Date();
+  const mesSelect = document.getElementById("filtro-mes");
+  const anioSelect = document.getElementById("filtro-anio");
+  mesSelect.innerHTML = Array.from({length:12}, (_,i)=>`<option value="${i}">${["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][i]}</option>`).join('');
+  for(let y = hoy.getFullYear()-2; y <= hoy.getFullYear()+1; y++) {
+    let opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    anioSelect.appendChild(opt);
+  }
+  mesSelect.value = hoy.getMonth();
+  anioSelect.value = hoy.getFullYear();
 }
-// --- FIN KPIs FUNCIONALES ---
 
+// FILTRADO POR MES/AÑO O RANGO DE FECHAS
 async function cargarCostumers() {
   try {
-    const res = await fetch('/api/costumer');
+    const desde = document.getElementById("filtro-fecha-desde").value;
+    const hasta = document.getElementById("filtro-fecha-hasta").value;
+    const mes = document.getElementById("filtro-mes").value;
+    const anio = document.getElementById("filtro-anio").value;
+    let url = '/api/costumer';
+
+    if (desde || hasta) {
+      url += `?${desde ? 'fechaDesde=' + desde : ''}${desde && hasta ? '&' : ''}${hasta ? 'fechaHasta=' + hasta : ''}`;
+    } else {
+      url += `?mes=${mes}&anio=${anio}`;
+    }
+
+    const res = await fetch(url);
     const data = await res.json();
     if (!data.costumers) {
       console.error("No se recibieron costumers del backend:", data);
@@ -613,10 +628,68 @@ async function cargarCostumers() {
     }));
     renderizarTablaCostumers(datosCostumers);
     llenarFiltroTeamYAgente();
+    recalcularKPIsCostumer(); // ACTUALIZAR KPIs
   } catch (err) {
     console.error("Error cargando costumers:", err);
   }
 }
+
+// KPIs DINÁMICOS SEGÚN DATOS FILTRADOS
+function recalcularKPIsCostumer() {
+  const hoy = new Date();
+  const hoyStr = hoy.toISOString().slice(0, 10);
+
+  // Ventas hoy
+  const ventasHoy = datosCostumers.filter(c => c.FECHA === hoyStr).length;
+
+  // Clientes pendientes
+  const pendientes = datosCostumers.filter(c => c.Estado === "Pending").length;
+
+  // Ventas Canceladas
+  const canceladas = datosCostumers.filter(c => c.Estado === "Cancelled").length;
+
+  // Ventas del mes actual/filtro (del mes visible)
+  let mes, anio;
+  if (datosCostumers.length > 0) {
+    [anio, mes] = datosCostumers[0].FECHA.split('-');
+    mes = Number(mes);
+    anio = Number(anio);
+  } else {
+    mes = hoy.getMonth() + 1;
+    anio = hoy.getFullYear();
+  }
+  const ventasMes = datosCostumers.filter(c => {
+    if (!c.FECHA) return false;
+    const [cyear, cmes] = c.FECHA.split('-');
+    return Number(cyear) === anio && Number(cmes) === mes;
+  }).length;
+
+  // Actualiza los recuadros
+  document.getElementById('kpi-ventas-hoy').textContent = ventasHoy;
+  document.getElementById('kpi-leads-pendientes').textContent = pendientes;
+  document.getElementById('kpi-clientes').textContent = canceladas;
+  document.getElementById('kpi-ventas-mes').textContent = ventasMes;
+}
+
+// Eventos para recargar al cambiar mes/año o filtros de fecha
+function agregarEventosFiltrosMesAnio() {
+  document.getElementById("filtro-mes").addEventListener("change", ()=>{ 
+    document.getElementById("filtro-fecha-desde").value = "";
+    document.getElementById("filtro-fecha-hasta").value = "";
+    cargarCostumers(); 
+  });
+  document.getElementById("filtro-anio").addEventListener("change", ()=>{
+    document.getElementById("filtro-fecha-desde").value = "";
+    document.getElementById("filtro-fecha-hasta").value = "";
+    cargarCostumers();
+  });
+  document.getElementById("filtro-fecha-desde").addEventListener("input", cargarCostumers);
+  document.getElementById("filtro-fecha-hasta").addEventListener("input", cargarCostumers);
+}
+
+// ...Aquí continúa TODO tu JS restante...
+
+// (Lógica para renderizarTablaCostumers, actualizarEstadoCostumer, llenarFiltroTeamYAgente, llenarFiltroAgente, aplicarFiltros, eliminarCostumer, mostrarFormEditar, cerrarFormEditar, eventos de filtros...)
 
 function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
@@ -730,6 +803,7 @@ function aplicarFiltros() {
   if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
 
   renderizarTablaCostumers(filtrados);
+  recalcularKPIsCostumer(); // ¡LOS KPI TAMBIÉN SE RECALCULAN CON LOS FILTROS!
 }
 
 // ---- ELIMINAR COSTUMER ----
@@ -830,6 +904,7 @@ function mostrarFormEditar(id) {
 function cerrarFormEditar() {
   document.getElementById("editar-form-container").innerHTML = "";
 }
+
 // Eventos de los filtros
 document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
 document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
@@ -837,9 +912,11 @@ document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarF
 document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
-// Inicial
+
+// ---- INICIALIZACIÓN ----
+inicializarFiltroMesAnio();
+agregarEventosFiltrosMesAnio();
 cargarCostumers();
-cargarKPIsCostumer(); // <-- Se llama al cargar la página
 function logout() {
   fetch('/logout').then(() => location.href = 'login.html');
 }
