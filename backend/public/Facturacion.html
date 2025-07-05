@@ -9,7 +9,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
-    /* ... (todo el CSS igual que antes, sin cambios) ... */
     :root {
       --azul-oscuro: #1e293b;
       --azul-acento: #28b5e8;
@@ -218,7 +217,6 @@
   </main>
 </div>
 <script>
-/* REGISTRO CORRECTO DEL PLUGIN DATALABELS PARA CHART.JS 4+ */
 if (window.ChartjsPluginDatalabels) {
   Chart.register(window.ChartjsPluginDatalabels);
 }
@@ -233,7 +231,6 @@ const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
 const btnGuardar = document.getElementById('btnGuardarFacturacion');
 
-/** NUEVO: array local con los totales de cada mes **/
 let totalesPorMesLocales = Array(12).fill(0);
 
 (function(){
@@ -317,7 +314,7 @@ async function renderTablaDias(mes, ano, block=0) {
   btnUp.disabled = (block === 0);
   btnDown.disabled = ((block + 1) * 16 >= numDias);
   renderFilaTotalesFacturacion();
-  actualizarTotalesPorMesLocales(); // <-- Actualiza el array local cuando se renderiza la tabla
+  actualizarTotalesPorMesLocales();
 }
 
 function updateTableByFilters() {
@@ -350,36 +347,28 @@ function prevBlock() {
 function recalcularFila(tr) {
   const tds = Array.from(tr.children);
 
-  // ALEXIS
   const alexis = parseFloat(tds[1].textContent.replace(/[^0-9.-]/g, "")) || 0;
   const ventasAlexis = parseFloat(tds[2].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[3].textContent = ventasAlexis > 0 ? (alexis / ventasAlexis).toFixed(2) : "";
 
-  // CUENTA ALTERNA
   const cuentaAlterna = parseFloat(tds[4].textContent.replace(/[^0-9.-]/g, "")) || 0;
   const ventasCA = parseFloat(tds[5].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[6].textContent = ventasCA > 0 ? (cuentaAlterna / ventasCA).toFixed(2) : "";
 
-  // LINEAS
   const lineas = parseFloat(tds[7].textContent.replace(/[^0-9.-]/g, "")) || 0;
   const ventasLineas = parseFloat(tds[8].textContent.replace(/[^0-9.-]/g, "")) || 0;
   tds[9].textContent = ventasLineas > 0 ? (lineas / ventasLineas).toFixed(2) : "";
 
-  // TOTAL DEL DIA (ALEXIS + CA + LINEAS)
   const totalDia = alexis + cuentaAlterna + lineas;
   tds[10].textContent = totalDia > 0 ? totalDia.toFixed(2) : "";
 
-  // TOTAL VENTAS (SUMA de ventas por día)
   const totalVentas = ventasAlexis + ventasCA + ventasLineas;
   tds[11].textContent = totalVentas > 0 ? totalVentas.toFixed(2) : "";
 
-  // VALOR VENTA (TOTAL DEL DIA / TOTAL VENTAS)
   tds[12].textContent = (totalVentas > 0) ? (totalDia / totalVentas).toFixed(2) : "";
 
-  // PUNTOS
   const puntos = parseFloat(tds[13].textContent.replace(/[^0-9.-]/g, "")) || 0;
 
-  // CPA PUNTOS (PUNTOS / TOTAL DEL DIA)
   tds[14].textContent = (totalDia > 0) ? (puntos / totalDia).toFixed(2) : "";
 }
 
@@ -394,22 +383,19 @@ excelBody.addEventListener('input', function(e) {
   }
 });
 
-// ---- GUARDADO ROBUSTO: recalcula y limpia antes de enviar ----
 btnGuardar.addEventListener('click', guardarTodoFacturacion);
 
 async function guardarTodoFacturacion() {
   const filas = Array.from(document.querySelectorAll('#excelBody tr'));
   let guardados = 0, errores = 0;
   for (const tr of filas) {
-    recalcularFila(tr); // recalcula SIEMPRE antes de guardar
+    recalcularFila(tr);
     const tds = Array.from(tr.children);
     const fecha = tds[0].textContent.trim();
-    // GUARDA los 15 campos, quitando $ y , y asegurando que los valores numéricos estén bien
     const campos = tds.slice(1).map((td, idx) => {
       let txt = td.textContent.trim();
       if (txt.startsWith("$")) txt = txt.replace(/[^0-9.\-]/g, "");
       if (txt.includes(",")) txt = txt.replace(/,/g, "");
-      // Si es vacío, deja vacío, excepto para PUNTOS y CPA PUNTOS
       if ((txt === "" || isNaN(Number(txt))) && idx !== 12 && idx !== 13) txt = "";
       return txt;
     });
@@ -448,17 +434,13 @@ function renderFilaTotalesFacturacion() {
   }
 }
 
-/** NUEVO: Actualiza el array local con el total del mes actual (de la celda de totales) **/
 function actualizarTotalesPorMesLocales() {
-  // El mes es 1-based, el array 0-based
   const mesActual = parseInt(filtroMes.value, 10) - 1;
-  // Lee el valor de la celda
   const total = parseFloat(document.getElementById('total-col-10').textContent.replace(/[^0-9.-]/g, "")) || 0;
   totalesPorMesLocales[mesActual] = total;
 }
 
 let grafica;
-/** Modificada: usa el array local en vez de datos del backend **/
 async function actualizarGrafica() {
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
@@ -478,10 +460,13 @@ async function actualizarGrafica() {
         borderRadius: 8,
         datalabels: {
           anchor: 'end',
-          align: 'start',
+          align: 'end',
           color: '#23485d',
           font: { weight: 'bold', size: 16 },
-          formatter: v => v === 0 ? "" : "$" + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          // Mostramos el total encima de cada barra (todas las barras)
+          formatter: function(value) {
+            return value === 0 ? "" : "$" + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
         }
       }]
     },
