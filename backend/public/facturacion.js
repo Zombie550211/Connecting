@@ -78,7 +78,7 @@ async function updateTableByFilters() {
   currentMonth = parseInt(filtroMes.value, 10);
   currentYear = parseInt(filtroAno.value, 10);
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica(true);
+  actualizarGrafica(false); // SIEMPRE lee solo del backend
 }
 filtroMes.addEventListener('change', async () => {
   await updateTableByFilters();
@@ -91,22 +91,24 @@ async function nextBlock() {
   if ((currentBlock + 1) * 16 < numDias) {
     currentBlock++;
     await renderTablaDias(currentMonth, currentYear, currentBlock);
+    actualizarGrafica(false); // SIEMPRE lee solo del backend
   }
 }
 async function prevBlock() {
   if (currentBlock > 0) {
     currentBlock--;
     await renderTablaDias(currentMonth, currentYear, currentBlock);
+    actualizarGrafica(false); // SIEMPRE lee solo del backend
   }
 }
 window.addEventListener('DOMContentLoaded', async () => {
   await renderTablaDias(currentMonth, currentYear, currentBlock);
-  actualizarGrafica(true);
+  actualizarGrafica(false); // SIEMPRE lee solo del backend
 });
 
 /* --- GRAFICA Chart.js --- */
 let grafica;
-async function actualizarGrafica(usarTabla = true) {
+async function actualizarGrafica(usarTabla = false) {
   const ano = parseInt(filtroAno.value, 10);
   let totalesPorMes = Array(12).fill(0);
   try {
@@ -119,23 +121,7 @@ async function actualizarGrafica(usarTabla = true) {
     console.error("Error obteniendo los datos para la gráfica:", e);
   }
 
-  // SOLO suma la tabla visible si se está editando en tiempo real
-  if (usarTabla) {
-    const filasDOM = document.querySelectorAll('#excelBody tr');
-    let sumaMesActual = 0;
-    filasDOM.forEach(tr => {
-      const fecha = tr.children[0].textContent;
-      const partes = fecha.split('/');
-      if (partes.length !== 3) return;
-      const mesIdx = parseInt(partes[1], 10) - 1;
-      if (mesIdx === currentMonth - 1) {
-        // Total del día es el td 10 (índice 10)
-        const totalDia = parseFloat(tr.children[10].textContent) || 0;
-        sumaMesActual += totalDia;
-      }
-    });
-    totalesPorMes[currentMonth - 1] = sumaMesActual;
-  }
+  // NO SE INCLUYEN DATOS LOCALES, SIEMPRE SOLO BACKEND
 
   if (grafica) grafica.destroy();
   const ctx = document.getElementById('graficaGastosMes').getContext('2d');
@@ -222,7 +208,7 @@ excelBody.addEventListener('input', function(e) {
   if (td.cellIndex !== 0) {
     recalcularFila(tr);
     renderFilaTotalesFacturacion();
-    actualizarGrafica(true); // ACTUALIZA LA GRAFICA EN TIEMPO REAL AL EDITAR
+    actualizarGrafica(false); // SIEMPRE lee solo del backend
   }
 });
 
