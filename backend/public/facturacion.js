@@ -254,5 +254,6 @@ async function guardarTodoFacturacion() {
   await renderTablaDias(currentMonth, currentYear, currentBlock);
   await actualizarGrafica(false); // SOLO backend después de guardar
   renderFilaTotalesFacturacion();
-  alert(`Guardados: ${guardados}. Errores: ${errores}`);
-}
+  alert(`Guardados: ${guardados}. Errores: ${errores}`);}
+
+  
