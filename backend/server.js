@@ -28,7 +28,7 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
-  // --- Endpoint público para consultar leads (SOLO LECTURA) ---
+// --- Endpoint público para consultar leads (SOLO LECTURA) ---
 app.get('/api/leads', async (req, res) => {
   try {
     const leads = await Lead.find().lean();
@@ -467,21 +467,24 @@ app.get('/api/facturacion/anual/:ano', protegerRuta, async (req, res) => {
     data = data.map(doc => normalizeFacturacionDoc(doc));
     const totalesPorMes = Array(12).fill(0);
 
+    // --------- MODIFICACION ROBUSTA DE EXTRACCION DE MES ---------
     data.forEach(doc => {
       let mes = null;
       if (doc.fecha) {
+        let f = doc.fecha.trim();
         // dd/mm/yyyy o dd-mm-yyyy
-        let match = doc.fecha.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+        let match = f.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
         if (match) mes = parseInt(match[2], 10);
         // yyyy-mm-dd o yyyy/mm/dd
-        match = doc.fecha.match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/);
+        match = f.match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/);
         if (match) mes = parseInt(match[2], 10);
-        // mm/dd/yyyy o mm-dd-yyyy
-        match = doc.fecha.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
-        if (match && mes === null) mes = parseInt(match[1], 10);
+        // mm/dd/yyyy o mm-dd-yyyy (solo si no lo encontró antes)
+        if (mes === null) {
+          match = f.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+          if (match) mes = parseInt(match[1], 10);
+        }
       }
       if (!isNaN(mes) && mes >= 1 && mes <= 12) {
-        // Asegura número (aunque el campo sea string)
         const totalDia = Number(doc.campos[10]) || 0;
         totalesPorMes[mes - 1] += totalDia;
       }
