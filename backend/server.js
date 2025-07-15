@@ -205,6 +205,60 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login.html'));
 });
 
+// ====================== API SYNC =========================
+// Middleware para proteger la ruta de sincronización con una API Key
+const API_KEY_SECRET = process.env.API_KEY_SECRET || "tu-clave-secreta-muy-larga-y-dificil-de-adivinar";
+
+function protegerRutaSync(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  if (apiKey && apiKey === API_KEY_SECRET) {
+    return next(); // La clave es correcta, permite el acceso
+  }
+  // Si no hay clave o es incorrecta, rechaza la solicitud
+  res.status(401).json({ success: false, error: "No autorizado. API Key inválida o no proporcionada." });
+}
+
+// Endpoint para recibir datos desde el CRM Agente
+app.post("/api/sync/costumer", protegerRutaSync, async (req, res) => {
+  try {
+    // Los nombres de los campos vienen del CRM Agente
+    const { fecha, equipo, agente, telefono, producto, puntaje, cuenta, direccion, zip, estado } = req.body;
+
+    // Validamos que los datos mínimos estén presentes
+    if (!agente || !producto) {
+      return res.status(400).json({ success: false, error: "Datos incompletos (agente y producto son requeridos)." });
+    }
+
+    const nuevoCostumer = {
+      fecha: fecha || getFechaLocalHoy(), // Usar fecha actual si no se provee
+      equipo: equipo || '',
+      agente: agente,
+      telefono: telefono || '',
+      producto: producto,
+      estado: estado || "Pending", // Por defecto "Pending"
+      puntaje: Number(puntaje) || 0,
+      cuenta: cuenta || '', // Recibirá el valor vacío que envíe el Agente
+      direccion: direccion || '',
+      zip: zip || ''
+    };
+
+    // Creamos el nuevo cliente en la base de datos del CRM Admin
+    await Costumer.create(nuevoCostumer);
+
+    // Opcional: También creamos el lead para mantener consistencia
+    await Lead.create(nuevoCostumer);
+
+    res.status(201).json({ success: true, message: "Costumer sincronizado correctamente." });
+
+  } catch (err) {
+    if (err.code === 11000) {
+      res.status(409).json({ success: false, error: "Conflicto: Ya existe un registro idéntico." });
+    } else {
+      res.status(500).json({ success: false, error: "Error interno al sincronizar el costumer: " + err.message });
+    }
+  }
+});
+
 // ====================== LEAD =========================
 app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
   try {
