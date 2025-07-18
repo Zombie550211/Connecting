@@ -387,14 +387,32 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
 });
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    const { fecha } = req.query;
+    const { fecha, fechaDesde, fechaHasta, mes, anio } = req.query;
     const query = {};
+    
+    // Si se proporciona fecha exacta
     if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       query.fecha = fecha;
+    } 
+    // Si se proporciona rango de fechas
+    else if (fechaDesde || fechaHasta) {
+      if (fechaDesde) query.fecha = { ...query.fecha, $gte: fechaDesde };
+      if (fechaHasta) query.fecha = { ...query.fecha, $lte: fechaHasta };
     }
+    // Si se proporciona mes y año
+    else if (mes && anio) {
+      const primerDia = new Date(anio, mes - 1, 1).toISOString().split('T')[0];
+      const ultimoDia = new Date(anio, mes, 0).toISOString().split('T')[0];
+      query.fecha = { $gte: primerDia, $lte: ultimoDia };
+    }
+    
+    console.log('Query ejecutada:', { query }); // Para depuración
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
+    console.log('Clientes encontrados:', costumers.length); // Para depuración
+    
     res.json({ costumers });
   } catch (err) {
+    console.error('Error en /api/costumer:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
