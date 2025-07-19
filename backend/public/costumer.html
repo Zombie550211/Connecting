@@ -675,7 +675,7 @@ function renderizarTablaCostumers(filas) {
         </select>
       </td>
       <td>${fila.PUNTAJE}</td>
-      <td><select class="cuenta-select">
+      <td><select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
          <option>Seleccione Cuenta</option>
          <option${fila.CUENTA === 'Cuenta Alexis' ? ' selected' : ''}>Cuenta Alexis</option>
          <option${fila.CUENTA === 'Cuenta Eduardo' ? ' selected' : ''}>Cuenta Eduardo</option>
@@ -692,6 +692,24 @@ function renderizarTablaCostumers(filas) {
     `;
     tbody.appendChild(tr);
   });
+}
+
+async function actualizarCuentaCostumer(id, cuenta) {
+  try {
+    const res = await fetch(`/api/costumer/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cuenta })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      alert("Error al actualizar la cuenta: " + (data.error || ""));
+      cargarCostumers();
+    }
+  } catch (e) {
+    alert("Error al actualizar la cuenta: " + e.message);
+    cargarCostumers();
+  }
 }
 
 async function actualizarEstadoCostumer(id, estado, selectEl) {
