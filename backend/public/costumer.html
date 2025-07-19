@@ -591,7 +591,7 @@ async function cargarCostumers() {
       "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
       "Estado": item.estado || "Pending",
       "PUNTAJE": item.puntaje || "",
-      "CUENTA": item.cuenta || "",
+      "CUENTA": item.cuenta && item.cuenta !== '' ? item.cuenta : 'Elige',
       "TELÉFONO": item.telefono || "",
       "DIRECCIÓN": item.direccion || "",
       "ZIP": item.zip || ""
@@ -676,7 +676,7 @@ function renderizarTablaCostumers(filas) {
       </td>
       <td>${fila.PUNTAJE}</td>
       <td><select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
-         <option>Seleccione Cuenta</option>
+         <option${!fila.CUENTA || fila.CUENTA === 'Elige' ? ' selected' : ''}>Elige</option>
          <option${fila.CUENTA === 'Cuenta Alexis' ? ' selected' : ''}>Cuenta Alexis</option>
          <option${fila.CUENTA === 'Cuenta Eduardo' ? ' selected' : ''}>Cuenta Eduardo</option>
          <option${fila.CUENTA === 'Cuenta Israel' ? ' selected' : ''}>Cuenta Israel</option>
