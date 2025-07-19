@@ -675,7 +675,13 @@ function renderizarTablaCostumers(filas) {
         </select>
       </td>
       <td>${fila.PUNTAJE}</td>
-      <td>${fila.CUENTA}</td>
+      <td><select class="cuenta-select">
+         <option>Seleccione Cuenta</option>
+         <option${fila.CUENTA === 'Cuenta Alexis' ? ' selected' : ''}>Cuenta Alexis</option>
+         <option${fila.CUENTA === 'Cuenta Eduardo' ? ' selected' : ''}>Cuenta Eduardo</option>
+         <option${fila.CUENTA === 'Cuenta Israel' ? ' selected' : ''}>Cuenta Israel</option>
+         <option${fila.CUENTA === 'Cuenta Lineas' ? ' selected' : ''}>Cuenta Lineas</option>
+       </select></td>
       <td>${fila["TELÉFONO"]}</td>
       <td>${fila["DIRECCIÓN"]}</td>
       <td>${fila.ZIP}</td>
