@@ -28,6 +28,20 @@ mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
   .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
 
+// Elimina el índice único en user_id de la colección de sesiones si existe
+mongoose.connection.once('open', async () => {
+  try {
+    await mongoose.connection.db.collection('sessions').dropIndex('user_id_1');
+    console.log('Índice único user_id_1 eliminado de la colección sessions');
+  } catch (err) {
+    if (err.codeName === 'IndexNotFound') {
+      console.log('El índice user_id_1 no existe en sessions, no es necesario eliminarlo.');
+    } else {
+      console.log('Error al eliminar el índice user_id_1:', err.message);
+    }
+  }
+});
+
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 app.get('/api/leads', async (req, res) => {
   try {
