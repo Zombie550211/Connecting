@@ -423,8 +423,20 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     console.log('Query ejecutada:', { query }); // Para depuración
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     console.log('Clientes encontrados:', costumers.length); // Para depuración
-    
-    res.json({ costumers });
+
+    // Mapeo y filtrado de campos según lo solicitado
+    const costumersMapeados = costumers.map(c => ({
+      "Fecha": c.Dia_Venta || "",
+      "Team": c.supervisor || "",
+      "Producto": c.tipo_de_serv || "",
+      "Puntaje": c.puntaje || 0,
+      "Telefono": c.telefono || "",
+      "Direccion": c.direccion || "",
+      "ZIP": c.zip || "",
+      "Cuenta": c.cuenta || ""
+    }));
+
+    res.json({ costumers: costumersMapeados });
   } catch (err) {
     console.error('Error en /api/costumer:', err);
     res.status(500).json({ success: false, error: err.message });
