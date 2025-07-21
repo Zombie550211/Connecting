@@ -5,85 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM Login</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f0f2f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: #f0f2f5;
+        z-index: 0;
+    }
+    .login-center {
+        position: relative;
+        z-index: 1;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-box {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.11);
+        padding: 38px 32px 32px 32px;
+        min-width: 320px;
+        max-width: 360px;
+        width: 100%;
+    }
+    .login-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 32px;
+    }
+    .input-group {
+        display: flex;
+        align-items: center;
+        background: #f5f6fa;
+        border-radius: 8px;
+        padding: 0 12px;
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0;
+    }
+    .input-group .icon {
+        margin-right: 8px;
+        display: flex;
+        align-items: center;
+    }
+    .input-group input {
+        border: none;
+        outline: none;
+        background: transparent;
+        flex: 1;
+        padding: 14px 0;
+        font-size: 1rem;
+        color: #333;
+    }
+    .input-group input::placeholder {
+        color: #aaa;
+    }
+    .toggle-password {
+        cursor: pointer;
+        margin-left: 8px;
+        user-select: none;
+        font-size: 1.1em;
+        color: #888;
+    }
+    .remember-forgot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        font-size: 0.96rem;
+    }
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #666;
+    }
+    .forgot-password {
+        color: #888;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .forgot-password:hover {
+        color: #333;
+    }
+    .login-btn {
+        width: 100%;
+        padding: 12px;
+        background: #333;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 16px;
+        transition: background 0.2s;
+    }
+    .login-btn:hover {
+        background: #222;
+    }
+    .register-link {
+        text-align: center;
+        color: #888;
+        font-size: 0.97rem;
+    }
+    .register-link a {
+        color: #333;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 3px;
+        transition: color 0.2s;
+    }
+    .register-link a:hover {
+        color: #1976d2;
+    }
+    #message {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 0.97rem;
+        font-weight: 500;
+        padding: 8px;
+        border-radius: 7px;
+    }
+    .success {
+        background: #eafaf1;
+        color: #27ae60;
+        border: 1px solid #b8eac7;
+    }
+    .error {
+        background: #fdeaea;
+        color: #e74c3c;
+        border: 1px solid #f5b7b1;
+    }
+    @media (max-width: 480px) {
+        .login-box {
+            padding: 22px 10px 20px 10px;
+            min-width: unset;
+            max-width: 98vw;
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23e8f4f8;stop-opacity:1" /><stop offset="100%" style="stop-color:%23d4e8f0;stop-opacity:1" /></linearGradient></defs><rect width="1920" height="1080" fill="url(%23sky)"/><polygon points="0,800 400,600 800,700 1200,500 1600,650 1920,550 1920,1080 0,1080" fill="%23a8c8d8"/><polygon points="0,900 300,750 600,850 900,700 1200,800 1500,650 1800,750 1920,700 1920,1080 0,1080" fill="%238fb8c8"/><ellipse cx="960" cy="850" rx="800" ry="200" fill="%23b8d8e8" opacity="0.7"/></svg>') center/cover,
-                    linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 50%, #c0dce8 100%);
-            position: relative;
-        }
-
-        /* Mountain landscape background */
-        .landscape-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(to bottom, rgba(232, 244, 248, 0.9) 0%, rgba(212, 232, 240, 0.8) 50%, rgba(192, 220, 232, 0.9) 100%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><polygon points="0,600 200,300 400,450 600,200 800,400 1000,150 1200,350 1400,100 1600,300 1800,200 1920,250 1920,1080 0,1080" fill="%23708090" opacity="0.6"/><polygon points="0,700 150,500 350,600 550,400 750,550 950,350 1150,500 1350,300 1550,450 1750,350 1920,400 1920,1080 0,1080" fill="%238a9ba8" opacity="0.5"/><ellipse cx="960" cy="800" rx="600" ry="150" fill="%236b8394" opacity="0.4"/></svg>') center/cover;
-        }
-
-        /* Floating rocks/elements */
-        .rock {
-            position: absolute;
-            border-radius: 50% 40% 60% 30%;
-            background: linear-gradient(135deg, #a8a8a8, #888888);
-            opacity: 0.6;
-            animation: float 8s ease-in-out infinite;
-        }
-
-        .rock1 {
-            width: 80px;
-            height: 60px;
-            bottom: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .rock2 {
-            width: 60px;
-            height: 45px;
-            bottom: 30%;
-            right: 15%;
-            animation-delay: 2s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(2deg); }
-        }
-
-        /* Glass container */
-        .glass-container {
-            position: relative;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 40px;
-        }
-
-        .login-form {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            padding: 40px;
-            width: 380px;
-            box-shadow: 
-                0 25px 45px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-        }
+    }
+</style>
 
         .login-title {
             text-align: center;
@@ -231,102 +307,73 @@
     </style>
 </head>
 <body>
-    <!-- Mountain landscape background -->
-    <div class="landscape-bg"></div>
-    <div class="rock rock1"></div>
-    <div class="rock rock2"></div>
-
-    <!-- Glass login form -->
-    <div class="glass-container">
-        <form id="loginForm" class="login-form" novalidate>
-            <h1 class="login-title">Login</h1>
-            
+    <div class="login-bg"></div>
+    <div class="login-center">
+        <form id="loginForm" class="login-box" autocomplete="off">
+            <h2 class="login-title">Login</h2>
             <div class="input-group">
+                <span class="icon"><svg width="20" height="20" fill="none"><path d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-3.33 0-6 1.34-6 3v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1c0-1.66-2.67-3-6-3Z" fill="#888"/></svg></span>
                 <input type="text" id="username" name="username" placeholder="Username" required>
             </div>
-
             <div class="input-group">
+                <span class="icon"><svg width="20" height="20" fill="none"><path d="M5 9V7a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h1Zm2-2a3 3 0 1 1 6 0v2H7V7Zm-2 4v5h10v-5H5Zm5 2a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" fill="#888"/></svg></span>
                 <input type="password" id="password" name="password" placeholder="Password" required>
+                <span class="toggle-password" onclick="togglePassword()">👁️</span>
             </div>
-
             <div class="remember-forgot">
                 <label class="remember-me">
                     <input type="checkbox" id="remember"> Remember me
                 </label>
                 <a href="#" class="forgot-password" onclick="forgotPassword()">Forgot Password?</a>
             </div>
-
             <button type="submit" class="login-btn">Login</button>
-
             <div class="register-link">
                 Don't have an account? <a href="/register.html">Register</a>
             </div>
-
             <div id="message"></div>
         </form>
     </div>
 
     <script>
-        // Login form submission
-        document.getElementById("loginForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
-
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const message = document.getElementById("message");
-
-            // Clear previous messages
-            message.textContent = "";
-            message.className = "";
-
-            try {
-                const response = await fetch("/api/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ username, password }),
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    message.textContent = "Login exitoso. Redirigiendo...";
-                    message.className = "success";
-                    
-                    // Store token if provided
-                    if (result.token) {
-                        localStorage.setItem('authToken', result.token);
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.href = "/inicio.html";
-                    }, 1500);
-                } else {
-                    message.textContent = result.mensaje || "Error al iniciar sesión";
-                    message.className = "error";
-                }
-            } catch (error) {
-                message.textContent = "Error de conexión";
-                message.className = "error";
-            }
+// Login form submission
+const loginForm = document.getElementById("loginForm");
+loginForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const message = document.getElementById("message");
+    message.textContent = "";
+    message.className = "";
+    try {
+        // Cambiar endpoint a /login (no /api/login)
+        const response = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
         });
-
-        // Forgot password functionality
-        function forgotPassword() {
-            alert("Funcionalidad de recuperación de contraseña próximamente...");
+        const result = await response.json();
+        if (response.ok) {
+            message.textContent = "Login exitoso. Redirigiendo...";
+            message.className = "success";
+            setTimeout(() => {
+                window.location.href = "/inicio.html";
+            }, 1200);
+        } else {
+            message.textContent = result.mensaje || "Error al iniciar sesión";
+            message.className = "error";
         }
-
-        // Add subtle animation to form elements
-        document.querySelectorAll('.input-group input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
-    </script>
+    } catch (error) {
+        message.textContent = "Error de conexión";
+        message.className = "error";
+    }
+});
+function forgotPassword() {
+    alert("Funcionalidad de recuperación de contraseña próximamente...");
+}
+function togglePassword() {
+    const pwd = document.getElementById("password");
+    pwd.type = pwd.type === "password" ? "text" : "password";
+}
+</script>
 </body>
 </html>
