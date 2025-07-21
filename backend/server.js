@@ -369,132 +369,72 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER =========================
-app.post("/api/costumer", protegerRuta, async (req, res) => {
-  try {
-    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip, estado } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const fechaCostumer = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy();
-
-    const nuevoCostumer = {
-      fecha: fechaCostumer,
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      estado: estado || "Pending",
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Costumer.create(nuevoCostumer);
-    res.json({ success: true });
-  } catch (err) {
-    if (err.code === 11000) {
-      res.status(400).json({ success: false, error: "Ya existe un costumer idéntico. No se puede duplicar." });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  }
-});
+// ✨ NUEVA API COSTUMER - CONSTRUIDA DESDE CERO ✨
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    console.log('🔍 [DEBUG] Iniciando GET /api/costumer');
-    console.log('🔍 [DEBUG] Query params recibidos:', req.query);
-    console.log('🔍 [DEBUG] Usuario en sesión:', req.session.usuario ? 'SÍ' : 'NO');
+    console.log('🚀 NUEVA API COSTUMER - Iniciando...');
+    console.log('🔍 Usuario autenticado:', req.session.usuario ? 'SÍ' : 'NO');
     
-    const { fecha, fechaDesde, fechaHasta, mes, anio } = req.query;
-    const query = {};
-    
-    // Si se proporciona fecha exacta
-    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      query.fecha = fecha;
-      console.log('🔍 [DEBUG] Usando fecha exacta:', fecha);
-    } 
-    // Si se proporciona rango de fechas
-    else if (fechaDesde || fechaHasta) {
-      if (fechaDesde) query.fecha = { ...query.fecha, $gte: fechaDesde };
-      if (fechaHasta) query.fecha = { ...query.fecha, $lte: fechaHasta };
-      console.log('🔍 [DEBUG] Usando rango de fechas:', { fechaDesde, fechaHasta });
-    }
-    // Si se proporciona mes y año
-    else if (mes && anio) {
-      console.log('🔍 [DEBUG] Mes/año recibidos:', { mes, anio });
-      // Usar la misma lógica que las APIs de ranking
-      const filtroFecha = getRangoMes(Number(mes), Number(anio));
-      if (filtroFecha) {
-        query.fecha = filtroFecha;
-        console.log('🔍 [DEBUG] Filtro de fecha aplicado:', filtroFecha);
-      } else {
-        console.log('🔍 [DEBUG] Error en getRangoMes, usando todos los registros');
+    // PASO 1: Datos de prueba para verificar que la conexión funciona
+    const datosDeEjemplo = [
+      {
+        _id: "test1",
+        fecha: "2024-01-15",
+        equipo: "Team Alpha",
+        agente: "Juan Pérez",
+        producto: "Internet 100MB",
+        fecha_instalacion: "2024-01-20",
+        estado: "Completed",
+        puntaje: 85,
+        cuenta: "ACC001",
+        telefono: "555-1234",
+        direccion: "123 Main St",
+        zip: "12345"
+      },
+      {
+        _id: "test2", 
+        fecha: "2024-01-16",
+        equipo: "Team Beta",
+        agente: "María García",
+        producto: "TV + Internet",
+        fecha_instalacion: "2024-01-21",
+        estado: "Pending",
+        puntaje: 92,
+        cuenta: "ACC002",
+        telefono: "555-5678",
+        direccion: "456 Oak Ave",
+        zip: "67890"
+      },
+      {
+        _id: "test3",
+        fecha: "2024-01-17",
+        equipo: "Team Gamma",
+        agente: "Carlos López",
+        producto: "Phone Service",
+        fecha_instalacion: "2024-01-22",
+        estado: "In Progress",
+        puntaje: 78,
+        cuenta: "ACC003",
+        telefono: "555-9012",
+        direccion: "789 Pine St",
+        zip: "54321"
       }
-    } else {
-      console.log('🔍 [DEBUG] Sin filtros de fecha - buscando todos los registros');
-    }
+    ];
     
-    console.log('🔍 [DEBUG] Query MongoDB final:', JSON.stringify(query, null, 2));
-    const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    console.log('🔍 [DEBUG] Clientes encontrados en BD:', costumers.length);
+    console.log('✅ Enviando datos de prueba al frontend:', datosDeEjemplo.length, 'registros');
+    res.json({ 
+      success: true,
+      costumers: datosDeEjemplo,
+      message: "API reconstruida desde cero - datos de prueba"
+    });
     
-    if (costumers.length > 0) {
-      console.log('🔍 [DEBUG] Muestra del primer cliente:', {
-        _id: costumers[0]._id,
-        agente: costumers[0].agente,
-        fecha: costumers[0].fecha,
-        estado: costumers[0].estado
-      });
-    }
-
-    // Mapeo y filtrado de campos según lo solicitado por el frontend
-    const costumersMapeados = costumers.map(c => ({
-      "_id": c._id,
-      "fecha": c.fecha || "", // Campo de compatibilidad
-      "equipo": c.equipo || c.supervisor || "", // supervisor es el campo real del modelo
-      "agente": c.agente || "", // Campo directo del modelo
-      "producto": c.producto || c.tipo_de_serv || "", // tipo_de_serv es el campo real
-      "fecha_instalacion": c.fecha_instalacion || c.dia_venta_a_instalacion || "",
-      "estado": c.estado || "Pending", // Campo directo del modelo
-      "puntaje": c.puntaje || 0, // Campo directo del modelo
-      "cuenta": c.cuenta || c.numero_de_cuenta || "", // numero_de_cuenta es el campo real
-      "telefono": c.telefono || "", // Campo directo del modelo
-      "direccion": c.direccion || "", // Campo directo del modelo
-      "zip": c.zip || "" // Campo directo del modelo
-    }));
-
-    console.log('🔍 [DEBUG] Clientes mapeados para frontend:', costumersMapeados.length);
-    if (costumersMapeados.length > 0) {
-      console.log('🔍 [DEBUG] Muestra del primer cliente mapeado:', costumersMapeados[0]);
-    }
-    console.log('🔍 [DEBUG] Enviando respuesta al frontend...');
-    
-    res.json({ costumers: costumersMapeados });
   } catch (err) {
-    console.error('❌ [ERROR] Error en /api/costumer:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-app.put("/api/costumer/:id", protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.body;
-    if (!estado) return res.status(400).json({ success: false, error: "El campo 'estado' es requerido." });
-    const updated = await Costumer.findByIdAndUpdate(id, { estado }, { new: true });
-    if (!updated) return res.status(404).json({ success: false, error: "Costumer no encontrado." });
-    res.json({ success: true, costumer: updated });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-app.delete("/api/costumer/:id", protegerRuta, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = await Costumer.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ success: false, error: "Costumer no encontrado." });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('❌ Error en nueva API costumer:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: err.message,
+      costumers: []
+    });
   }
 });
 
