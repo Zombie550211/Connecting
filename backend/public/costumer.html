@@ -486,8 +486,6 @@
             <th>TEAM</th>
             <th>AGENTE</th>
             <th>PRODUCTO</th>
-            <th>FECHA DE INSTALACION</th>
-            <th>Estado</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
             <th>TELÉFONO</th>
@@ -704,28 +702,16 @@ function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
   }
   filas.forEach(fila => {
-    const estadoActual = ESTADO_OPCIONES.find(e => e.value === fila.Estado) ? fila.Estado : "Pending";
-    const claseColor = ESTADO_OPCIONES.find(e => e.value === estadoActual)?.clase || "estado-pending";
-    const opcionesEstado = ESTADO_OPCIONES.map(op =>
-      `<option value="${op.value}"${fila.Estado === op.value ? " selected" : ""}>${op.texto}</option>`
-    ).join('');
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${fila.FECHA}</td>
       <td>${fila.TEAM}</td>
       <td>${fila.AGENTE}</td>
       <td>${fila.PRODUCTO}</td>
-      <td>${fila.FECHA_INSTALACION || ""}</td>
-      <td>
-        <select class="estado-select ${claseColor}"
-                onchange="actualizarEstadoCostumer('${fila._id}', this.value, this)">
-          ${opcionesEstado}
-        </select>
-      </td>
       <td>${fila.PUNTAJE}</td>
       <td><select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
          <option${!fila.CUENTA || fila.CUENTA === 'Elige' ? ' selected' : ''}>Elige</option>
