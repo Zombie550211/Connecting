@@ -401,28 +401,51 @@ app.post("/api/costumer", protegerRuta, async (req, res) => {
 });
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
+    console.log('🔍 [DEBUG] Iniciando GET /api/costumer');
+    console.log('🔍 [DEBUG] Query params recibidos:', req.query);
+    console.log('🔍 [DEBUG] Usuario en sesión:', req.session.usuario ? 'SÍ' : 'NO');
+    
     const { fecha, fechaDesde, fechaHasta, mes, anio } = req.query;
     const query = {};
     
     // Si se proporciona fecha exacta
     if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       query.fecha = fecha;
+      console.log('🔍 [DEBUG] Usando fecha exacta:', fecha);
     } 
     // Si se proporciona rango de fechas
     else if (fechaDesde || fechaHasta) {
       if (fechaDesde) query.fecha = { ...query.fecha, $gte: fechaDesde };
       if (fechaHasta) query.fecha = { ...query.fecha, $lte: fechaHasta };
+      console.log('🔍 [DEBUG] Usando rango de fechas:', { fechaDesde, fechaHasta });
     }
     // Si se proporciona mes y año
     else if (mes && anio) {
-      const primerDia = new Date(anio, mes - 1, 1).toISOString().split('T')[0];
-      const ultimoDia = new Date(anio, mes, 0).toISOString().split('T')[0];
-      query.fecha = { $gte: primerDia, $lte: ultimoDia };
+      console.log('🔍 [DEBUG] Mes/año recibidos:', { mes, anio });
+      // Usar la misma lógica que las APIs de ranking
+      const filtroFecha = getRangoMes(Number(mes), Number(anio));
+      if (filtroFecha) {
+        query.fecha = filtroFecha;
+        console.log('🔍 [DEBUG] Filtro de fecha aplicado:', filtroFecha);
+      } else {
+        console.log('🔍 [DEBUG] Error en getRangoMes, usando todos los registros');
+      }
+    } else {
+      console.log('🔍 [DEBUG] Sin filtros de fecha - buscando todos los registros');
     }
     
-    console.log('Query ejecutada:', { query }); // Para depuración
+    console.log('🔍 [DEBUG] Query MongoDB final:', JSON.stringify(query, null, 2));
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
-    console.log('Clientes encontrados:', costumers.length); // Para depuración
+    console.log('🔍 [DEBUG] Clientes encontrados en BD:', costumers.length);
+    
+    if (costumers.length > 0) {
+      console.log('🔍 [DEBUG] Muestra del primer cliente:', {
+        _id: costumers[0]._id,
+        agente: costumers[0].agente,
+        fecha: costumers[0].fecha,
+        estado: costumers[0].estado
+      });
+    }
 
     // Mapeo y filtrado de campos según lo solicitado por el frontend
     const costumersMapeados = costumers.map(c => ({
@@ -440,9 +463,15 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
       "zip": c.zip || "" // Campo directo del modelo
     }));
 
+    console.log('🔍 [DEBUG] Clientes mapeados para frontend:', costumersMapeados.length);
+    if (costumersMapeados.length > 0) {
+      console.log('🔍 [DEBUG] Muestra del primer cliente mapeado:', costumersMapeados[0]);
+    }
+    console.log('🔍 [DEBUG] Enviando respuesta al frontend...');
+    
     res.json({ costumers: costumersMapeados });
   } catch (err) {
-    console.error('Error en /api/costumer:', err);
+    console.error('❌ [ERROR] Error en /api/costumer:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

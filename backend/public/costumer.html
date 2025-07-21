@@ -564,10 +564,14 @@ function inicializarFiltroMesAnio() {
 
 async function cargarCostumers() {
   try {
+    console.log('🔍 [FRONTEND] Iniciando cargarCostumers()');
     const desde = document.getElementById("filtro-fecha-desde").value;
     const hasta = document.getElementById("filtro-fecha-hasta").value;
     const mes = document.getElementById("filtro-mes").value;
     const anio = document.getElementById("filtro-anio").value;
+    
+    console.log('🔍 [FRONTEND] Filtros actuales:', { desde, hasta, mes, anio });
+    
     let url = '/api/costumer';
 
     if (desde || hasta) {
@@ -575,13 +579,29 @@ async function cargarCostumers() {
     } else {
       url += `?mes=${mes}&anio=${anio}`;
     }
+    
+    console.log('🔍 [FRONTEND] URL de la petición:', url);
+    console.log('🔍 [FRONTEND] Realizando fetch...');
 
     const res = await fetch(url);
-    const data = await res.json();
-    if (!data.costumers) {
-      console.error("No se recibieron costumers del backend:", data);
+    console.log('🔍 [FRONTEND] Respuesta recibida - Status:', res.status);
+    
+    if (!res.ok) {
+      console.error('❌ [FRONTEND] Error en la respuesta:', res.status, res.statusText);
+      const errorText = await res.text();
+      console.error('❌ [FRONTEND] Texto del error:', errorText);
       return;
     }
+    
+    const data = await res.json();
+    console.log('🔍 [FRONTEND] Datos recibidos del backend:', data);
+    
+    if (!data.costumers) {
+      console.error("❌ [FRONTEND] No se recibieron costumers del backend:", data);
+      return;
+    }
+    
+    console.log('🔍 [FRONTEND] Número de costumers recibidos:', data.costumers.length);
     datosCostumers = data.costumers.map(item => ({
       "_id": item._id,
       "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
@@ -596,12 +616,25 @@ async function cargarCostumers() {
       "DIRECCIÓN": item.direccion || "",
       "ZIP": item.zip || ""
     }));
+    
+    console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
+    if (datosCostumers.length > 0) {
+      console.log('🔍 [FRONTEND] Muestra del primer cliente procesado:', datosCostumers[0]);
+    }
+    
+    console.log('🔍 [FRONTEND] Llenando filtros de Team y Agente...');
     llenarFiltroTeamYAgente();
+    
+    console.log('🔍 [FRONTEND] Aplicando filtros...');
     // Aplicar filtros existentes después de cargar los datos
     aplicarFiltros();
+    
+    console.log('🔍 [FRONTEND] Recalculando KPIs...');
     recalcularKPIsCostumer();
+    
+    console.log('🔍 [FRONTEND] cargarCostumers() completado exitosamente');
   } catch (err) {
-    console.error("Error cargando costumers:", err);
+    console.error("❌ [FRONTEND] Error cargando costumers:", err);
   }
 }
 
