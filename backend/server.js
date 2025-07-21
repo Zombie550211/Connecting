@@ -369,67 +369,51 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER =========================
-// ✨ NUEVA API COSTUMER - CONSTRUIDA DESDE CERO ✨
+// ✨ NUEVA API COSTUMER - CONECTADA A BASE DE DATOS REAL ✨
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    console.log('🚀 NUEVA API COSTUMER - Iniciando...');
+    console.log('🚀 NUEVA API COSTUMER - Conectando a BD real...');
     console.log('🔍 Usuario autenticado:', req.session.usuario ? 'SÍ' : 'NO');
     
-    // PASO 1: Datos de prueba para verificar que la conexión funciona
-    const datosDeEjemplo = [
-      {
-        _id: "test1",
-        fecha: "2024-01-15",
-        equipo: "Team Alpha",
-        agente: "Juan Pérez",
-        producto: "Internet 100MB",
-        fecha_instalacion: "2024-01-20",
-        estado: "Completed",
-        puntaje: 85,
-        cuenta: "ACC001",
-        telefono: "555-1234",
-        direccion: "123 Main St",
-        zip: "12345"
-      },
-      {
-        _id: "test2", 
-        fecha: "2024-01-16",
-        equipo: "Team Beta",
-        agente: "María García",
-        producto: "TV + Internet",
-        fecha_instalacion: "2024-01-21",
-        estado: "Pending",
-        puntaje: 92,
-        cuenta: "ACC002",
-        telefono: "555-5678",
-        direccion: "456 Oak Ave",
-        zip: "67890"
-      },
-      {
-        _id: "test3",
-        fecha: "2024-01-17",
-        equipo: "Team Gamma",
-        agente: "Carlos López",
-        producto: "Phone Service",
-        fecha_instalacion: "2024-01-22",
-        estado: "In Progress",
-        puntaje: 78,
-        cuenta: "ACC003",
-        telefono: "555-9012",
-        direccion: "789 Pine St",
-        zip: "54321"
-      }
-    ];
+    // Consulta simple a la base de datos real
+    console.log('📊 Consultando colección costumers...');
+    const costumers = await Costumer.find({}).sort({ fecha: -1 }).lean();
+    console.log('📋 Registros encontrados en BD:', costumers.length);
     
-    console.log('✅ Enviando datos de prueba al frontend:', datosDeEjemplo.length, 'registros');
+    if (costumers.length > 0) {
+      console.log('🔍 Muestra del primer registro:', {
+        _id: costumers[0]._id,
+        agente: costumers[0].agente,
+        fecha: costumers[0].fecha,
+        estado: costumers[0].estado
+      });
+    }
+    
+    // Mapeo simple de campos para el frontend
+    const costumersMapeados = costumers.map(c => ({
+      _id: c._id,
+      fecha: c.fecha || "",
+      equipo: c.supervisor || c.equipo || "", // supervisor es el campo real en la BD
+      agente: c.agente || "",
+      producto: c.producto || "",
+      fecha_instalacion: c.dia_venta_a_instalacion || c.fecha_instalacion || "",
+      estado: c.estado || "PENDIENTE",
+      puntaje: c.puntaje || 0,
+      cuenta: c.numero_de_cuenta || c.cuenta || "",
+      telefono: c.telefono || "",
+      direccion: c.direccion || "",
+      zip: c.zip || ""
+    }));
+    
+    console.log('✅ Enviando datos reales al frontend:', costumersMapeados.length, 'registros');
     res.json({ 
       success: true,
-      costumers: datosDeEjemplo,
-      message: "API reconstruida desde cero - datos de prueba"
+      costumers: costumersMapeados,
+      message: "Datos reales de MongoDB"
     });
     
   } catch (err) {
-    console.error('❌ Error en nueva API costumer:', err);
+    console.error('❌ Error en API costumer:', err);
     res.status(500).json({ 
       success: false, 
       error: err.message,
