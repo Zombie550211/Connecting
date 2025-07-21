@@ -369,35 +369,33 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER =========================
-// ✨ NUEVA API COSTUMER - CONECTADA A BASE DE DATOS REAL ✨
+// ✨ API COSTUMER - CONECTADA A COLECCIÓN COSTUMERS ✨
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    console.log('🚀 NUEVA API COSTUMER - Conectando a BD real...');
+    console.log('🚀 API COSTUMER - Conectando a colección costumers...');
     console.log('🔍 Usuario autenticado:', req.session.usuario ? 'SÍ' : 'NO');
     
-    // Consulta simple a la base de datos real
+    // Consulta a la colección costumers
     console.log('📊 Consultando colección costumers...');
     const costumers = await Costumer.find({}).sort({ fecha: -1 }).lean();
-    console.log('📋 Registros encontrados en BD:', costumers.length);
+    console.log('📋 Registros encontrados en costumers:', costumers.length);
     
     if (costumers.length > 0) {
       console.log('🔍 Muestra del primer registro:', {
         _id: costumers[0]._id,
         agente: costumers[0].agente,
         fecha: costumers[0].fecha,
-        estado: costumers[0].estado
+        supervisor: costumers[0].supervisor
       });
     }
     
-    // Mapeo simple de campos para el frontend
+    // Mapeo de campos para el frontend
     const costumersMapeados = costumers.map(c => ({
       _id: c._id,
       fecha: c.fecha || "",
-      equipo: c.supervisor || c.equipo || "", // supervisor es el campo real en la BD
+      equipo: c.supervisor || c.equipo || "", // supervisor es el campo team en costumers
       agente: c.agente || "",
       producto: c.producto || "",
-      fecha_instalacion: c.dia_venta_a_instalacion || c.fecha_instalacion || "",
-      estado: c.estado || "PENDIENTE",
       puntaje: c.puntaje || 0,
       cuenta: c.numero_de_cuenta || c.cuenta || "",
       telefono: c.telefono || "",
@@ -405,11 +403,11 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
       zip: c.zip || ""
     }));
     
-    console.log('✅ Enviando datos reales al frontend:', costumersMapeados.length, 'registros');
+    console.log('✅ Enviando datos de costumers al frontend:', costumersMapeados.length, 'registros');
     res.json({ 
       success: true,
       costumers: costumersMapeados,
-      message: "Datos reales de MongoDB"
+      message: "Datos de colección costumers"
     });
     
   } catch (err) {
