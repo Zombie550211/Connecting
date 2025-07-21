@@ -535,6 +535,13 @@ window.addEventListener('DOMContentLoaded', () => {
   inicializarFiltroMesAnio();
   agregarEventosFiltrosMesAnio();
   cargarCostumers();
+  
+  // 🔄 AUTO-ACTUALIZACIÓN CADA 2 MINUTOS
+  console.log('🔄 Iniciando auto-actualización cada 2 minutos...');
+  setInterval(() => {
+    console.log('🔄 Auto-actualizando datos de costumers...');
+    cargarCostumers();
+  }, 2 * 60 * 1000); // 2 minutos = 120,000 ms
 });
 
 function inicializarFiltroMesAnio() {
