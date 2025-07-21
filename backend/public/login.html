@@ -1,302 +1,332 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Login Neumorph</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      background: #d3d3d6;
-      width: 100vw;
-      height: 100vh;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    .login-card {
-      background: #e7e7ea;
-      border-radius: 20px;
-      box-shadow: 7px 7px 18px #bcbcc1, -7px -7px 18px #ffffff;
-      padding: 42px 30px 38px 30px;
-      width: 280px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-    .user-avatar {
-      width: 78px;
-      height: 78px;
-      margin-bottom: 30px;
-      border-radius: 50%;
-      background: #e7e7ea;
-      box-shadow: 3px 3px 10px #c6c6cb, -3px -3px 10px #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .user-avatar svg {
-      width: 48px;
-      height: 48px;
-      opacity: 0.57;
-    }
-    .neumorph-input {
-      width: 100%;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-    }
-    .neumorph-input input {
-      width: 100%;
-      padding: 11px 18px;
-      border-radius: 18px;
-      border: none;
-      background: #e7e7ea;
-      box-shadow: 3px 3px 8px #c6c6cb, -3px -3px 8px #ffffff;
-      font-size: 1.05rem;
-      color: #555;
-      outline: none;
-      transition: box-shadow .17s;
-      font-family: inherit;
-      letter-spacing: .01em;
-    }
-    .neumorph-input input::placeholder {
-      color: #b2b2b7;
-      font-weight: 400;
-      opacity: 1;
-    }
-    .neumorph-input input:focus {
-      box-shadow: 2px 2px 8px #bcbcc1, -2px -2px 8px #fff, 0 0 0 2px #c9e3fb inset;
-      background: #f6f6f8;
-    }
-    .neumorph-btn {
-      width: 100%;
-      padding: 10px 0;
-      margin-top: 6px;
-      border: none;
-      border-radius: 18px;
-      background: #e7e7ea;
-      box-shadow: 3px 3px 8px #c6c6cb, -3px -3px 8px #ffffff;
-      color: #a0487b;
-      font-size: 1.1rem;
-      font-family: inherit;
-      font-weight: 500;
-      cursor: pointer;
-      letter-spacing: .03em;
-      transition: background .17s, color .15s;
-    }
-    .neumorph-btn:hover, .neumorph-btn:focus {
-      background: #edeef0;
-      color: #7b2054;
-    }
-    .register-link {
-      margin-top: 17px;
-      font-size: 1.02em;
-      color: #777;
-      text-align: center;
-      width: 100%;
-    }
-    .register-link a {
-      color: #a0487b;
-      text-decoration: none;
-      font-weight: 500;
-      margin-left: 3px;
-      transition: color .16s;
-      cursor: pointer;
-    }
-    .register-link a:hover {
-      text-decoration: underline;
-      color: #7b2054;
-    }
-    .login-error {
-      color: #fff;
-      background: #e74c3c;
-      padding: 10px 0;
-      width: 100%;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 15px;
-      display: none;
-      font-size: 1rem;
-      position: absolute;
-      top: 8px;
-      left: 0;
-    }
-    /* Modal styles */
-    .modal-bg {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(44, 83, 100, 0.13);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-bg.active { display: flex; }
-    .register-card {
-      background: #e7e7ea;
-      border-radius: 20px;
-      box-shadow: 7px 7px 18px #bcbcc1, -7px -7px 18px #ffffff;
-      padding: 36px 28px 28px 28px;
-      width: 270px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      animation: modalIn .2s;
-    }
-    @keyframes modalIn {
-      from { transform: scale(0.98) translateY(-16px); opacity: 0.3;}
-      to   { transform: none; opacity: 1;}
-    }
-    .register-title {
-      margin-bottom: 15px;
-      font-size: 1.17em;
-      font-weight: 700;
-      color: #111;
-      text-align: center;
-    }
-    .close-modal {
-      position: absolute;
-      top: 12px; right: 16px;
-      font-size: 1.3em;
-      color: #a0487b;
-      cursor: pointer;
-      background: none;
-      border: none;
-      outline: none;
-    }
-    .login-link-row {
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      font-size: .93em;
-      margin: 2px 0 6px 0;
-    }
-    .login-link-row a {
-      color: #a0487b;
-      text-decoration: none;
-      font-size: .97em;
-      transition: color .15s;
-      cursor:pointer;
-    }
-    .login-link-row a:hover {
-      text-decoration: underline;
-      color: #7b2054;
-    }
-    .register-btn {
-      width: 100%;
-      padding: 10px 0;
-      margin-top: 8px;
-      background: #a0487b;
-      color: #fff;
-      border: none;
-      border-radius: 18px;
-      font-size: 1.08em;
-      font-family: inherit;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background .17s;
-      box-shadow: 3px 3px 8px #c6c6cb, -3px -3px 8px #ffffff;
-    }
-    .register-btn:hover, .register-btn:focus {
-      background: #7b2054;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23e8f4f8;stop-opacity:1" /><stop offset="100%" style="stop-color:%23d4e8f0;stop-opacity:1" /></linearGradient></defs><rect width="1920" height="1080" fill="url(%23sky)"/><polygon points="0,800 400,600 800,700 1200,500 1600,650 1920,550 1920,1080 0,1080" fill="%23a8c8d8"/><polygon points="0,900 300,750 600,850 900,700 1200,800 1500,650 1800,750 1920,700 1920,1080 0,1080" fill="%238fb8c8"/><ellipse cx="960" cy="850" rx="800" ry="200" fill="%23b8d8e8" opacity="0.7"/></svg>') center/cover,
+                    linear-gradient(135deg, #e8f4f8 0%, #d4e8f0 50%, #c0dce8 100%);
+            position: relative;
+        }
+
+        /* Mountain landscape background */
+        .landscape-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(to bottom, rgba(232, 244, 248, 0.9) 0%, rgba(212, 232, 240, 0.8) 50%, rgba(192, 220, 232, 0.9) 100%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><polygon points="0,600 200,300 400,450 600,200 800,400 1000,150 1200,350 1400,100 1600,300 1800,200 1920,250 1920,1080 0,1080" fill="%23708090" opacity="0.6"/><polygon points="0,700 150,500 350,600 550,400 750,550 950,350 1150,500 1350,300 1550,450 1750,350 1920,400 1920,1080 0,1080" fill="%238a9ba8" opacity="0.5"/><ellipse cx="960" cy="800" rx="600" ry="150" fill="%236b8394" opacity="0.4"/></svg>') center/cover;
+        }
+
+        /* Floating rocks/elements */
+        .rock {
+            position: absolute;
+            border-radius: 50% 40% 60% 30%;
+            background: linear-gradient(135deg, #a8a8a8, #888888);
+            opacity: 0.6;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .rock1 {
+            width: 80px;
+            height: 60px;
+            bottom: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .rock2 {
+            width: 60px;
+            height: 45px;
+            bottom: 30%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        /* Glass container */
+        .glass-container {
+            position: relative;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 40px;
+        }
+
+        .login-form {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            width: 380px;
+            box-shadow: 
+                0 25px 45px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .login-title {
+            text-align: center;
+            color: rgba(0, 0, 0, 0.8);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 35px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: rgba(0, 0, 0, 0.8);
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .forgot-password {
+            color: rgba(0, 0, 0, 0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: rgba(0, 0, 0, 0.9);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .login-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .register-link {
+            text-align: center;
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .register-link a {
+            color: rgba(0, 0, 0, 0.8);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: rgba(0, 0, 0, 1);
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .glass-container {
+                padding: 20px;
+            }
+            
+            .login-form {
+                width: 100%;
+                padding: 30px 25px;
+            }
+            
+            .login-title {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- Login Card -->
-  <form class="login-card" id="loginForm" autocomplete="off">
-    <div class="login-error" id="loginError"></div>
-    <div class="user-avatar">
-      <!-- User SVG icon -->
-      <svg fill="none" viewBox="0 0 64 64"><circle cx="32" cy="24" r="16" fill="#bbb"/><ellipse cx="32" cy="48" rx="16" ry="10" fill="#bbb"/></svg>
-    </div>
-    <div class="neumorph-input">
-      <input type="text" name="usuario" placeholder="Email" required autocomplete="username">
-    </div>
-    <div class="neumorph-input">
-      <input type="password" name="contrasena" placeholder="Password" required autocomplete="current-password">
-    </div>
-    <button type="submit" class="neumorph-btn">Login</button>
-    <div class="register-link">
-      ¿No tienes cuenta?
-      <a id="openRegister">Crea una aquí</a>
-    </div>
-  </form>
+    <!-- Mountain landscape background -->
+    <div class="landscape-bg"></div>
+    <div class="rock rock1"></div>
+    <div class="rock rock2"></div>
 
-  <!-- Modal Registro -->
-  <div class="modal-bg" id="registerModal">
-    <form class="register-card" autocomplete="off">
-      <button class="close-modal" id="closeRegister" title="Cerrar" type="button">&times;</button>
-      <div class="register-title">Crear Cuenta</div>
-      <div class="neumorph-input">
-        <input type="text" name="usuario" placeholder="Usuario" required>
-      </div>
-      <div class="neumorph-input">
-        <input type="password" name="contrasena" placeholder="Contraseña" required>
-      </div>
-      <div class="login-link-row">
-        <a id="volverLogin">Iniciar sesión</a>
-      </div>
-      <button type="submit" class="register-btn">Registrarse</button>
-    </form>
-  </div>
-  <script>
-    // Modal registro
-    const openRegister = document.getElementById('openRegister');
-    const closeRegister = document.getElementById('closeRegister');
-    const registerModal = document.getElementById('registerModal');
-    const volverLogin = document.getElementById('volverLogin');
-    openRegister.onclick = () => registerModal.classList.add('active');
-    closeRegister.onclick = () => registerModal.classList.remove('active');
-    volverLogin.onclick = () => registerModal.classList.remove('active');
-    window.onclick = function(e) {
-      if (e.target === registerModal) registerModal.classList.remove('active');
-    };
-    // LOGIN AJAX
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const usuario = form.usuario.value;
-      const contrasena = form.contrasena.value;
-      try {
-        const res = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario, contrasena })
+    <!-- Glass login form -->
+    <div class="glass-container">
+        <form id="loginForm" class="login-form" novalidate>
+            <h1 class="login-title">Login</h1>
+            
+            <div class="input-group">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="remember-forgot">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember"> Remember me
+                </label>
+                <a href="#" class="forgot-password" onclick="forgotPassword()">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+
+            <div class="register-link">
+                Don't have an account? <a href="/register.html">Register</a>
+            </div>
+
+            <div id="message"></div>
+        </form>
+    </div>
+
+    <script>
+        // Login form submission
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
+
+            // Clear previous messages
+            message.textContent = "";
+            message.className = "";
+
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    message.textContent = "Login exitoso. Redirigiendo...";
+                    message.className = "success";
+                    
+                    // Store token if provided
+                    if (result.token) {
+                        localStorage.setItem('authToken', result.token);
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.href = "/inicio.html";
+                    }, 1500);
+                } else {
+                    message.textContent = result.mensaje || "Error al iniciar sesión";
+                    message.className = "error";
+                }
+            } catch (error) {
+                message.textContent = "Error de conexión";
+                message.className = "error";
+            }
         });
-        if (res.redirected) {
-          window.location.href = res.url;
-          return;
+
+        // Forgot password functionality
+        function forgotPassword() {
+            alert("Funcionalidad de recuperación de contraseña próximamente...");
         }
-        const result = await res.json();
-        if (result.success) {
-          window.location.href = '/inicio.html'; // Cambia aquí si tu ruta de inicio es otra
-        } else {
-          mostrarError('loginError', 'Usuario o contraseña incorrectos');
-        }
-      } catch (err) {
-        mostrarError('loginError', 'Error de conexión o servidor');
-      }
-    });
-    function mostrarError(id, msg) {
-      const el = document.getElementById(id);
-      el.textContent = msg;
-      el.style.display = 'block';
-      setTimeout(() => {
-        el.style.display = 'none';    
-      }, 3500);
-    }
-  </script>
+
+        // Add subtle animation to form elements
+        document.querySelectorAll('.input-group input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
 </body>
 </html>
