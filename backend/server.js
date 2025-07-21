@@ -393,7 +393,7 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     const costumersMapeados = costumers.map(c => ({
       _id: c._id,
       fecha: c.fecha || "",
-      TEAM: c.supervisor || "", // Campo supervisor de BD → TEAM en frontend
+      TEAM: c.equipo || "", // Campo equipo de BD → TEAM en frontend
       agente: c.agente || "",
       producto: c.producto || "",
       puntaje: c.puntaje || 0,
