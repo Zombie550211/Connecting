@@ -339,31 +339,45 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
 });
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
+    console.log('📊 API GRAFICAS - Conectando a colección costumers...');
     const fechaFiltro = req.query.fecha;
     const query = {};
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
       query.fecha = fechaFiltro;
+      console.log('🗓️ Filtro por fecha aplicado:', fechaFiltro);
     }
-    const leads = await Lead.find(query).lean();
+    
+    // 🎯 CAMBIO: Ahora consulta la colección COSTUMERS (la marcada en celeste)
+    const costumers = await Costumer.find(query).lean();
+    console.log('📋 Registros encontrados en costumers para gráficas:', costumers.length);
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
     const ventasPorProducto = {};
 
-    leads.forEach(row => {
-      const equipo = row.equipo || row.team || "";
-      const producto = row.producto || "";
+    costumers.forEach(row => {
+      const equipo = row.equipo || row.team || "Sin equipo";
+      const producto = row.producto || "Sin producto";
       const puntaje = parseFloat(row.puntaje) || 0;
 
-      if (!equipo || !producto) return;
-
+      // 📊 VENTAS: Conteo de leads por equipo (barra azul)
       ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
+      
+      // 🔴 PUNTAJE: Suma de puntajes por equipo (barra roja)
       puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
+      
+      // 🍩 PRODUCTO: Conteo por producto (gráfica de abajo)
       ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
     });
 
+    console.log('✅ Datos calculados para gráficas:');
+    console.log('   - Ventas por equipo:', Object.keys(ventasPorEquipo).length, 'equipos');
+    console.log('   - Puntos por equipo:', Object.keys(puntosPorEquipo).length, 'equipos');
+    console.log('   - Ventas por producto:', Object.keys(ventasPorProducto).length, 'productos');
+
     res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
   } catch (error) {
+    console.error('❌ Error en API graficas:', error);
     res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
   }
 });
