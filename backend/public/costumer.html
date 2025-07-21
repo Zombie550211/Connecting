@@ -596,8 +596,9 @@ async function cargarCostumers() {
       "DIRECCIÓN": item.direccion || "",
       "ZIP": item.zip || ""
     }));
-    renderizarTablaCostumers(datosCostumers);
     llenarFiltroTeamYAgente();
+    // Aplicar filtros existentes después de cargar los datos
+    aplicarFiltros();
     recalcularKPIsCostumer();
   } catch (err) {
     console.error("Error cargando costumers:", err);
@@ -634,6 +635,24 @@ function recalcularKPIsCostumer() {
 }
 
 function agregarEventosFiltrosMesAnio() {
+  // Limpiar event listeners previos
+  const mesSelect = document.getElementById("filtro-mes");
+  const anioSelect = document.getElementById("filtro-anio");
+  const fechaDesde = document.getElementById("filtro-fecha-desde");
+  const fechaHasta = document.getElementById("filtro-fecha-hasta");
+  
+  // Clonar elementos para remover todos los event listeners
+  const mesSelectClone = mesSelect.cloneNode(true);
+  const anioSelectClone = anioSelect.cloneNode(true);
+  const fechaDesdeClone = fechaDesde.cloneNode(true);
+  const fechaHastaClone = fechaHasta.cloneNode(true);
+  
+  mesSelect.parentNode.replaceChild(mesSelectClone, mesSelect);
+  anioSelect.parentNode.replaceChild(anioSelectClone, anioSelect);
+  fechaDesde.parentNode.replaceChild(fechaDesdeClone, fechaDesde);
+  fechaHasta.parentNode.replaceChild(fechaHastaClone, fechaHasta);
+  
+  // Agregar nuevos event listeners
   document.getElementById("filtro-mes").addEventListener("change", ()=>{ 
     document.getElementById("filtro-fecha-desde").value = "";
     document.getElementById("filtro-fecha-hasta").value = "";
@@ -740,11 +759,21 @@ function llenarFiltroTeamYAgente() {
   const teamSelect = document.getElementById("filtro-team");
   teamSelect.innerHTML = `<option value="">Todos</option>` +
     Object.keys(TEAMS).map(t => `<option value="${t}">${t}</option>`).join('');
-  teamSelect.onchange = function() {
+  
+  // Remover event listeners previos para evitar duplicados
+  teamSelect.onchange = null;
+  
+  teamSelect.addEventListener('change', function() {
     llenarFiltroAgente(this.value);
     aplicarFiltros();
-  };
+  });
+  
   llenarFiltroAgente(teamSelect.value);
+  
+  // Agregar event listener al filtro de agente después de llenarlo
+  const agenteSelect = document.getElementById("filtro-agente");
+  agenteSelect.onchange = null; // Remover listener previo
+  agenteSelect.addEventListener('change', aplicarFiltros);
 }
 
 function llenarFiltroAgente(team) {
@@ -878,9 +907,7 @@ function cerrarFormEditar() {
   document.getElementById("editar-form-container").innerHTML = "";
 }
 
-document.getElementById("filtro-agente").addEventListener("change", aplicarFiltros);
-document.getElementById("filtro-fecha-desde").addEventListener("input", aplicarFiltros);
-document.getElementById("filtro-fecha-hasta").addEventListener("input", aplicarFiltros);
+// Event listeners para filtros que no se manejan en otras funciones
 document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);

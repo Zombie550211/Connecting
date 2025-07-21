@@ -424,16 +424,20 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
     const costumers = await Costumer.find(query).sort({ fecha: -1 }).lean();
     console.log('Clientes encontrados:', costumers.length); // Para depuración
 
-    // Mapeo y filtrado de campos según lo solicitado
+    // Mapeo y filtrado de campos según lo solicitado por el frontend
     const costumersMapeados = costumers.map(c => ({
-      "Fecha": c.Dia_Venta || "",
-      "Team": c.supervisor || "",
-      "Producto": c.tipo_de_serv || "",
-      "Puntaje": c.puntaje || 0,
-      "Telefono": c.telefono || "",
-      "Direccion": c.direccion || "",
-      "ZIP": c.zip || "",
-      "Cuenta": c.cuenta || ""
+      "_id": c._id,
+      "fecha": c.fecha || "", // Campo de compatibilidad
+      "equipo": c.equipo || c.supervisor || "", // supervisor es el campo real del modelo
+      "agente": c.agente || "", // Campo directo del modelo
+      "producto": c.producto || c.tipo_de_serv || "", // tipo_de_serv es el campo real
+      "fecha_instalacion": c.fecha_instalacion || c.dia_venta_a_instalacion || "",
+      "estado": c.estado || "Pending", // Campo directo del modelo
+      "puntaje": c.puntaje || 0, // Campo directo del modelo
+      "cuenta": c.cuenta || c.numero_de_cuenta || "", // numero_de_cuenta es el campo real
+      "telefono": c.telefono || "", // Campo directo del modelo
+      "direccion": c.direccion || "", // Campo directo del modelo
+      "zip": c.zip || "" // Campo directo del modelo
     }));
 
     res.json({ costumers: costumersMapeados });
