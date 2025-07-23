@@ -5,16 +5,11 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const mongoose = require("mongoose");
 const path = require("path");
-const fs = require("fs");
-const XLSX = require("xlsx");
-const multer = require('multer');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const upload = multer({ dest: 'uploads/' });
 const cors = require("cors");
 
-const Lead = require('./models/lead');
-const Costumer = require('./models/costumer');
+
 const CrmAgente = require('./models/crm_agente');
 const Facturacion = require('./models/Facturacion');
 const User = require('./models/user');
@@ -44,14 +39,7 @@ mongoose.connection.once('open', async () => {
 });
 
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
-app.get('/api/leads', async (req, res) => {
-  try {
-    const leads = await Lead.find().lean();
-    res.json(leads);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+
 
 app.use(cors({
   origin: [
@@ -220,210 +208,40 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login.html'));
 });
 
-// ====================== API SYNC =========================
-// Middleware para proteger la ruta de sincronización con una API Key
-const API_KEY_SECRET = process.env.API_KEY_SECRET || "tu-clave-secreta-muy-larga-y-dificil-de-adivinar";
-
-function protegerRutaSync(req, res, next) {
-  const apiKey = req.headers['x-api-key'];
-  if (apiKey && apiKey === API_KEY_SECRET) {
-    return next(); // La clave es correcta, permite el acceso
-  }
-  // Si no hay clave o es incorrecta, rechaza la solicitud
-  res.status(401).json({ success: false, error: "No autorizado. API Key inválida o no proporcionada." });
-}
-
-// Endpoint para recibir datos desde el CRM Agente
-app.post("/api/sync/costumer", protegerRutaSync, async (req, res) => {
-  try {
-    // Los nombres de los campos vienen del CRM Agente
-    const { fecha, equipo, agente, telefono, producto, puntaje, cuenta, direccion, zip, estado } = req.body;
-
-    // Validamos que los datos mínimos estén presentes
-    if (!agente || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos (agente y producto son requeridos)." });
-    }
-
-    const nuevoCostumer = {
-      fecha: fecha || getFechaLocalHoy(), // Usar fecha actual si no se provee
-      equipo: equipo || '',
-      agente: agente,
-      telefono: telefono || '',
-      producto: producto,
-      estado: estado || "Pending", // Por defecto "Pending"
-      puntaje: Number(puntaje) || 0,
-      cuenta: cuenta || '', // Recibirá el valor vacío que envíe el Agente
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-
-    // Creamos el nuevo cliente en la base de datos del CRM Admin
-    await Costumer.create(nuevoCostumer);
-
-    // Opcional: También creamos el lead para mantener consistencia
-    await Lead.create(nuevoCostumer);
-
-    res.status(201).json({ success: true, message: "Costumer sincronizado correctamente." });
-
-  } catch (err) {
-    if (err.code === 11000) {
-      res.status(409).json({ success: false, error: "Conflicto: Ya existe un registro idéntico." });
-    } else {
-      res.status(500).json({ success: false, error: "Error interno al sincronizar el costumer: " + err.message });
-    }
-  }
-});
-
-// ====================== LEAD =========================
-app.post('/api/leads/import', protegerRuta, upload.single('archivo'), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
-    const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    const mapped = rows.filter(row =>
-      row.equipo || row.team || row.agente || row.agent || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
-    ).map(row => ({
-      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : getFechaLocalHoy(),
-      equipo: row.equipo || row.team || "",
-      agente: row.agente || row.agent || "",
-      telefono: row.telefono || "",
-      producto: row.producto || "",
-      puntaje: Number(row.puntaje) || 0,
-      cuenta: row.cuenta || "",
-      direccion: row.direccion || "",
-      zip: row.zip || ""
-    }));
-
-    if (mapped.length) {
-      await Lead.insertMany(mapped);
-      await Costumer.insertMany(mapped); // Guardar en costumers también
-    }
-    fs.unlinkSync(filePath);
-    res.json({ success: true, count: mapped.length });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-app.post("/api/leads", protegerRuta, async (req, res) => {
-  try {
-    const { fecha, team, agent, telefono, producto, puntaje, cuenta, direccion, zip } = req.body;
-    if (!agent || !producto) {
-      return res.status(400).json({ success: false, error: "Datos incompletos" });
-    }
-    const fechaLead = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
-      ? fecha
-      : getFechaLocalHoy();
-
-    const nuevoLead = {
-      fecha: fechaLead,
-      equipo: team || '',
-      agente: agent,
-      telefono: telefono || '',
-      producto,
-      puntaje: puntaje || 0,
-      cuenta: cuenta || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Lead.create(nuevoLead);
-    await Costumer.create(nuevoLead);
-    res.json({ success: true });
-  } catch (err) {
-    if (err.code === 11000) {
-      res.status(400).json({ success: false, error: "Ya existe un registro idéntico. No se puede duplicar." });
-    } else {
-      res.status(500).json({ success: false, error: "Error al guardar el lead/costumer: " + err.message });
-    }
-  }
-});
-
-app.get("/api/graficas", protegerRuta, async (req, res) => {
-  try {
-    console.log('📊 API GRAFICAS - Conectando a colección crm agente...');
-    const fechaFiltro = req.query.fecha;
-    const query = {};
-    if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      query.dia_venta = fechaFiltro;
-      console.log('🗓️ Filtro por dia_venta aplicado:', fechaFiltro);
-    }
-    
-    // Ahora consulta la colección CRM AGENTE
-    const agentes = await CrmAgente.find(query).lean();
-    console.log('📋 Registros encontrados en crm agente para gráficas:', agentes.length);
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    agentes.forEach(row => {
-      const equipo = row.team || "Sin equipo";
-      const producto = row.producto || "Sin producto";
-      const puntaje = parseFloat(row.puntaje) || 0;
-
-      // 📊 VENTAS: Conteo de leads por equipo (barra azul)
-      ventasPorEquipo[equipo] = (ventasPorEquipo[equipo] || 0) + 1;
-      
-      // 🔴 PUNTAJE: Suma de puntajes por equipo (barra roja)
-      puntosPorEquipo[equipo] = Math.round(((puntosPorEquipo[equipo] || 0) + puntaje) * 100) / 100;
-      
-      // 🍩 PRODUCTO: Conteo por producto (gráfica de abajo)
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-
-    console.log('✅ Datos calculados para gráficas:');
-    console.log('   - Ventas por equipo:', Object.keys(ventasPorEquipo).length, 'equipos');
-    console.log('   - Puntos por equipo:', Object.keys(puntosPorEquipo).length, 'equipos');
-    console.log('   - Ventas por producto:', Object.keys(ventasPorProducto).length, 'productos');
-
-    res.json({ ventasPorEquipo, puntosPorEquipo, ventasPorProducto });
-  } catch (error) {
-    console.error('❌ Error en API graficas:', error);
-    res.status(500).json({ error: "No se pudieron cargar los datos para gráficas." });
-  }
-});
-
 // ====================== COSTUMER =========================
-// ✨ API COSTUMER - CONECTADA A COLECCIÓN CRM AGENTE ✨
+// ✨ API COSTUMER - CONECTADA A COLECCIÓN COSTUMERS ✨
+const Costumer = require('./models/costumer');
+
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    console.log('🚀 API COSTUMER - Conectando a colección crm agente...');
+    console.log('🚀 API COSTUMER - Conectando a colección costumers...');
     console.log('🔍 Usuario autenticado:', req.session.usuario ? 'SÍ' : 'NO');
     
-    // Consulta a la colección crm agente
-    console.log('📊 Consultando colección crm agente...');
-    const agentes = await CrmAgente.find({}).sort({ dia_venta: -1 }).lean();
-    console.log('📋 Registros encontrados en crm agente:', agentes.length);
+    // Consulta a la colección costumers
+    console.log('📊 Consultando colección costumers...');
+    const costumers = await Costumer.find({}).sort({ fecha: -1 }).lean();
+    console.log('📋 Registros encontrados en costumers:', costumers.length);
     
-    if (agentes.length > 0) {
-      console.log('🔍 Muestra del primer registro:', {
-        _id: agentes[0]._id,
-        agente: agentes[0].agente,
-        dia_venta: agentes[0].dia_venta,
-        team: agentes[0].team
-      });
-    }
-    
-    // Mapeo de campos para el frontend
-    const costumersMapeados = agentes.map(c => ({
-      _id: c._id,
-      FECHA: c.dia_venta || "", // o c.dia_instalacion si aplica
-      TEAM: c.team || "",
-      AGENTE: c.agente || "",
-      PRODUCTO: c.tipo_servicios || c.servicios || c.mercado || "",
-      PUNTAJE: c.puntaje || 0,
-      CUENTA: c.numero_de_cuenta || c.numero_cliente || "",
-      "TELÉFONO": c.telefono_principal || "",
-      "DIRECCIÓN": c.direccion || "",
-      ZIP: c.zip || ""
+    // Mapear los costumers al formato esperado por el frontend
+    const costumersMapeados = costumers.map(costumer => ({
+      _id: costumer._id,
+      FECHA: costumer.fecha || '',
+      TEAM: costumer.equipo || '',
+      AGENTE: costumer.agente || '',
+      PRODUCTO: costumer.tipo_de_serv || '',
+      FECHA_INSTALACION: costumer.dia_venta_a_instalacion || '',
+      ESTADO: costumer.estado || 'Pending',
+      PUNTAJE: costumer.puntaje || 0,
+      CUENTA: costumer.numero_de_cuenta || '',
+      TELEFONO: costumer.telefono || '',
+      DIRECCION: costumer.direccion || '',
+      ZIP: costumer.zip || ''
     }));
     
-    console.log('✅ Enviando datos de crm agente al frontend:', costumersMapeados.length, 'registros');
     res.json({ 
       success: true,
       costumers: costumersMapeados,
-      message: "Datos de colección crm agente"
+      message: "Datos de colección costumers"
     });
     
   } catch (err) {
@@ -433,50 +251,6 @@ app.get("/api/costumer", protegerRuta, async (req, res) => {
       error: err.message,
       costumers: []
     });
-  }
-});
-
-// --------- KPIs ---------
-app.get('/api/ventas/hoy', protegerRuta, async (req, res) => {
-  try {
-    const hoy = new Date();
-    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-    const fechaHoy = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const total = await Costumer.countDocuments({ fecha: fechaHoy });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-app.get('/api/leads/pendientes', protegerRuta, async (req, res) => {
-  try {
-    const total = await Costumer.countDocuments({ estado: 'Pending' });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-app.get('/api/clientes', protegerRuta, async (req, res) => {
-  try {
-    const total = await Costumer.countDocuments();
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
-  }
-});
-app.get('/api/ventas/mes', protegerRuta, async (req, res) => {
-  try {
-    const hoy = new Date();
-    const [month, day, year] = hoy.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' }).split('/');
-    const inicioMes = `${year}-${month.padStart(2, '0')}-01`;
-    const finMesDate = new Date(year, parseInt(month), 0);
-    const finMes = `${year}-${month.padStart(2, '0')}-${String(finMesDate.getDate()).padStart(2, '0')}`;
-    const total = await Costumer.countDocuments({
-      fecha: { $gte: inicioMes, $lte: finMes }
-    });
-    res.json({ total });
-  } catch (err) {
-    res.status(500).json({ total: 0, error: err.message });
   }
 });
 
@@ -608,6 +382,84 @@ function aliasAgente(nombre) {
   return nombre;
 }
 
+// Endpoint para obtener datos para las gráficas de la pestaña lead
+app.get('/api/graficas', protegerRuta, async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    
+    // Validar formato de fecha (opcional)
+    let fechaFiltro = {};
+    if (fecha) {
+      // Asumimos que la fecha viene en formato YYYY-MM-DD
+      const fechaObj = new Date(fecha);
+      if (isNaN(fechaObj.getTime())) {
+        return res.status(400).json({ ok: false, error: 'Formato de fecha inválido. Usar YYYY-MM-DD' });
+      }
+      const dia = String(fechaObj.getDate()).padStart(2, '0');
+      const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+      const anio = fechaObj.getFullYear();
+      
+      // Buscar en cualquier formato de fecha que coincida con el día/mes/año
+      fechaFiltro = {
+        $or: [
+          { dia_venta: { $regex: `${dia}/${mes}/${anio}$` } }, // DD/MM/YYYY
+          { dia_venta: { $regex: `${anio}-${mes}-${dia}` } }, // YYYY-MM-DD
+          { dia_venta: { $regex: `${mes}/${dia}/${anio}` } }  // MM/DD/YYYY
+        ]
+      };
+    }
+
+    // Obtener todos los registros de crm_agente que coincidan con el filtro de fecha
+    const registros = await CrmAgente.find(fechaFiltro).lean();
+
+    // Inicializar objetos para almacenar los resultados
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    const ventasPorProducto = {};
+
+    // Procesar cada registro
+    registros.forEach(registro => {
+      const { team, tipo_servicios, puntaje } = registro;
+      
+      // Validar que el equipo exista y tenga un valor
+      if (team && team.trim()) {
+        // Inicializar contadores para el equipo si no existen
+        if (!ventasPorEquipo[team]) ventasPorEquipo[team] = 0;
+        if (!puntosPorEquipo[team]) puntosPorEquipo[team] = 0;
+        
+        // Contar ventas por equipo (cada registro es una venta)
+        ventasPorEquipo[team]++;
+        
+        // Sumar puntaje por equipo
+        if (typeof puntaje === 'number' && !isNaN(puntaje)) {
+          puntosPorEquipo[team] += puntaje;
+        }
+      }
+
+      // Procesar tipo de servicio para la gráfica de productos
+      if (tipo_servicios && tipo_servicios.trim()) {
+        const producto = tipo_servicios.trim();
+        if (!ventasPorProducto[producto]) {
+          ventasPorProducto[producto] = 0;
+        }
+        ventasPorProducto[producto]++;
+      }
+    });
+
+    // Devolver los datos en el formato esperado por el frontend
+    res.json({
+      ok: true,
+      ventasPorEquipo,
+      puntosPorEquipo,
+      ventasPorProducto
+    });
+
+  } catch (error) {
+    console.error('Error en /api/graficas:', error);
+    res.status(500).json({ ok: false, error: 'Error al obtener datos para las gráficas' });
+  }
+});
+
 app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
   try {
     const { mes, anio } = req.query;
@@ -616,9 +468,9 @@ app.get('/api/ranking-equipos', protegerRuta, async (req, res) => {
       const filtroFecha = getRangoMes(Number(mes), Number(anio));
       if (filtroFecha) matchStage.fecha = filtroFecha;
     }
-    const equipos = await Costumer.aggregate([
+    const equipos = await Facturacion.aggregate([
       { $match: matchStage },
-      { $group: { _id: "$equipo", ventas: { $sum: 1 } } },
+      { $group: { _id: "$campos[1]", ventas: { $sum: 1 } } },
       { $sort: { ventas: -1 } }
     ]);
     res.json(equipos.map((e, idx) => ({
@@ -639,10 +491,10 @@ app.get('/api/ranking-agentes', protegerRuta, async (req, res) => {
       const filtroFecha = getRangoMes(Number(mes), Number(anio));
       if (filtroFecha) match.fecha = filtroFecha;
     }
-    const docs = await Costumer.find(match, { agente: 1 }).lean();
+    const docs = await Facturacion.find(match, { campos: 1 }).lean();
     const ranking = {};
     for (const venta of docs) {
-      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      const nombreAgente = aliasAgente(venta.campos[1] || "Sin nombre");
       if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, ventas: 0 };
       ranking[nombreAgente].ventas += 1;
     }
@@ -661,12 +513,12 @@ app.get('/api/ranking-puntos', protegerRuta, async (req, res) => {
       const filtroFecha = getRangoMes(Number(mes), Number(anio));
       if (filtroFecha) match.fecha = filtroFecha;
     }
-    const docs = await Costumer.find(match, { agente: 1, puntaje: 1 }).lean();
+    const docs = await Facturacion.find(match, { campos: 1 }).lean();
     const ranking = {};
     for (const venta of docs) {
-      const nombreAgente = aliasAgente(venta.agente || "Sin nombre");
+      const nombreAgente = aliasAgente(venta.campos[1] || "Sin nombre");
       if (!ranking[nombreAgente]) ranking[nombreAgente] = { nombre: nombreAgente, puntos: 0 };
-      ranking[nombreAgente].puntos += Number(venta.puntaje) || 0;
+      ranking[nombreAgente].puntos += Number(venta.campos[13]) || 0;
     }
     const resultado = Object.values(ranking)
       .sort((a, b) => b.puntos - a.puntos)
@@ -705,284 +557,18 @@ app.get('/api/welcome', protegerRuta, async (req, res) => {
   }
 });
 
-// --------- COSTUMER EXPORT/IMPORT ---------
-app.get('/descargar/costumers', protegerRuta, async (req, res) => {
-  try {
-    const { desde, hasta } = req.query;
-    let query = {};
-    if (desde && hasta) {
-      query.fecha = { $gte: desde, $lte: hasta };
-    } else if (desde) {
-      query.fecha = { $gte: desde };
-    } else if (hasta) {
-      query.fecha = { $lte: hasta };
-    }
-
-    const costumers = await Costumer.find(query).lean();
-
-    const excelData = costumers.map(c => ({
-      Fecha: c.fecha || '',
-      Team: c.equipo || '',
-      Agente: c.agente || '',
-      Producto: c.producto || '',
-      Estado: c.estado || '',
-      Puntaje: c.puntaje || '',
-      Cuenta: c.cuenta || '',
-      Telefono: c.telefono || '',
-      Dirección: c.direccion || '',
-      ZIP: c.zip || ''
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Costumers');
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    res.setHeader('Content-Disposition', 'attachment; filename="costumers.xlsx"');
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.send(buf);
-  } catch (err) {
-    res.status(500).send('Error generando Excel');
-  }
-});
-
-// =================== AGENTE ===================
-app.post('/agente/login', async (req, res) => {
-  const { user, pass } = req.body;
-  const usuarioDB = await User.findOne({ usuario: user });
-  if (!usuarioDB) return res.json({ success: false });
-  const match = await bcrypt.compare(pass, usuarioDB.password);
-  if (!match) return res.json({ success: false });
-  req.session.agente = usuarioDB.usuario;
-  req.session.nombreAgente = `${usuarioDB.nombre} ${usuarioDB.apellido}`;
-  res.json({ success: true });
-});
-app.get('/agente/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/agente/login.html'));
-});
-app.get('/api/agente/info', protegerAgente, (req, res) => {
-  res.json({ nombre: req.session.agente, nombreCompleto: req.session.nombreAgente });
-});
-app.post('/api/agente/leads', protegerAgente, async (req, res) => {
-  try {
-    const { fecha, team, producto, puntaje, telefono, direccion, zip } = req.body;
-    const agente = req.session.nombreAgente || req.session.agente;
-    if (!producto || !agente) return res.json({ success: false, error: "Faltan datos" });
-    const nuevoLead = {
-      fecha: fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : getFechaLocalHoy(),
-      equipo: team || '',
-      agente: agente,
-      producto,
-      puntaje: Number(puntaje) || 0,
-      telefono: telefono || '',
-      direccion: direccion || '',
-      zip: zip || ''
-    };
-    await Lead.create(nuevoLead);
-    await Costumer.create(nuevoLead);
-    res.json({ success: true });
-  } catch (err) {
-    res.json({ success: false, error: "Error al guardar: "+err.message });
-  }
-});
-app.get('/api/agente/estadisticas-mes', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const year = new Date().getFullYear();
-    const docs = await Costumer.find({
-      agente,
-      fecha: { $gte: `${year}-01-01`, $lte: `${year}-12-31` }
-    }).lean();
-    const ventasPorMes = Array(12).fill(0), puntajePorMes = Array(12).fill(0);
-    docs.forEach(doc => {
-      const [yyyy, mm] = doc.fecha.split('-');
-      const idx = parseInt(mm, 10) - 1;
-      ventasPorMes[idx]++;
-      puntajePorMes[idx] += Number(doc.puntaje) || 0;
-    });
-    res.json({ ventasPorMes, puntajePorMes });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.get('/api/agente/ventas-producto', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const docs = await Costumer.find({ agente }).lean();
-    const ventasPorProducto = {};
-    docs.forEach(row => {
-      const producto = row.producto || "";
-      if (!producto) return;
-      ventasPorProducto[producto] = (ventasPorProducto[producto] || 0) + 1;
-    });
-    const labels = Object.keys(ventasPorProducto);
-    const dataArr = labels.map(k => ventasPorProducto[k]);
-    res.json({ labels, data: dataArr });
-  } catch (err) {
-    res.status(500).json({ labels:[], data:[] });
-  }
-});
-app.get('/api/agente/costumer-metricas', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const hoy = getFechaLocalHoy();
-    const [yyyy, mm] = hoy.split('-');
-    const inicioMes = `${yyyy}-${mm}-01`;
-    const finMes = `${yyyy}-${mm}-31`;
-    const filtros = { agente };
-    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
-    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
-    if (req.query.team) filtros.equipo = req.query.team;
-    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
-    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
-    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
-
-    const [ventasHoy, leadsPendientes, clientes, ventasMes] = await Promise.all([
-      Costumer.countDocuments({ ...filtros, fecha: hoy }),
-      Costumer.countDocuments({ ...filtros, estado: 'Pending' }),
-      Costumer.countDocuments(filtros),
-      Costumer.countDocuments({ ...filtros, fecha: { $gte: inicioMes, $lte: finMes } }),
-    ]);
-    res.json({ ventasHoy, leadsPendientes, clientes, ventasMes });
-  } catch (err) {
-    res.status(500).json({ ventasHoy:0, leadsPendientes:0, clientes:0, ventasMes:0, error:err.message });
-  }
-});
-app.get('/api/agente/costumer', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const filtros = { agente };
-    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
-    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
-    if (req.query.team) filtros.equipo = req.query.team;
-    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
-    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
-    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
-
-    const costumers = await Costumer.find(filtros).sort({ fecha: -1 }).lean();
-    res.json({ costumers });
-  } catch (err) {
-    res.status(500).json({ costumers: [], error: err.message });
-  }
-});
-app.get('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const costumer = await Costumer.findOne({ _id: req.params.id, agente }).lean();
-    if (!costumer) return res.status(404).json({ error: "No encontrado" });
-    res.json(costumer);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.put('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const update = { ...req.body };
-    delete update._id;
-    const updated = await Costumer.findOneAndUpdate(
-      { _id: req.params.id, agente },
-      update,
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ success: false, error: "No encontrado" });
-    res.json({ success: true, costumer: updated });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-app.delete('/api/agente/costumer/:id', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const deleted = await Costumer.findOneAndDelete({ _id: req.params.id, agente });
-    if (!deleted) return res.status(404).json({ success: false, error: "No encontrado" });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-app.delete('/api/agente/costumer-eliminar-todo', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    await Costumer.deleteMany({ agente });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// Endpoint para obtener equipos de agentes (solo lectura)
 app.get('/api/agente/teams', protegerAgente, async (req, res) => {
   try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const teams = await Costumer.distinct('equipo', { agente });
-    res.json(teams.filter(Boolean));
+    // Obtener equipos únicos de la colección CrmAgente
+    const teams = await CrmAgente.distinct('team', {});
+    res.json(teams.filter(team => team)); // Filtra valores nulos o vacíos
   } catch (err) {
+    console.error('Error al obtener equipos:', err);
     res.status(500).json([]);
   }
 });
-app.get('/api/agente/costumer-excel', protegerAgente, async (req, res) => {
-  try {
-    const agente = req.session.nombreAgente || req.session.agente;
-    const filtros = { agente };
-    if (req.query.fechaDesde) filtros.fecha = { ...filtros.fecha, $gte: req.query.fechaDesde };
-    if (req.query.fechaHasta) filtros.fecha = { ...filtros.fecha, $lte: req.query.fechaHasta };
-    if (req.query.team) filtros.equipo = req.query.team;
-    if (req.query.numero) filtros.telefono = new RegExp(req.query.numero, "i");
-    if (req.query.direccion) filtros.direccion = new RegExp(req.query.direccion, "i");
-    if (req.query.zip) filtros.zip = new RegExp(req.query.zip, "i");
 
-    const costumers = await Costumer.find(filtros).lean();
-    const excelData = costumers.map(c => ({
-      Fecha: c.fecha || '',
-      Team: c.equipo || '',
-      Agente: c.agente || '',
-      Producto: c.producto || '',
-      Estado: c.estado || '',
-      Puntaje: c.puntaje || '',
-      Cuenta: c.cuenta || '',
-      Telefono: c.telefono || '',
-      Dirección: c.direccion || '',
-      ZIP: c.zip || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Costumers');
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    res.setHeader('Content-Disposition', 'attachment; filename="costumers.xlsx"');
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.send(buf);
-  } catch (err) {
-    res.status(500).send('Error generando Excel');
-  }
-});
-app.post('/api/agente/costumer-import', protegerAgente, upload.single('excel'), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ success: false, error: "No se subió ningún archivo." });
-    const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    const agente = req.session.nombreAgente || req.session.agente;
-    const mapped = rows.filter(row =>
-      row.equipo || row.team || row.agente || row.producto || row.puntaje || row.cuenta || row.direccion || row.telefono || row.zip
-    ).map(row => ({
-      fecha: row.fecha ? row.fecha.toString().slice(0, 10) : getFechaLocalHoy(),
-      equipo: row.equipo || row.team || "",
-      agente: agente,
-      producto: row.producto || "",
-      estado: row.estado || "Pending",
-      puntaje: Number(row.puntaje) || 0,
-      cuenta: row.cuenta || "",
-      telefono: row.telefono || "",
-      direccion: row.direccion || "",
-      zip: row.zip || ""
-    }));
-
-    if (mapped.length) await Costumer.insertMany(mapped);
-    fs.unlinkSync(filePath);
-    res.json({ success: true, count: mapped.length });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 // --------- LISTEN ---------
 app.listen(PORT, () => {

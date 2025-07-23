@@ -474,10 +474,12 @@
       <table id="tabla-clientes">
         <thead>
           <tr>
-            <th>FECHA</th>
+            <th>FECHA VENTA</th>
             <th>TEAM</th>
             <th>AGENTE</th>
             <th>PRODUCTO</th>
+            <th>FECHA INSTALACIÓN</th>
+            <th>ESTADO</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
             <th>TELÉFONO</th>
@@ -601,17 +603,17 @@ async function cargarCostumers() {
     console.log('🔍 [FRONTEND] Número de costumers recibidos:', data.costumers.length);
     datosCostumers = data.costumers.map(item => ({
       "_id": item._id,
-      "FECHA": item.fecha ? item.fecha.substring(0, 10) : "",
-      "TEAM": item.equipo || "",
-      "AGENTE": item.agente || "",
-      "PRODUCTO": item.producto || "",
-      "FECHA_INSTALACION": item.fecha_instalacion ? item.fecha_instalacion.substring(0, 10) : "",
-      "Estado": item.estado || "Pending",
-      "PUNTAJE": item.puntaje || "",
-      "CUENTA": item.cuenta && item.cuenta !== '' ? item.cuenta : 'Elige',
-      "TELÉFONO": item.telefono || "",
-      "DIRECCIÓN": item.direccion || "",
-      "ZIP": item.zip || ""
+      "FECHA": item.FECHA || "",
+      "TEAM": item.TEAM || "",
+      "AGENTE": item.AGENTE || "",
+      "PRODUCTO": item.PRODUCTO || "",
+      "FECHA_INSTALACION": item.FECHA_INSTALACION || "",
+      "ESTADO": item.ESTADO || "Pending",
+      "PUNTAJE": item.PUNTAJE || 0,
+      "CUENTA": item.CUENTA || 'Elige',
+      "TELÉFONO": item.TELEFONO || "",
+      "DIRECCIÓN": item.DIRECCION || "",
+      "ZIP": item.ZIP || ""
     }));
     
     console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
@@ -701,27 +703,31 @@ function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No hay clientes registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
   }
   filas.forEach(fila => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${fila.FECHA}</td>
-      <td>${fila.TEAM}</td>
-      <td>${fila.AGENTE}</td>
-      <td>${fila.PRODUCTO}</td>
-      <td>${fila.PUNTAJE}</td>
-      <td><select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
-         <option${!fila.CUENTA || fila.CUENTA === 'Elige' ? ' selected' : ''}>Elige</option>
-         <option${fila.CUENTA === 'Cuenta Alexis' ? ' selected' : ''}>Cuenta Alexis</option>
-         <option${fila.CUENTA === 'Cuenta Eduardo' ? ' selected' : ''}>Cuenta Eduardo</option>
-         <option${fila.CUENTA === 'Cuenta Israel' ? ' selected' : ''}>Cuenta Israel</option>
-         <option${fila.CUENTA === 'Cuenta Lineas' ? ' selected' : ''}>Cuenta Lineas</option>
-       </select></td>
-      <td>${fila["TELÉFONO"]}</td>
-      <td>${fila["DIRECCIÓN"]}</td>
-      <td>${fila.ZIP}</td>
+      <td>${fila.FECHA || ''}</td>
+      <td>${fila.TEAM || ''}</td>
+      <td>${fila.AGENTE || ''}</td>
+      <td>${fila.PRODUCTO || ''}</td>
+      <td>${fila.FECHA_INSTALACION || ''}</td>
+      <td>${fila.ESTADO || ''}</td>
+      <td>${fila.PUNTAJE || 0}</td>
+      <td>
+        <select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
+          <option${!fila.CUENTA || fila.CUENTA === 'Elige' ? ' selected' : ''}>Elige</option>
+          <option${fila.CUENTA === 'Cuenta Alexis' ? ' selected' : ''}>Cuenta Alexis</option>
+          <option${fila.CUENTA === 'Cuenta Eduardo' ? ' selected' : ''}>Cuenta Eduardo</option>
+          <option${fila.CUENTA === 'Cuenta Israel' ? ' selected' : ''}>Cuenta Israel</option>
+          <option${fila.CUENTA === 'Cuenta Lineas' ? ' selected' : ''}>Cuenta Lineas</option>
+        </select>
+      </td>
+      <td>${fila["TELÉFONO"] || ''}</td>
+      <td>${fila["DIRECCIÓN"] || ''}</td>
+      <td>${fila.ZIP || ''}</td>
       <td>
         <button class="btn-editar" title="Editar" onclick="mostrarFormEditar('${fila._id}')">&#9998;</button>
         <button class="btn-eliminar" title="Eliminar" onclick="eliminarCostumer('${fila._id}')">&#128465;</button>
@@ -733,15 +739,36 @@ function renderizarTablaCostumers(filas) {
 
 async function actualizarCuentaCostumer(id, cuenta) {
   try {
+    console.log(`🔄 [FRONTEND] Actualizando cuenta del cliente ${id} a:`, cuenta);
     const res = await fetch(`/api/costumer/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cuenta })
+      body: JSON.stringify({ 
+        numero_de_cuenta: cuenta,
+        // Incluimos otros campos que podrían necesitarse para la actualización
+        actualizado_el: new Date().toISOString()
+      })
     });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('❌ [FRONTEND] Error en la respuesta del servidor:', res.status, errorData);
+      throw new Error(errorData.message || 'Error al actualizar la cuenta');
+    }
+    
     const data = await res.json();
+    console.log('✅ [FRONTEND] Cuenta actualizada correctamente:', data);
+    
     if (!data.success) {
-      alert("Error al actualizar la cuenta: " + (data.error || ""));
-      cargarCostumers();
+      console.error('❌ [FRONTEND] Error en la respuesta del servidor:', data);
+      throw new Error(data.error || 'Error desconocido al actualizar la cuenta');
+    }
+    
+    // Actualizar la UI para reflejar el cambio
+    const fila = document.querySelector(`[data-id="${id}"]`);
+    if (fila) {
+      const select = fila.querySelector('.cuenta-select');
+      if (select) select.value = cuenta;
     }
   } catch (e) {
     alert("Error al actualizar la cuenta: " + e.message);

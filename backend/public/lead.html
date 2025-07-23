@@ -540,34 +540,49 @@
     fetch(`/api/graficas?fecha=${fecha}`, {
       credentials: 'include'
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Error HTTP: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        // Ventas y puntaje por equipo
+        if (!data.ok) {
+          throw new Error(data.error || 'Error en la respuesta del servidor');
+        }
+        
+        console.log('Datos recibidos para gráficas:', data);
+        
+        // 1. Actualizar gráfica de ventas y puntaje por equipo
         let hayDataTeam = false;
         equipos.forEach((team, i) => {
           const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
           const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+          
+          // Actualizar datos en la gráfica
           ventasTeamChart.data.datasets[0].data[i] = ventas;
-          ventasTeamChart.data.datasets[1].data[i] = team === "Team Lineas" ? 0 : puntos;
+          ventasTeamChart.data.datasets[1].data[i] = puntos;
+          
           if (ventas > 0 || puntos > 0) hayDataTeam = true;
         });
+        
+        // Actualizar y redibujar la gráfica de equipos
         ventasTeamChart.update();
         mostrarNoData(!hayDataTeam, false);
 
-        // Ventas por producto: SIEMPRE usa el array productos como labels.
-        productosChart.data.labels = productos;
-        productosChart.data.datasets[0].data = productos.map(
-          prod => {
-            if (!data.ventasPorProducto) return 0;
-            if (typeof data.ventasPorProducto[prod] !== 'undefined') return data.ventasPorProducto[prod];
-            // Busqueda flexible para casos de mayúsculas/minúsculas/diferencias menores
-            const key = Object.keys(data.ventasPorProducto).find(k => k.trim().toLowerCase() === prod.trim().toLowerCase());
-            return key ? data.ventasPorProducto[key] : 0;
-          }
-        );
+        // 2. Actualizar gráfica de ventas por producto
+        // Primero, obtener todos los productos únicos de la respuesta
+        const productosUnicos = data.ventasPorProducto ? Object.keys(data.ventasPorProducto) : [];
+        
+        // Actualizar etiquetas y datos de la gráfica de productos
+        productosChart.data.labels = productosUnicos;
+        productosChart.data.datasets[0].data = productosUnicos.map(prod => data.ventasPorProducto[prod]);
+        
+        // Actualizar y redibujar la gráfica de productos
         productosChart.update();
 
-        let hayDataProd = productosChart.data.datasets[0].data.some(v => v > 0);
+        // Mostrar mensaje si no hay datos
+        const hayDataProd = productosUnicos.length > 0;
         mostrarNoData(false, !hayDataProd);
       })
       .catch(err => {
