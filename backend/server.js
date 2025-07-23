@@ -338,7 +338,6 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
   }
 });
-const CrmAgente = require('./models/crm_agente');
 
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
