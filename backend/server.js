@@ -15,6 +15,7 @@ const cors = require("cors");
 
 const Lead = require('./models/lead');
 const Costumer = require('./models/costumer');
+const CrmAgente = require('./models/crm_agente');
 const Facturacion = require('./models/Facturacion');
 const User = require('./models/user');
 
@@ -337,26 +338,28 @@ app.post("/api/leads", protegerRuta, async (req, res) => {
     }
   }
 });
+const CrmAgente = require('./models/crm_agente');
+
 app.get("/api/graficas", protegerRuta, async (req, res) => {
   try {
-    console.log('📊 API GRAFICAS - Conectando a colección costumers...');
+    console.log('📊 API GRAFICAS - Conectando a colección crm agente...');
     const fechaFiltro = req.query.fecha;
     const query = {};
     if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-      query.fecha = fechaFiltro;
-      console.log('🗓️ Filtro por fecha aplicado:', fechaFiltro);
+      query.dia_venta = fechaFiltro;
+      console.log('🗓️ Filtro por dia_venta aplicado:', fechaFiltro);
     }
     
-    // 🎯 CAMBIO: Ahora consulta la colección COSTUMERS (la marcada en celeste)
-    const costumers = await Costumer.find(query).lean();
-    console.log('📋 Registros encontrados en costumers para gráficas:', costumers.length);
+    // Ahora consulta la colección CRM AGENTE
+    const agentes = await CrmAgente.find(query).lean();
+    console.log('📋 Registros encontrados en crm agente para gráficas:', agentes.length);
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
     const ventasPorProducto = {};
 
-    costumers.forEach(row => {
-      const equipo = row.equipo || row.team || "Sin equipo";
+    agentes.forEach(row => {
+      const equipo = row.team || "Sin equipo";
       const producto = row.producto || "Sin producto";
       const puntaje = parseFloat(row.puntaje) || 0;
 
@@ -383,45 +386,45 @@ app.get("/api/graficas", protegerRuta, async (req, res) => {
 });
 
 // ====================== COSTUMER =========================
-// ✨ API COSTUMER - CONECTADA A COLECCIÓN COSTUMERS ✨
+// ✨ API COSTUMER - CONECTADA A COLECCIÓN CRM AGENTE ✨
 app.get("/api/costumer", protegerRuta, async (req, res) => {
   try {
-    console.log('🚀 API COSTUMER - Conectando a colección costumers...');
+    console.log('🚀 API COSTUMER - Conectando a colección crm agente...');
     console.log('🔍 Usuario autenticado:', req.session.usuario ? 'SÍ' : 'NO');
     
-    // Consulta a la colección costumers
-    console.log('📊 Consultando colección costumers...');
-    const costumers = await Costumer.find({}).sort({ fecha: -1 }).lean();
-    console.log('📋 Registros encontrados en costumers:', costumers.length);
+    // Consulta a la colección crm agente
+    console.log('📊 Consultando colección crm agente...');
+    const agentes = await CrmAgente.find({}).sort({ dia_venta: -1 }).lean();
+    console.log('📋 Registros encontrados en crm agente:', agentes.length);
     
-    if (costumers.length > 0) {
+    if (agentes.length > 0) {
       console.log('🔍 Muestra del primer registro:', {
-        _id: costumers[0]._id,
-        agente: costumers[0].agente,
-        fecha: costumers[0].fecha,
-        supervisor: costumers[0].supervisor
+        _id: agentes[0]._id,
+        agente: agentes[0].agente,
+        dia_venta: agentes[0].dia_venta,
+        team: agentes[0].team
       });
     }
     
     // Mapeo de campos para el frontend
-    const costumersMapeados = costumers.map(c => ({
+    const costumersMapeados = agentes.map(c => ({
       _id: c._id,
-      fecha: c.fecha || "",
-      TEAM: c.equipo || "", // Campo equipo de BD → TEAM en frontend
-      agente: c.agente || "",
-      producto: c.producto || "",
-      puntaje: c.puntaje || 0,
-      cuenta: c.numero_de_cuenta || c.cuenta || "",
-      telefono: c.telefono || "",
-      direccion: c.direccion || "",
-      zip: c.zip || ""
+      FECHA: c.dia_venta || "", // o c.dia_instalacion si aplica
+      TEAM: c.team || "",
+      AGENTE: c.agente || "",
+      PRODUCTO: c.tipo_servicios || c.servicios || c.mercado || "",
+      PUNTAJE: c.puntaje || 0,
+      CUENTA: c.numero_de_cuenta || c.numero_cliente || "",
+      "TELÉFONO": c.telefono_principal || "",
+      "DIRECCIÓN": c.direccion || "",
+      ZIP: c.zip || ""
     }));
     
-    console.log('✅ Enviando datos de costumers al frontend:', costumersMapeados.length, 'registros');
+    console.log('✅ Enviando datos de crm agente al frontend:', costumersMapeados.length, 'registros');
     res.json({ 
       success: true,
       costumers: costumersMapeados,
-      message: "Datos de colección costumers"
+      message: "Datos de colección crm agente"
     });
     
   } catch (err) {

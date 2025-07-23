@@ -5,134 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM Login</title>
     <style>
-    * {
+    html, body {
+        height: 100%;
         margin: 0;
         padding: 0;
-        box-sizing: border-box;
     }
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #f0f2f5;
         min-height: 100vh;
+        background: #fff;
+        font-family: 'Segoe UI', 'Arial', sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    .login-bg {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: #f0f2f5;
-        z-index: 0;
+        position: relative;
+        overflow: hidden;
+        height: 100vh;
     }
     .login-center {
-        position: relative;
-        z-index: 1;
         width: 100vw;
         height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: absolute;
+        top: 0; left: 0;
     }
-    .login-box {
+    .login-glass {
+        position: relative;
+        z-index: 1;
+        width: 370px;
+        padding: 44px 36px 36px 36px;
+        border-radius: 38px;
         background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.11);
-        padding: 38px 32px 32px 32px;
-        min-width: 320px;
-        max-width: 360px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.09);
+        border: 1.5px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+    .login-form-glass {
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
     }
-    .login-title {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 32px;
-    }
-    .input-group {
+    .input-row {
         display: flex;
         align-items: center;
-        background: #f5f6fa;
-        border-radius: 8px;
-        padding: 0 12px;
-        margin-bottom: 20px;
-        border: 1px solid #e0e0e0;
+        gap: 10px;
+        margin-bottom: 0px;
+        position: relative;
     }
-    .input-group .icon {
-        margin-right: 8px;
+    .icon-mail, .icon-lock {
         display: flex;
         align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 36px;
+        color: #888;
+        opacity: 0.95;
     }
-    .input-group input {
+    .input-row input {
+        background: transparent;
         border: none;
         outline: none;
-        background: transparent;
+        color: #222;
+        font-size: 1.07rem;
         flex: 1;
-        padding: 14px 0;
-        font-size: 1rem;
-        color: #333;
+        padding: 13px 0 10px 0;
+        letter-spacing: 0.02em;
     }
-    .input-group input::placeholder {
-        color: #aaa;
-    }
-    .toggle-password {
-        cursor: pointer;
-        margin-left: 8px;
-        user-select: none;
-        font-size: 1.1em;
+    .input-row input::placeholder {
         color: #888;
+        opacity: 0.8;
+        font-weight: 400;
     }
-    .remember-forgot {
+    .underline {
+        height: 1px;
+        background: linear-gradient(90deg, #e0e0e0 0%, #f7f7f7 100%);
+        margin-bottom: 18px;
+        margin-top: -2px;
+        border-radius: 2px;
+    }
+    .options-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 18px;
-        font-size: 0.96rem;
+        font-size: 0.98rem;
+        margin-bottom: 30px;
+        margin-top: 4px;
     }
     .remember-me {
+        color: #888;
+        font-weight: 400;
+        letter-spacing: 0.01em;
         display: flex;
         align-items: center;
-        gap: 6px;
-        color: #666;
+        gap: 5px;
+    }
+    .remember-me input[type="checkbox"] {
+        accent-color: #888;
+        width: 15px;
+        height: 15px;
+        margin-right: 2px;
     }
     .forgot-password {
-        color: #888;
+        color: #b3b3b3;
+        font-style: italic;
+        font-size: 0.97rem;
         text-decoration: none;
+        opacity: 0.85;
         transition: color 0.2s;
     }
     .forgot-password:hover {
-        color: #333;
+        color: #222;
+        opacity: 1;
     }
-    .login-btn {
+    .login-btn-glass {
         width: 100%;
-        padding: 12px;
-        background: #333;
+        padding: 13px 0;
+        margin-top: 5px;
+        margin-bottom: 7px;
+        background: linear-gradient(90deg, #232323 0%, #6a7bb8 100%);
         color: #fff;
         border: none;
-        border-radius: 8px;
-        font-size: 1.1rem;
+        border-radius: 12px;
+        font-size: 1.09rem;
         font-weight: 600;
+        letter-spacing: 0.09em;
+        box-shadow: 0 2px 8px rgba(80,80,140,0.08);
         cursor: pointer;
-        margin-bottom: 16px;
-        transition: background 0.2s;
+        transition: background 0.2s, box-shadow 0.2s;
     }
-    .login-btn:hover {
-        background: #222;
-    }
-    .register-link {
-        text-align: center;
-        color: #888;
-        font-size: 0.97rem;
-    }
-    .register-link a {
-        color: #333;
-        text-decoration: none;
-        font-weight: 600;
-        margin-left: 3px;
-        transition: color 0.2s;
-    }
-    .register-link a:hover {
-        color: #1976d2;
+    .login-btn-glass:hover {
+        background: linear-gradient(90deg, #333 0%, #7a8be8 100%);
+        box-shadow: 0 4px 18px rgba(80,80,140,0.13);
     }
     #message {
         margin-top: 10px;
@@ -152,228 +165,81 @@
         color: #e74c3c;
         border: 1px solid #f5b7b1;
     }
-    @media (max-width: 480px) {
-        .login-box {
-            padding: 22px 10px 20px 10px;
-            min-width: unset;
-            max-width: 98vw;
+    @media (max-width: 500px) {
+        .login-glass {
+            width: 97vw;
+            padding: 18px 4vw 18px 4vw;
+            border-radius: 20px;
         }
+        .avatar svg { width: 65px; height: 65px; }
     }
-</style>
-
-        .login-title {
-            text-align: center;
-            color: rgba(0, 0, 0, 0.8);
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 35px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: rgba(0, 0, 0, 0.8);
-            font-size: 1rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-        }
-
-        .input-group input::placeholder {
-            color: rgba(0, 0, 0, 0.5);
-        }
-
-        .remember-forgot {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(0, 0, 0, 0.7);
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: rgba(0, 0, 0, 0.6);
-        }
-
-        .forgot-password {
-            color: rgba(0, 0, 0, 0.7);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-password:hover {
-            color: rgba(0, 0, 0, 0.9);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
-        }
-
-        .login-btn:hover {
-            background: rgba(0, 0, 0, 0.7);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .register-link {
-            text-align: center;
-            color: rgba(0, 0, 0, 0.7);
-            font-size: 0.9rem;
-        }
-
-        .register-link a {
-            color: rgba(0, 0, 0, 0.8);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .register-link a:hover {
-            color: rgba(0, 0, 0, 1);
-        }
-
-        #message {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 10px;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-        }
-
-        .success {
-            background: rgba(46, 204, 113, 0.2);
-            color: #27ae60;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-
-        .error {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .glass-container {
-                padding: 20px;
-            }
-            
-            .login-form {
-                width: 100%;
-                padding: 30px 25px;
-            }
-            
-            .login-title {
-                font-size: 1.7rem;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="login-bg"></div>
     <div class="login-center">
-        <form id="loginForm" class="login-box" autocomplete="off">
-            <h2 class="login-title">Login</h2>
-            <div class="input-group">
-                <span class="icon"><svg width="20" height="20" fill="none"><path d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-3.33 0-6 1.34-6 3v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1c0-1.66-2.67-3-6-3Z" fill="#888"/></svg></span>
-                <input type="text" id="username" name="username" placeholder="Username" required>
+        <div class="login-glass">
+            <div class="avatar">
+                <svg width="90" height="90" viewBox="0 0 90 90"><circle cx="45" cy="35" r="22" fill="#e0e0e0"/><ellipse cx="45" cy="70" rx="28" ry="14" fill="#e0e0e0"/><circle cx="45" cy="35" r="20" fill="#bcbcbc"/><path d="M45 48c-7.5 0-13.5-6-13.5-13.5S37.5 21 45 21s13.5 6 13.5 13.5S52.5 48 45 48Zm0 3c9.5 0 20 4.5 20 10.5V66a2 2 0 0 1-2 2H27a2 2 0 0 1-2-2v-4.5c0-6 10.5-10.5 20-10.5Z" fill="#bcbcbc"/></svg>
             </div>
-            <div class="input-group">
-                <span class="icon"><svg width="20" height="20" fill="none"><path d="M5 9V7a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h1Zm2-2a3 3 0 1 1 6 0v2H7V7Zm-2 4v5h10v-5H5Zm5 2a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" fill="#888"/></svg></span>
-                <input type="password" id="password" name="password" placeholder="Password" required>
-                <span class="toggle-password" onclick="togglePassword()">👁️</span>
-            </div>
-            <div class="remember-forgot">
-                <label class="remember-me">
-                    <input type="checkbox" id="remember"> Remember me
-                </label>
-                <a href="#" class="forgot-password" onclick="forgotPassword()">Forgot Password?</a>
-            </div>
-            <button type="submit" class="login-btn">Login</button>
-            <div class="register-link">
-                Don't have an account? <a href="/register.html">Register</a>
-            </div>
-            <div id="message"></div>
-        </form>
+            <form id="loginForm" class="login-form-glass" autocomplete="off">
+                <div class="input-row">
+                    <span class="icon-mail">
+                        <svg width="22" height="22" fill="none"><path d="M3 7.5v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2Zm14 0-6 4.5L5 7.5" stroke="#888" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <input type="text" id="username" name="username" placeholder="Email ID" required>
+                </div>
+                <div class="underline"></div>
+                <div class="input-row">
+                    <span class="icon-lock">
+                        <svg width="22" height="22" fill="none"><path d="M7 10V8a4 4 0 1 1 8 0v2m-9 0h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Zm5 3v2" stroke="#888" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                </div>
+                <div class="underline"></div>
+                <div class="options-row">
+                    <label class="remember-me"><input type="checkbox" id="remember"> Remember me</label>
+                    <a href="#" class="forgot-password" onclick="forgotPassword()">Forgot Password?</a>
+                </div>
+                <button type="submit" class="login-btn-glass">LOGIN</button>
+                <div id="message"></div>
+            </form>
+        </div>
     </div>
-
     <script>
-// Login form submission
-const loginForm = document.getElementById("loginForm");
-loginForm.addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    const message = document.getElementById("message");
-    message.textContent = "";
-    message.className = "";
-    try {
-        // Cambiar endpoint a /login (no /api/login)
-        const response = await fetch("/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-        });
-        const result = await response.json();
-        if (response.ok) {
-            message.textContent = "Login exitoso. Redirigiendo...";
-            message.className = "success";
-            setTimeout(() => {
-                window.location.href = "/inicio.html";
-            }, 1200);
-        } else {
-            message.textContent = result.mensaje || "Error al iniciar sesión";
+    // Login form submission
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const message = document.getElementById("message");
+        message.textContent = "";
+        message.className = "";
+        try {
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+            const result = await response.json();
+            if (response.ok) {
+                message.textContent = "Login exitoso. Redirigiendo...";
+                message.className = "success";
+                setTimeout(() => {
+                    window.location.href = "/inicio.html";
+                }, 1200);
+            } else {
+                message.textContent = result.mensaje || "Error al iniciar sesión";
+                message.className = "error";
+            }
+        } catch (error) {
+            message.textContent = "Error de conexión";
             message.className = "error";
         }
-    } catch (error) {
-        message.textContent = "Error de conexión";
-        message.className = "error";
+    });
+    function forgotPassword() {
+        alert("Funcionalidad de recuperación de contraseña próximamente...");
     }
-});
-function forgotPassword() {
-    alert("Funcionalidad de recuperación de contraseña próximamente...");
-}
-function togglePassword() {
-    const pwd = document.getElementById("password");
-    pwd.type = pwd.type === "password" ? "text" : "password";
-}
-</script>
+    </script>
 </body>
 </html>
