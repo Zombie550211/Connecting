@@ -57,40 +57,20 @@ app.get('/api/test-graficas', async (req, res) => {
 
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 
-// Configuración de CORS mejorada
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5500",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-  "https://crm-dashboard-1234.netlify.app",
-  "https://crm-dashboard-xyz.vercel.app",
-  "https://crm-connecting.onrender.com"
-];
+// Configuración de CORS simplificada para producción
+const isProduction = process.env.NODE_ENV === 'production';
 
+// Configuración básica de CORS para desarrollo
 const corsOptions = {
-  origin: function (origin, callback) {
-    // En desarrollo, permitir cualquier origen
-    if (process.env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
-    
-    // En producción, verificar contra la lista de orígenes permitidos
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️  Intento de acceso desde origen no permitido: ${origin}`);
-      callback(new Error('No permitido por CORS'));
-    }
-  },
+  origin: isProduction ? 'https://crm-connecting.onrender.com' : true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['set-cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['set-cookie'],
+  maxAge: 600 // Tiempo de caché para las respuestas preflight
 };
 
+// Aplicar CORS con las opciones configuradas
 app.use(cors(corsOptions));
 
 // Manejar preflight OPTIONS para todas las rutas
