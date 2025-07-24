@@ -16,6 +16,7 @@ const User = require('./models/user');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) throw new Error("La variable de entorno MONGO_URL no está definida.");
@@ -129,7 +130,6 @@ function protegerAgente(req, res, next) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Configuración mejorada de la sesión
-const isProduction = process.env.NODE_ENV === 'production';
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "secreto_crm_conectado_seguro_123",
   resave: false,
