@@ -386,6 +386,7 @@ function aliasAgente(nombre) {
 app.get('/api/graficas', protegerRuta, async (req, res) => {
   try {
     const { fecha } = req.query;
+    console.log('🔍 Solicitando datos para gráficas con fecha:', fecha || 'sin fecha (todos los registros)');
     
     // Validar formato de fecha (opcional)
     let fechaFiltro = {};
@@ -393,6 +394,7 @@ app.get('/api/graficas', protegerRuta, async (req, res) => {
       // Asumimos que la fecha viene en formato YYYY-MM-DD
       const fechaObj = new Date(fecha);
       if (isNaN(fechaObj.getTime())) {
+        console.error('❌ Formato de fecha inválido:', fecha);
         return res.status(400).json({ ok: false, error: 'Formato de fecha inválido. Usar YYYY-MM-DD' });
       }
       const dia = String(fechaObj.getDate()).padStart(2, '0');
@@ -407,10 +409,19 @@ app.get('/api/graficas', protegerRuta, async (req, res) => {
           { dia_venta: { $regex: `${mes}/${dia}/${anio}` } }  // MM/DD/YYYY
         ]
       };
+      console.log('🔍 Filtro de fecha aplicado:', JSON.stringify(fechaFiltro, null, 2));
     }
 
     // Obtener todos los registros de crm_agente que coincidan con el filtro de fecha
+    console.log('🔍 Buscando registros con filtro:', JSON.stringify(fechaFiltro, null, 2));
     const registros = await CrmAgente.find(fechaFiltro).lean();
+    console.log(`📊 Total de registros encontrados: ${registros.length}`);
+    
+    if (registros.length > 0) {
+      console.log('📝 Primer registro como ejemplo:', JSON.stringify(registros[0], null, 2));
+    } else {
+      console.log('⚠️ No se encontraron registros con el filtro aplicado');
+    }
 
     // Inicializar objetos para almacenar los resultados
     const ventasPorEquipo = {};

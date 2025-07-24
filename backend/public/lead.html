@@ -537,27 +537,38 @@
 
   function actualizarGraficas() {
     const fecha = document.getElementById('fechaGraficas').value;
+    console.log('🔵 Iniciando actualización de gráficas para la fecha:', fecha);
+    
     fetch(`/api/graficas?fecha=${fecha}`, {
       credentials: 'include'
     })
       .then(res => {
+        console.log('🔵 Respuesta del servidor recibida. Estado:', res.status, res.statusText);
         if (!res.ok) {
-          throw new Error(`Error HTTP: ${res.status}`);
+          console.error('❌ Error en la respuesta del servidor:', res.status, res.statusText);
+          return res.text().then(text => {
+            console.error('Detalles del error:', text);
+            throw new Error(`Error HTTP: ${res.status} - ${res.statusText}`);
+          });
         }
         return res.json();
       })
       .then(data => {
+        console.log('📊 Datos recibidos para gráficas:', JSON.stringify(data, null, 2));
+        
         if (!data.ok) {
+          console.error('❌ Error en los datos recibidos:', data.error || 'Error desconocido');
           throw new Error(data.error || 'Error en la respuesta del servidor');
         }
         
-        console.log('Datos recibidos para gráficas:', data);
-        
         // 1. Actualizar gráfica de ventas y puntaje por equipo
+        console.log('🔄 Actualizando gráfica de equipos...');
         let hayDataTeam = false;
         equipos.forEach((team, i) => {
           const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
           const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+          
+          console.log(`   Equipo: ${team}, Ventas: ${ventas}, Puntos: ${puntos}`);
           
           // Actualizar datos en la gráfica
           ventasTeamChart.data.datasets[0].data[i] = ventas;
@@ -567,12 +578,20 @@
         });
         
         // Actualizar y redibujar la gráfica de equipos
+        console.log('🔄 Actualizando gráfica de equipos...');
         ventasTeamChart.update();
         mostrarNoData(!hayDataTeam, false);
+        console.log('✅ Gráfica de equipos actualizada');
 
         // 2. Actualizar gráfica de ventas por producto
+        console.log('🔄 Actualizando gráfica de productos...');
         // Primero, obtener todos los productos únicos de la respuesta
         const productosUnicos = data.ventasPorProducto ? Object.keys(data.ventasPorProducto) : [];
+        console.log(`   Productos únicos encontrados: ${productosUnicos.length}`);
+        
+        if (productosUnicos.length > 0) {
+          console.log('   Ejemplo de productos:', productosUnicos.slice(0, 3).join(', '), productosUnicos.length > 3 ? '...' : '');
+        }
         
         // Actualizar etiquetas y datos de la gráfica de productos
         productosChart.data.labels = productosUnicos;
@@ -580,13 +599,16 @@
         
         // Actualizar y redibujar la gráfica de productos
         productosChart.update();
+        console.log('✅ Gráfica de productos actualizada');
 
         // Mostrar mensaje si no hay datos
         const hayDataProd = productosUnicos.length > 0;
         mostrarNoData(false, !hayDataProd);
+        
+        console.log('✅ Actualización de gráficas completada');
       })
       .catch(err => {
-        console.error("Error al cargar gráficas:", err);
+        console.error("❌ Error al cargar gráficas:", err);
         mostrarNoData(true, true);
       });
   }
