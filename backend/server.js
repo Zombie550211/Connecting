@@ -58,7 +58,6 @@ app.get('/api/test-graficas', async (req, res) => {
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 
 // Configuración de CORS simplificada para producción
-const isProduction = process.env.NODE_ENV === 'production';
 
 // Configuración básica de CORS para desarrollo
 const corsOptions = {
