@@ -57,29 +57,44 @@ app.get('/api/test-graficas', async (req, res) => {
 
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 
-// Configuración de CORS simplificada
+// Configuración de CORS mejorada
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5500",
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
   "https://crm-dashboard-1234.netlify.app",
-  "https://crm-dashboard-xyz.vercel.app"
+  "https://crm-dashboard-xyz.vercel.app",
+  "https://crm-connecting.onrender.com"
 ];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir solicitudes sin origen (como aplicaciones móviles o curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'El origen de CORS no está permitido';
-      console.warn(`⚠️  Intento de acceso desde origen no permitido: ${origin}`);
-      return callback(new Error(msg), false);
+const corsOptions = {
+  origin: function (origin, callback) {
+    // En desarrollo, permitir cualquier origen
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
     }
-    return callback(null, true);
+    
+    // En producción, verificar contra la lista de orígenes permitidos
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  Intento de acceso desde origen no permitido: ${origin}`);
+      callback(new Error('No permitido por CORS'));
+    }
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['set-cookie']
+};
+
+app.use(cors(corsOptions));
+
+// Manejar preflight OPTIONS para todas las rutas
+app.options('*', cors(corsOptions));
 
 function getFechaLocalHoy() {
   const hoy = new Date();
@@ -135,6 +150,7 @@ function protegerAgente(req, res, next) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Configuración mejorada de la sesión
+const isProduction = process.env.NODE_ENV === 'production';
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "secreto_crm_conectado_seguro_123",
   resave: false,
@@ -142,18 +158,31 @@ const sessionConfig = {
   store: MongoStore.create({
     mongoUrl: MONGO_URL,
     ttl: 24 * 60 * 60, // 1 día de duración de la sesión
-    autoRemove: 'native', // Eliminar sesiones expiradas automáticamente
-    touchAfter: 24 * 3600 // tiempo en segundos - actualiza la sesión solo si ha pasado 1 día
+    autoRemove: 'native',
+    touchAfter: 24 * 3600,
+    collectionName: 'sessions',
+    stringify: false,
+    autoRemove: 'interval',
+    autoRemoveInterval: 60 // Eliminar sesiones expiradas cada hora
   }),
+  name: 'crm.session',
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 1 día
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Solo enviar sobre HTTPS en producción
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Para soporte cross-site en producción
-    domain: process.env.NODE_ENV === 'production' ? '.tu-dominio.com' : undefined // Configurar en producción
+    secure: isProduction, // true en producción para HTTPS
+    sameSite: isProduction ? 'none' : 'lax',
+    domain: isProduction ? '.crm-connecting.onrender.com' : undefined,
+    path: '/',
+    // Para desarrollo, permitir el acceso desde localhost
+    ...(!isProduction && {
+      domain: 'localhost',
+      sameSite: 'lax',
+      secure: false
+    })
   },
-  name: 'crm.sid', // Nombre personalizado para la cookie de sesión
-  rolling: true // Renovar la cookie en cada solicitud
+  rolling: true,
+  proxy: isProduction, // Importante para confiar en proxies en producción (como Render, Heroku, etc.)
+  unset: 'destroy' // Destruir la sesión cuando se cierra el navegador
 };
 
 app.use(session(sessionConfig));
