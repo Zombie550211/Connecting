@@ -38,16 +38,46 @@ mongoose.connection.once('open', async () => {
   }
 });
 
+// --- Endpoint temporal para pruebas sin autenticación ---
+app.get('/api/test-graficas', async (req, res) => {
+  try {
+    const registros = await CrmAgente.find({}).limit(5).lean();
+    console.log(`📊 Total de registros en crm_agente: ${await CrmAgente.countDocuments()}`);
+    res.json({
+      ok: true,
+      totalRegistros: await CrmAgente.countDocuments(),
+      ejemploRegistro: registros[0] || {},
+      colecciones: await mongoose.connection.db.listCollections().toArray()
+    });
+  } catch (error) {
+    console.error('Error en /api/test-graficas:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
 
+// Configuración de CORS simplificada
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5500",
+  "http://localhost:3000",
+  "https://crm-dashboard-1234.netlify.app",
+  "https://crm-dashboard-xyz.vercel.app"
+];
 
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5500",
-    "https://crm-dashboard-1234.netlify.app",
-    "https://crm-dashboard-xyz.vercel.app"
-  ],
+  origin: function(origin, callback) {
+    // Permitir solicitudes sin origen (como aplicaciones móviles o curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'El origen de CORS no está permitido';
+      console.warn(`⚠️  Intento de acceso desde origen no permitido: ${origin}`);
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 
@@ -104,12 +134,29 @@ function protegerAgente(req, res, next) {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: "secreto_crm_conectado",
+// Configuración mejorada de la sesión
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || "secreto_crm_conectado_seguro_123",
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: MONGO_URL })
-}));
+  store: MongoStore.create({
+    mongoUrl: MONGO_URL,
+    ttl: 24 * 60 * 60, // 1 día de duración de la sesión
+    autoRemove: 'native', // Eliminar sesiones expiradas automáticamente
+    touchAfter: 24 * 3600 // tiempo en segundos - actualiza la sesión solo si ha pasado 1 día
+  }),
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 1 día
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Solo enviar sobre HTTPS en producción
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Para soporte cross-site en producción
+    domain: process.env.NODE_ENV === 'production' ? '.tu-dominio.com' : undefined // Configurar en producción
+  },
+  name: 'crm.sid', // Nombre personalizado para la cookie de sesión
+  rolling: true // Renovar la cookie en cada solicitud
+};
+
+app.use(session(sessionConfig));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------- Rutas HTML protegidas ----------------
@@ -374,6 +421,15 @@ function getRangoMes(mes, anio) {
   const fin = `${anio}-${mesStr}-${String(finDate.getDate()).padStart(2, '0')}`;
   return { $gte: inicio, $lte: fin };
 }
+
+// Endpoint para verificar la autenticación desde el frontend
+app.get('/api/check-auth', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json({ ok: true, user: req.session.user });
+  } else {
+    res.status(401).json({ ok: false, error: 'No autenticado' });
+  }
+});
 
 // --------- DASHBOARD, RANKINGS ---------
 function aliasAgente(nombre) {

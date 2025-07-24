@@ -683,5 +683,17 @@
       });
   });
 </script>
+<script>
+  // Verificar autenticación al cargar la página
+  fetch('/api/check-auth', { credentials: 'include' })
+    .then(response => {
+      if (!response.ok) {
+        window.location.href = '/login.html';
+      }
+    })
+    .catch(() => {
+      window.location.href = '/login.html';
+    });
+</script>
 </body>
 </html>
