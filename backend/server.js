@@ -158,6 +158,12 @@ app.get('/api/facturacion/:anio/:mes', requireAuth, (req, res) => {
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Importar rutas
+const rankingsRoutes = require('./routes/rankings');
+
+// Usar rutas
+app.use('/api/rankings', rankingsRoutes);
+
 // Ruta raíz que redirige al login
 app.get('/', (req, res) => {
   res.redirect('/login.html');
