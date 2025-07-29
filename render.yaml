@@ -3,10 +3,17 @@ services:
     name: crm-connecting
     env: node
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    region: oregon
+    buildCommand: |
+      cd backend
+      npm cache clean --force
+      rm -rf node_modules package-lock.json
+      npm install --legacy-peer-deps
+    startCommand: cd backend && node server.js
     envVars:
       - key: NODE_VERSION
         value: 18.18.0
       - key: NODE_ENV
         value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: false

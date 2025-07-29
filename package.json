@@ -1,4 +1,14 @@
 {
+  "name": "crm-connecting",
+  "version": "1.0.0",
+  "engines": {
+    "node": "18.18.0",
+    "npm": "9.8.1"
+  },
+  "scripts": {
+    "start": "cd backend && node server.js",
+    "build": "cd backend && npm install --legacy-peer-deps"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
