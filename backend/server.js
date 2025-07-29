@@ -69,7 +69,8 @@ const requireAuth = (req, res, next) => {
 
 // Rutas de autenticación
 app.post('/api/login', async (req, res) => {
-  const { usuario, contrasena } = req.body;
+  // Usar los nombres de campos que vienen del frontend
+  const { username: usuario, password: contrasena } = req.body;
   
   try {
     // Autenticación de ejemplo
