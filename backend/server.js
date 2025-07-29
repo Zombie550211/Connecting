@@ -331,19 +331,42 @@ function normalizeFacturacionDoc(doc) {
 }
 
 // GET por MES (robusto)
-app.get('/api/facturacion/:ano/:mes', protegerRuta, async (req, res) => {
+app.get('/api/facturacion/:ano(\\d+)/:mes(\\d{1,2})', protegerRuta, async (req, res) => {
   const { ano, mes } = req.params;
   try {
+    // Validar que el mes esté entre 1 y 12
+    const mesNum = parseInt(mes, 10);
+    if (mesNum < 1 || mesNum > 12) {
+      return res.status(400).json({ ok: false, error: 'El mes debe estar entre 1 y 12' });
+    }
+    
+    // Formatear el mes con ceros a la izquierda si es necesario
+    const mesFormateado = mes.padStart(2, '0');
+    
+    // Crear expresiones regulares para diferentes formatos de fecha
     const regexes = [
-      new RegExp(`^\\d{2}[/-]${mes}[/-]${ano}$`),       // 01/07/2025 o 01-07-2025
-      new RegExp(`^${ano}[/-]${mes}[/-]\\d{2}$`),       // 2025-07-01 o 2025/07/01
-      new RegExp(`^${mes}[/-]\\d{2}[/-]${ano}$`),       // 07-01-2025 o 07/01/2025
+      new RegExp(`^\\d{2}[/-]${mesFormateado}[/-]${ano}$`),  // DD/MM/YYYY o DD-MM-YYYY
+      new RegExp(`^${ano}[/-]${mesFormateado}[/-]\\d{2}$`),  // YYYY/MM/DD o YYYY-MM-DD
+      new RegExp(`^${mesFormateado}[/-]\\d{2}[/-]${ano}$`),  // MM/DD/YYYY o MM-DD-YYYY
+      new RegExp(`^${ano}-${mesFormateado}-\\d{2}T`),        // Formato ISO
     ];
+    
+    // Buscar documentos que coincidan con cualquiera de los formatos
     let data = await Facturacion.find({
-      $or: regexes.map(r => ({ fecha: { $regex: r } }))
+      $or: [
+        { fecha: { $in: regexes.map(r => ({ $regex: r })) } },
+        { 'campos.0': { $in: regexes.map(r => ({ $regex: r })) } } // También buscar en el primer campo si es necesario
+      ]
     }).lean();
+    
+    // Normalizar los datos
     data = data.map(doc => normalizeFacturacionDoc(doc));
-    res.json({ ok: true, data });
+    
+    res.json({ 
+      ok: true, 
+      data,
+      mensaje: `Datos de facturación para ${mesFormateado}/${ano}`
+    });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
