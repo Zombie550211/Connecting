@@ -646,13 +646,13 @@
       renderValores();
 
       // Pasa mes y año como query params a la API si tu backend lo soporta
-                  const equiposResponse = await fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>({data:[]}));
+                  const equiposResponse = await fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
       window.equiposRanking = equiposResponse.data;
       renderRankingEquipos(window.equiposRanking, false);
-                  const agentesResponse = await fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>({data:[]}));
+                  const agentesResponse = await fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
       window.agentesRanking = agentesResponse.data;
       renderRankingAgentes(window.agentesRanking, false);
-                  const puntosResponse = await fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>({data:[]}));
+                  const puntosResponse = await fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
       window.puntosRanking = puntosResponse.data;
       renderRankingPuntos(window.puntosRanking, false);
     }
