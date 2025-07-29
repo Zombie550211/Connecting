@@ -5,11 +5,9 @@ services:
     plan: free
     region: oregon
     buildCommand: |
-      cd backend
-      npm cache clean --force
-      rm -rf node_modules package-lock.json
-      npm install --legacy-peer-deps
-    startCommand: cd backend && node server.js
+      chmod +x build.sh
+      ./build.sh
+    startCommand: cd backend && node server-compatible.js
     envVars:
       - key: NODE_VERSION
         value: 18.18.0
@@ -17,3 +15,5 @@ services:
         value: production
       - key: NPM_CONFIG_PRODUCTION
         value: false
+      - key: RENDER_NODE_VERSION
+        value: 18.18.0
