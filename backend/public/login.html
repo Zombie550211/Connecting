@@ -222,14 +222,15 @@
                 body: JSON.stringify({ username, password }),
             });
             const result = await response.json();
-            if (response.ok) {
+            if (response.ok && result.token) {
+                localStorage.setItem('token', result.token);
                 message.textContent = "Login exitoso. Redirigiendo...";
                 message.className = "success";
                 setTimeout(() => {
                     window.location.href = "/inicio.html";
                 }, 1200);
             } else {
-                message.textContent = result.mensaje || "Error al iniciar sesión";
+                message.textContent = result.mensaje || "Token no recibido o error de login.";
                 message.className = "error";
             }
         } catch (error) {
