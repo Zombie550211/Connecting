@@ -18,6 +18,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Configuración básica de CORS para desarrollo
+const corsOptions = {
+  origin: isProduction ? 'https://crm-connecting.onrender.com' : true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['set-cookie'],
+  maxAge: 600 // Tiempo de caché para las respuestas preflight
+};
+
+// Aplicar CORS con las opciones configuradas
+app.use(cors(corsOptions));
+
+// Manejar preflight OPTIONS para todas las rutas
+app.options('*', cors(corsOptions));
+
 const MONGO_URL = process.env.MONGO_URL;
 if (!MONGO_URL) throw new Error("La variable de entorno MONGO_URL no está definida.");
 
@@ -57,24 +73,6 @@ app.get('/api/test-graficas', async (req, res) => {
 });
 
 // --- Endpoint público para consultar leads (SOLO LECTURA) ---
-
-// Configuración de CORS simplificada para producción
-
-// Configuración básica de CORS para desarrollo
-const corsOptions = {
-  origin: isProduction ? 'https://crm-connecting.onrender.com' : true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['set-cookie'],
-  maxAge: 600 // Tiempo de caché para las respuestas preflight
-};
-
-// Aplicar CORS con las opciones configuradas
-app.use(cors(corsOptions));
-
-// Manejar preflight OPTIONS para todas las rutas
-app.options('*', cors(corsOptions));
 
 function getFechaLocalHoy() {
   const hoy = new Date();
