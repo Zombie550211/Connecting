@@ -27,10 +27,7 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    .layout {
-      display: flex;
-      min-height: 100vh;
-    }
+    .layout { display: flex; min-height: 100vh; }
     .sidebar {
       width: 240px;
       background-color: var(--sidebar-bg);
@@ -45,15 +42,8 @@
       gap: 0.75rem;
       margin-bottom: 2.5rem;
     }
-    .sidebar-logo {
-      width: 32px;
-      height: 32px;
-    }
-    .sidebar-title {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--primary-color);
-    }
+    .sidebar-logo { width: 32px; height: 32px; }
+    .sidebar-title { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); }
     .sidebar-nav a, .sidebar-nav button {
       display: block;
       width: 100%;
@@ -74,35 +64,12 @@
       background-color: #eef2ff;
       color: var(--primary-color);
     }
-    .sidebar-footer {
-      margin-top: auto;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      text-align: center;
-    }
-    .main-content {
-      flex: 1;
-      padding: 2.5rem;
-      overflow-y: auto;
-    }
-    .main-header {
-      margin-bottom: 2rem;
-    }
-    .main-header h1 {
-      font-size: 1.875rem;
-      font-weight: 800;
-      margin-bottom: 0.25rem;
-    }
-    .main-header p {
-      color: var(--text-secondary);
-      font-size: 1rem;
-    }
-    .filters {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      align-items: center;
-    }
+    .sidebar-footer { margin-top: auto; font-size: 0.8rem; color: var(--text-secondary); text-align: center; }
+    .main-content { flex: 1; padding: 2.5rem; overflow-y: auto; }
+    .main-header { margin-bottom: 2rem; }
+    .main-header h1 { font-size: 1.875rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .main-header p { color: var(--text-secondary); font-size: 1rem; }
+    .filters { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
     .filters label { font-weight: 600; font-size: 0.9rem; }
     .filters select {
       padding: 0.5rem 0.75rem;
@@ -111,48 +78,34 @@
       background-color: #fff;
       font-weight: 600;
     }
-    .rankings-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
+    .rankings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
     .ranking-panel {
       background-color: #fff;
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
       padding: 1.5rem;
     }
-    .ranking-panel h3 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-    }
-    .ranking-list {
-      list-style: none;
-    }
+    .ranking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .ranking-header h3 { font-size: 1.125rem; font-weight: 700; margin: 0; }
+    .ranking-header button { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; }
+    .ranking-list { list-style: none; }
     .ranking-list li {
       display: flex;
       align-items: center;
       gap: 1rem;
       margin-bottom: 1.25rem;
     }
-    .ranking-list .posicion {
-      font-size: 1.125rem;
-      font-weight: 700;
-      width: 2rem;
-      text-align: center;
-    }
-    .ranking-list .info {
-      flex: 1;
-    }
+    .ranking-list .posicion { font-size: 1.125rem; font-weight: 700; width: 2rem; text-align: center; }
+    .ranking-list .info { flex: 1; }
     .ranking-list .nombre { font-weight: 600; }
     .ranking-list .detalle { font-size: 0.875rem; color: var(--text-secondary); }
     .ranking-list .valor { font-weight: 700; color: var(--primary-color); }
-    .loader {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-secondary);
-    }
+    .loader { text-align: center; padding: 2rem; color: var(--text-secondary); }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #fff; padding: 2rem; border-radius: var(--panel-radius); width: 90%; max-width: 600px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .modal-header h2 { font-size: 1.5rem; }
+    .modal-header button { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -160,125 +113,196 @@
   <nav class="sidebar">
     <div>
       <div class="sidebar-header">
-        <img src="logo connecting.png" alt="Logo" class="sidebar-logo"/>
+        <img src="/logo connecting.png" alt="Logo" class="sidebar-logo"/>
         <span class="sidebar-title">Connecting</span>
       </div>
       <div class="sidebar-nav">
         <a href="/inicio.html" class="active">Inicio</a>
-        <a href="/lead.html">Leads</a>
-        <a href="/costumer.html">Costumers</a>
+        <a href="/leads.html">Leads</a>
+        <a href="/costumers.html">Costumers</a>
         <a href="/Facturacion.html">Facturación</a>
         <button onclick="logout()">Cerrar Sesión</button>
       </div>
     </div>
-    <div class="sidebar-footer">
-      <p>Connecting CRM 2024</p>
-    </div>
+    <div class="sidebar-footer"><p>Connecting CRM 2024</p></div>
   </nav>
 
   <main class="main-content">
     <header class="main-header">
-      <h1>Dashboard</h1>
-      <p>Resumen de rendimiento de equipos y agentes.</p>
+      <h1 id="saludo">Dashboard</h1>
+      <p id="frase-inspiradora">Resumen de rendimiento de equipos y agentes.</p>
     </header>
-      ol.innerHTML = agentes.slice(0, cantidad).map((ag, idx) => `
-        <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
-          <div style="flex:1;">
-            <div style="font-weight:700;">${ag.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${ag.equipo}</div>
-          </div>
-          <span style="font-weight:600;color:#209dd5;">${ag.ventas} ventas</span>
-        </li>
-      `).join('');
-    }
-    function renderRankingPuntos(puntos, mostrarTodos) {
-      const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-puntos-list');
-      const cantidad = mostrarTodos ? puntos.length : Math.min(4, puntos.length);
-      ol.innerHTML = puntos.slice(0, cantidad).map((p, idx) => `
-        <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
-          <div style="flex:1;">
-            <div style="font-weight:700;">${p.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${p.equipo}</div>
-          </div>
-          <span style="font-weight:600;color:#209dd5;">${p.puntos} pts</span>
-        </li>
-      `).join('');
+
+    <div class="filters">
+      <label for="mes-select">Mes:</label>
+      <select id="mes-select">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <label for="anio-select">Año:</label>
+      <select id="anio-select"></select>
+    </div>
+
+    <div class="rankings-grid">
+      <div class="ranking-panel">
+        <div class="ranking-header"><h3>Ranking por Equipo</h3><button onclick="abrirModal('equipos')">Ver todo</button></div>
+        <ol id="ranking-equipos-list" class="ranking-list"></ol>
+      </div>
+      <div class="ranking-panel">
+        <div class="ranking-header"><h3>Ranking por Agente</h3><button onclick="abrirModal('agentes')">Ver todo</button></div>
+        <ol id="ranking-agentes-list" class="ranking-list"></ol>
+      </div>
+      <div class="ranking-panel">
+        <div class="ranking-header"><h3>Ranking por Puntos</h3><button onclick="abrirModal('puntos')">Ver todo</button></div>
+        <ol id="ranking-puntos-list" class="ranking-list"></ol>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title">Ranking Completo</h2>
+      <button onclick="cerrarModal()">&times;</button>
+    </div>
+    <ol id="modal-list" class="ranking-list"></ol>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+      return;
     }
 
-    // MODAL LÓGICA
-    let currentModal = null;
-    function abrirModal(tipo) {
-      currentModal = tipo;
-      document.getElementById('modal-overlay').style.display = "flex";
-      if (tipo === "equipos") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Equipo";
-        renderRankingEquipos(window.equiposRanking, true);
-      } else if (tipo === "agentes") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Agente";
-        renderRankingAgentes(window.agentesRanking, true);
-      } else if (tipo === "puntos") {
-        document.getElementById('modal-title').textContent = "Ranking completo por Puntos";
-        renderRankingPuntos(window.puntosRanking, true);
-      }
-    }
-    function cerrarModal() {
-      document.getElementById('modal-overlay').style.display = "none";
-      currentModal = null;
-    }
-
-    // Filtros de mes/año
-    const hoy = new Date();
     const mesSelect = document.getElementById('mes-select');
     const anioSelect = document.getElementById('anio-select');
-    for(let y = hoy.getFullYear()-2; y <= hoy.getFullYear()+1; y++) {
+    const hoy = new Date();
+
+    // Populate year filter
+    for(let y = hoy.getFullYear() - 2; y <= hoy.getFullYear() + 1; y++) {
       let opt = document.createElement('option');
       opt.value = y;
       opt.textContent = y;
       anioSelect.appendChild(opt);
     }
-    mesSelect.value = hoy.getMonth();
+    mesSelect.value = hoy.getMonth() + 1;
     anioSelect.value = hoy.getFullYear();
 
-    async function cargarDashboard(mes, anio) {
-      const bienvenida = await fetch('/api/welcome').then(r=>r.json())
-        .catch(()=>({nombre:'Equipo administrativo'}));
-      document.getElementById('saludo').textContent = getSaludo(bienvenida.nombre);
-      document.getElementById('frase-inspiradora').textContent = frases[Math.floor(Math.random()*frases.length)];
-      renderValores();
+    const MEDAL_ICONS = ['🥇', '🥈', '🥉'];
 
-      // Pasa mes y año como query params a la API si tu backend lo soporta
-                  const equiposResponse = await fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
-      window.equiposRanking = equiposResponse.data;
-      renderRankingEquipos(window.equiposRanking, false);
-                  const agentesResponse = await fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
-      window.agentesRanking = agentesResponse.data;
-      renderRankingAgentes(window.agentesRanking, false);
-                  const puntosResponse = await fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`, { credentials: 'include' }).then(r=>r.json()).catch(()=>({data:[]}));
-      window.puntosRanking = puntosResponse.data;
-      renderRankingPuntos(window.puntosRanking, false);
-    }
+    const renderRanking = (listId, data, formatter, limit = 3) => {
+      const listEl = document.getElementById(listId);
+      if (!listEl) return;
+      listEl.innerHTML = '<div class="loader">Cargando...</div>';
+      if (!data || data.length === 0) {
+        listEl.innerHTML = '<div class="loader">No hay datos para este período.</div>';
+        return;
+      }
+      const itemsToRender = data.slice(0, limit);
+      listEl.innerHTML = itemsToRender.map(formatter).join('');
+    };
 
-    mesSelect.addEventListener('change', ()=>cargarDashboard(mesSelect.value, anioSelect.value));
-    anioSelect.addEventListener('change', ()=>cargarDashboard(mesSelect.value, anioSelect.value));
+    const formatEquipo = (item, idx) => `
+      <li>
+        <div class="posicion">${MEDAL_ICONS[idx] || idx + 1}</div>
+        <div class="info">
+          <div class="nombre">${item.equipo}</div>
+        </div>
+        <div class="valor">${item.ventas} ventas</div>
+      </li>`;
 
-    // Primer carga con el mes actual
-    cargarDashboard(mesSelect.value, anioSelect.value);
+    const formatAgente = (item, idx) => `
+      <li>
+        <div class="posicion">${MEDAL_ICONS[idx] || idx + 1}</div>
+        <div class="info">
+          <div class="nombre">${item.agente}</div>
+          <div class="detalle">${item.equipo}</div>
+        </div>
+        <div class="valor">${item.ventas} ventas</div>
+      </li>`;
 
-    function logout() {
-      window.location.href = 'logout';
-    }
-    document.addEventListener('keydown', function(e){
-      if (e.key === "Escape") cerrarModal();
-    });
-    document.getElementById('modal-overlay').addEventListener('click', function(e){
-      if (e.target === this) cerrarModal();
-    });
-  </script>
+    const formatPuntos = (item, idx) => `
+      <li>
+        <div class="posicion">${MEDAL_ICONS[idx] || idx + 1}</div>
+        <div class="info">
+          <div class="nombre">${item.agente}</div>
+          <div class="detalle">${item.equipo}</div>
+        </div>
+        <div class="valor">${item.totalPuntos} pts</div>
+      </li>`;
+
+    let rankingsData = { equipos: [], agentes: [], puntos: [] };
+
+    const fetchRankings = async (mes, anio) => {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      try {
+        const [equiposRes, agentesRes, puntosRes] = await Promise.all([
+          fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`, { headers }),
+          fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`, { headers }),
+          fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`, { headers })
+        ]);
+
+        if (equiposRes.status === 401 || agentesRes.status === 401 || puntosRes.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login.html';
+          return;
+        }
+
+        rankingsData.equipos = (await equiposRes.json()).data || [];
+        rankingsData.agentes = (await agentesRes.json()).data || [];
+        rankingsData.puntos = (await puntosRes.json()).data || [];
+
+        renderRanking('ranking-equipos-list', rankingsData.equipos, formatEquipo);
+        renderRanking('ranking-agentes-list', rankingsData.agentes, formatAgente);
+        renderRanking('ranking-puntos-list', rankingsData.puntos, formatPuntos);
+      } catch (error) {
+        console.error('Error al cargar rankings:', error);
+        document.getElementById('ranking-equipos-list').innerHTML = '<div class="loader">Error al cargar datos.</div>';
+        document.getElementById('ranking-agentes-list').innerHTML = '<div class="loader">Error al cargar datos.</div>';
+        document.getElementById('ranking-puntos-list').innerHTML = '<div class="loader">Error al cargar datos.</div>';
+      }
+    };
+
+    window.abrirModal = (tipo) => {
+      document.getElementById('modal-overlay').style.display = 'flex';
+      const modalList = document.getElementById('modal-list');
+      let data, formatter, title;
+      if (tipo === 'equipos') {
+        data = rankingsData.equipos;
+        formatter = formatEquipo;
+        title = 'Ranking Completo por Equipo';
+      } else if (tipo === 'agentes') {
+        data = rankingsData.agentes;
+        formatter = formatAgente;
+        title = 'Ranking Completo por Agente';
+      } else {
+        data = rankingsData.puntos;
+        formatter = formatPuntos;
+        title = 'Ranking Completo por Puntos';
+      }
+      document.getElementById('modal-title').textContent = title;
+      renderRanking('modal-list', data, formatter, data.length);
+    };
+
+    window.cerrarModal = () => {
+      document.getElementById('modal-overlay').style.display = 'none';
+    };
+
+    window.logout = () => {
+      localStorage.removeItem('token');
+      window.location.href = '/logout';
+    };
+
+    mesSelect.addEventListener('change', () => fetchRankings(mesSelect.value, anioSelect.value));
+    anioSelect.addEventListener('change', () => fetchRankings(mesSelect.value, anioSelect.value));
+    document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) cerrarModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
+    fetchRankings(mesSelect.value, anioSelect.value);
+  });
+</script>
 </body>
 </html>
