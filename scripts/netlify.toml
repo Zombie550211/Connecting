@@ -1,0 +1,23 @@
+[build]
+  publish = "./"
+  command = ""
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/lead"
+  to = "/lead.html"
+  status = 200
+
+[[redirects]]
+  from = "/costumer"
+  to = "/costumer.html"
+  status = 200
+
+[[redirects]]
+  from = "/register"
+  to = "/register.html"
+  status = 200

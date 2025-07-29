@@ -1,0 +1,74 @@
+/* COLORES BASADOS EN LA IMAGEN DE EXCEL */
+:root {
+  --verde-encabezado: #296e5b;
+  --verde-fila: #c8f0e2;
+  --amarillo-fila: #fff2b2;
+  --gris-fila: #e3e3e3;
+  --verde-totales: #a8dcc5;
+  --verde-puntos: #19a100;
+  --rojo-puntos: #e20000;
+  --verde-claro-puntos: #b5ffb5;
+}
+
+#tablaExcel th {
+  background: var(--verde-encabezado) !important;
+  color: #fff !important;
+  font-weight: bold;
+  border: 1.5px solid #23604d;
+}
+
+#tablaExcel td {
+  border: 1px solid #888;
+}
+
+/* Columnas alternadas */
+#tablaExcel td:nth-child(odd):not(:first-child),
+#tablaExcel th:nth-child(odd):not(:first-child) {
+  background: var(--verde-fila);
+}
+
+#tablaExcel td:nth-child(even):not(:first-child),
+#tablaExcel th:nth-child(even):not(:first-child) {
+  background: var(--amarillo-fila);
+}
+
+#tablaExcel td,
+#tablaExcel th {
+  text-align: center;
+}
+
+/* Fondo para columnas de totales y celdas especiales */
+#tablaExcel td:nth-child(11),  /* TOTAL DEL DIA */
+#tablaExcel td:nth-child(12),  /* TOTAL VENTAS */
+#tablaExcel td:nth-child(13)   /* VALOR VENTA */
+{
+  background: var(--verde-totales);
+  font-weight: bold;
+}
+
+/* Columnas de PUNTOS y CPA PUNTOS */
+#tablaExcel td:nth-child(14),
+#tablaExcel td:nth-child(15) {
+  background: var(--verde-claro-puntos);
+  color: var(--verde-puntos);
+  font-weight: bold;
+}
+
+/* Si quieres que los negativos o valores bajos sean en rojo */
+#tablaExcel td.negativo {
+  color: var(--rojo-puntos) !important;
+}
+
+/* Primera columna (fecha) */
+#tablaExcel td:first-child,
+#tablaExcel th:first-child {
+  background: var(--verde-encabezado) !important;
+  color: #fff !important;
+}
+
+/* Fila de totales (última fila) */
+#tablaExcel tr.total-row td {
+  background: var(--verde-encabezado) !important;
+  color: #fff !important;
+  font-weight: bold;
+}
