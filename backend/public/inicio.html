@@ -646,11 +646,11 @@
       renderValores();
 
       // Pasa mes y año como query params a la API si tu backend lo soporta
-      window.equiposRanking = await fetch(`/api/ranking-equipos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
+            window.equiposRanking = await fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
       renderRankingEquipos(window.equiposRanking, false);
-      window.agentesRanking = await fetch(`/api/ranking-agentes?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
+            window.agentesRanking = await fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
       renderRankingAgentes(window.agentesRanking, false);
-      window.puntosRanking = await fetch(`/api/ranking-puntos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
+            window.puntosRanking = await fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`).then(r=>r.json()).catch(()=>[]);
       renderRankingPuntos(window.puntosRanking, false);
     }
 
