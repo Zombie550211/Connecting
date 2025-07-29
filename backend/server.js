@@ -157,6 +157,27 @@ app.get('/api/facturacion/:anio/:mes', requireAuth, (req, res) => {
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Ruta raíz que redirige al login
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// Ruta de bienvenida para la API
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Bienvenido a la API de Connecting CRM',
+    endpoints: {
+      auth: {
+        login: 'POST /api/login',
+        logout: 'POST /api/logout',
+        checkAuth: 'GET /api/check-auth'
+      },
+      costumers: 'GET /api/costumers',
+      facturacion: 'GET /api/facturacion/:anio/:mes'
+    }
+  });
+});
+
 // Ruta de prueba
 app.get('/api/test', (req, res) => {
   res.json({ status: 'ok', message: 'El servidor está funcionando correctamente' });
