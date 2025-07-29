@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const CrmAgente = require('../models/crm_agente');
-const { protect } = require('../middleware/auth');
+
 
 // Obtener ranking de equipos
-router.get('/equipos', protect, async (req, res) => {
+router.get('/equipos', async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
@@ -63,7 +63,7 @@ router.get('/equipos', protect, async (req, res) => {
 });
 
 // Obtener ranking de agentes
-router.get('/agentes', protect, async (req, res) => {
+router.get('/agentes', async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
@@ -126,7 +126,7 @@ router.get('/agentes', protect, async (req, res) => {
 });
 
 // Obtener ranking por puntos
-router.get('/puntos', protect, async (req, res) => {
+router.get('/puntos', async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
