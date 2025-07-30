@@ -6,6 +6,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('./models/user');
+const CrmAgente = require('./models/crm_agente');
+const Costumer = require('./models/costumer');
 
 // Inicialización de la aplicación
 const app = express();
@@ -147,14 +149,44 @@ app.post('/api/login', async (req, res) => {
 // Rutas de la API (protegidas)
 app.get('/api/costumers', protect, async (req, res) => {
   try {
-    const costumers = [
-      { id: 1, nombre: 'Cliente 1', email: 'cliente1@ejemplo.com' },
-      { id: 2, nombre: 'Cliente 2', email: 'cliente2@ejemplo.com' }
-    ];
-    res.json({ success: true, data: costumers });
+    const { fechaDesde, fechaHasta, mes, anio } = req.query;
+    let query = {};
+
+    if (fechaDesde && fechaHasta) {
+      query.fecha = { $gte: fechaDesde, $lte: fechaHasta };
+    } else if (mes && anio) {
+      const mesNum = parseInt(mes, 10);
+      const anioNum = parseInt(anio, 10);
+      const primerDia = new Date(anioNum, mesNum, 1);
+      const ultimoDia = new Date(anioNum, mesNum + 1, 0);
+      query.fecha = {
+        $gte: primerDia.toISOString().split('T')[0],
+        $lte: ultimoDia.toISOString().split('T')[0]
+      };
+    }
+
+    const resultados = await Costumer.find(query);
+
+    const costumers = resultados.map(item => ({
+      _id: item._id,
+      FECHA: item.fecha,
+      TEAM: item.equipo,
+      AGENTE: item.agente,
+      PRODUCTO: item.producto,
+      FECHA_INSTALACION: item.fecha_instalacion, // Este campo puede no existir en Costumer
+      ESTADO: item.estado,
+      PUNTAJE: item.puntaje,
+      CUENTA: item.cuenta, // Este campo puede no existir en Costumer
+      TELEFONO: item.telefono, // Este campo puede no existir en Costumer
+      DIRECCION: item.direccion, // Este campo puede no existir en Costumer
+      ZIP: item.zip // Este campo puede no existir en Costumer
+    }));
+
+    res.json({ costumers });
+
   } catch (error) {
-    console.error('Error al obtener clientes:', error);
-    res.status(500).json({ success: false, error: 'Error al obtener clientes' });
+    console.error('Error al obtener costumers:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -217,7 +249,6 @@ app.post('/api/leads', protect, async (req, res) => {
 });
 
 // Nueva ruta para las gráficas de la página de leads
-const Costumer = require('./models/costumer');
 app.get('/api/graficas', protect, async (req, res) => {
   try {
     const { fecha } = req.query;

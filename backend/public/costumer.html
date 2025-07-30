@@ -571,7 +571,7 @@ async function cargarCostumers() {
     
     console.log('🔍 [FRONTEND] Filtros actuales:', { desde, hasta, mes, anio });
     
-    let url = '/api/costumer';
+    let url = '/api/costumers';
 
     if (desde || hasta) {
       url += `?${desde ? 'fechaDesde=' + desde : ''}${desde && hasta ? '&' : ''}${hasta ? 'fechaHasta=' + hasta : ''}`;
