@@ -258,6 +258,18 @@ app.get('/api/graficas', protect, async (req, res) => {
   }
 });
 
+// Ruta para obtener todos los productos únicos
+app.get('/api/productos', protect, async (req, res) => {
+  try {
+    const productos = await Costumer.distinct('producto');
+    // Filtramos cualquier valor nulo o vacío que pueda existir
+    res.json({ ok: true, productos: productos.filter(p => p) });
+  } catch (error) {
+    console.error('Error al obtener la lista de productos:', error);
+    res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+  }
+});
+
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 

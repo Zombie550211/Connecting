@@ -354,13 +354,7 @@
 
   // --- ARRAYS ---
   const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-  const productos = [
-    "225 AT&T AIR", "18 AT&T", "25 AT&T", "50 AT&T", "75 AT&T", "100 AT&T", "300 AT&T", "500 AT&T", "1G AT&T", "2G AT&T",
-    "2GB SPECTRUM", "1GB SPECTRUM", "500 SPECTRUM", "200 SPECTRUM", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM BUSSINES", "SPECTRUM PREMIER", "SPECTRUM ADVENTAGE",
-    "5GB FRONTIER", "2GB FRONTIER", "1GB FRONTIER", "500 FRONTIER", "200 FRONTIER",
-    "OPTIMO MAS", "MAS LATINO", "MAS ULTRA", "DIRECTV BUSSINES", "HUGHESNET", "OPTIMUM", "VIASAT", "WINDSTREAM",
-    "VIVINT", "KINETICK", "WOW", "ALTAFIBER", "ZYPLYFIBER", "CONSOLIDATE COMUNICATION", "BRIGHTSPEED", "EARTHLINK", "LINEA + CELULAR"
-  ];
+  let todosLosProductos = []; // Variable para guardar la lista completa de productos
 
   // --- AGENTES POR TEAM ---
   const agentesPorTeam = {
@@ -386,9 +380,27 @@
     }
   });
 
-  document.addEventListener("DOMContentLoaded", () => {
+  async function obtenerTodosLosProductos() {
+    try {
+      const response = await fetch('/api/productos', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!response.ok) throw new Error('No se pudo obtener la lista de productos');
+      const data = await response.json();
+      if (data.ok) {
+        todosLosProductos = data.productos;
+        console.log('✅ Lista completa de productos cargada:', todosLosProductos);
+      }
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    await obtenerTodosLosProductos(); // Cargar productos al iniciar
+
     const selectProducto = document.getElementById("producto");
-    productos.forEach(p => {
+    todosLosProductos.forEach(p => {
       const opt = document.createElement("option");
       opt.value = p;
       opt.textContent = p;
@@ -400,21 +412,20 @@
     document.getElementById('fechaGraficas').value = hoy;
     document.getElementById('fecha-lead').value = hoy;
 
-    iniciarGraficas();
+    crearGraficas();
     actualizarGraficas();
 
     setInterval(actualizarGraficas, 30000);
   });
-
-  let ventasTeamChart, productosChart;
 
   function destroyChart(chart) {
     if (chart && typeof chart.destroy === 'function') chart.destroy();
   }
 
   // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
-  function iniciarGraficas() {
-    // Limpia si ya existen
+  let ventasTeamChart, productosChart;
+
+  function crearGraficas() {
     destroyChart(ventasTeamChart);
     destroyChart(productosChart);
 
@@ -495,10 +506,10 @@
     productosChart = new Chart(ctxProducto, {
       type: 'bar',
       data: {
-        labels: productos,
+        labels: todosLosProductos,
         datasets: [{
           label: 'Ventas por Producto',
-          data: productos.map(() => 0),
+          data: todosLosProductos.map(() => 0),
           backgroundColor: '#007bff',
           borderRadius: 6
         }]
@@ -531,7 +542,7 @@
   // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
   window.addEventListener('resize', () => {
     setTimeout(() => {
-      iniciarGraficas();
+      crearGraficas();
     }, 150);
   });
 
@@ -563,7 +574,6 @@
         
         // 1. Actualizar gráfica de ventas y puntaje por equipo
         console.log('🔄 Actualizando gráfica de equipos...');
-        let hayDataTeam = false;
         equipos.forEach((equipo, i) => {
           const equipoKey = equipo.toUpperCase(); // Convertir a mayúsculas para la búsqueda
           const ventas = data.ventasPorEquipo[equipoKey] || 0;
@@ -574,49 +584,44 @@
           // Actualizar datos en la gráfica
           ventasTeamChart.data.datasets[0].data[i] = ventas;
           ventasTeamChart.data.datasets[1].data[i] = puntos;
-          
-          if (ventas > 0 || puntos > 0) hayDataTeam = true;
         });
         
         // Actualizar y redibujar la gráfica de equipos
-        console.log('🔄 Actualizando gráfica de equipos...');
-        ventasTeamChart.update();
-        mostrarNoData(!hayDataTeam, false);
+        const hayDatosTeam = data.ventasPorEquipo && Object.keys(data.ventasPorEquipo).length > 0;
+        mostrarNoData(!hayDatosTeam, 'no-data-team');
         console.log('✅ Gráfica de equipos actualizada');
 
         // 2. Actualizar gráfica de ventas por producto
         console.log('🔄 Actualizando gráfica de productos...');
-        // Primero, obtener todos los productos únicos de la respuesta
-        const productosUnicos = data.ventasPorProducto ? Object.keys(data.ventasPorProducto) : [];
-        console.log(`   Productos únicos encontrados: ${productosUnicos.length}`);
+        const ventasDelDia = data.ventasPorProducto || {};
         
-        if (productosUnicos.length > 0) {
-          console.log('   Ejemplo de productos:', productosUnicos.slice(0, 3).join(', '), productosUnicos.length > 3 ? '...' : '');
-        }
-        
-        // Actualizar etiquetas y datos de la gráfica de productos
-        productosChart.data.labels = productosUnicos;
-        productosChart.data.datasets[0].data = productosUnicos.map(prod => data.ventasPorProducto[prod]);
-        
-        // Actualizar y redibujar la gráfica de productos
+        // Usar la lista completa de productos como etiquetas
+        const labelsProductos = todosLosProductos;
+        // Mapear los datos de ventas a la lista completa de productos
+        const dataProductos = todosLosProductos.map(producto => ventasDelDia[producto] || 0);
+
+        console.log(`   Mostrando ${labelsProductos.length} productos en total.`);
+
+        productosChart.data.labels = labelsProductos;
+        productosChart.data.datasets[0].data = dataProductos;
         productosChart.update();
-        console.log('✅ Gráfica de productos actualizada');
+        console.log('✅ Gráfica de productos actualizada con lista completa.');
 
         // Mostrar mensaje si no hay datos
-        const hayDataProd = productosUnicos.length > 0;
-        mostrarNoData(false, !hayDataProd);
+        const hayDataProd = dataProductos.some(d => d > 0);
+        mostrarNoData(!hayDataProd, 'no-data-producto');
         
         console.log('✅ Actualización de gráficas completada');
       })
       .catch(err => {
         console.error("❌ Error al cargar gráficas:", err);
-        mostrarNoData(true, true);
+        mostrarNoData(true, 'no-data-team');
+        mostrarNoData(true, 'no-data-producto');
       });
   }
 
-  function mostrarNoData(team, producto) {
-    document.getElementById('no-data-team').style.display = team ? '' : 'none';
-    document.getElementById('no-data-producto').style.display = producto ? '' : 'none';
+  function mostrarNoData(show, elementId) {
+    document.getElementById(elementId).style.display = show ? 'block' : 'none';
   }
 
   // --- Formulario Lead ---
