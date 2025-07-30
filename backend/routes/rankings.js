@@ -16,7 +16,7 @@ router.get('/equipos', async (req, res) => {
       });
     }
 
-    const mesNum = parseInt(mes);
+    const mesNum = parseInt(mes) + 1; // Se suma 1 porque JS usa meses 0-11 y Mongo 1-12
     const anioNum = parseInt(anio);
     
     // Agrupar por equipo y sumar ventas
@@ -75,7 +75,7 @@ router.get('/agentes', async (req, res) => {
       });
     }
 
-    const mesNum = parseInt(mes);
+    const mesNum = parseInt(mes) + 1; // Se suma 1 porque JS usa meses 0-11 y Mongo 1-12
     const anioNum = parseInt(anio);
     
     // Agrupar por agente y sumar ventas
@@ -138,7 +138,7 @@ router.get('/puntos', async (req, res) => {
       });
     }
 
-    const mesNum = parseInt(mes);
+    const mesNum = parseInt(mes) + 1; // Se suma 1 porque JS usa meses 0-11 y Mongo 1-12
     const anioNum = parseInt(anio);
     
     // Agrupar por agente y sumar puntos
