@@ -224,6 +224,11 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Ruta para verificar la autenticación del token
+app.get('/api/check-auth', protect, (req, res) => {
+  res.json({ success: true, message: 'Token válido.' });
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
