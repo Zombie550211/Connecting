@@ -563,18 +563,15 @@
     function renderRankingAgentes(agentes, mostrarTodos) {
       const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-agentes-list');
       const cantidad = mostrarTodos ? agentes.length : Math.min(3, agentes.length);
-       if (agentes.length === 0) {
-        ol.innerHTML = '<div class="loader">No hay datos para este mes.</div>';
+      if (agentes.length === 0) {
+        ol.innerHTML = '<li>No hay datos para este mes.</li>';
         return;
       }
       ol.innerHTML = agentes.slice(0, cantidad).map((ag, idx) => `
         <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
+          <span style="font-size:1.3em;margin-right:8px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
           <div style="flex:1;">
-            <div style="font-weight:700;">${ag.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${ag.equipo}</div>
+            <div style="font-weight:700;">${ag.agente}</div>
           </div>
           <span style="font-weight:600;color:#209dd5;">${ag.ventas} ventas</span>
         </li>
@@ -583,20 +580,17 @@
     function renderRankingPuntos(puntos, mostrarTodos) {
       const ol = document.getElementById(mostrarTodos ? 'modal-list' : 'ranking-puntos-list');
       const cantidad = mostrarTodos ? puntos.length : Math.min(3, puntos.length);
-       if (puntos.length === 0) {
-        ol.innerHTML = '<div class="loader">No hay datos para este mes.</div>';
+      if (puntos.length === 0) {
+        ol.innerHTML = '<li>No hay datos para este mes.</li>';
         return;
       }
       ol.innerHTML = puntos.slice(0, cantidad).map((p, idx) => `
         <li>
-          <span style="font-size:1.3em;margin-right:8px;">
-            ${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}
-          </span>
+          <span style="font-size:1.3em;margin-right:8px;">${idx==0?'🥇':idx==1?'🥈':idx==2?'🥉':idx+1}</span>
           <div style="flex:1;">
-            <div style="font-weight:700;">${p.nombre}</div>
-            <div style="font-size:0.97em;color:#209dd5;">${p.equipo}</div>
+            <div style="font-weight:700;">${p.agente}</div>
           </div>
-          <span style="font-weight:600;color:#209dd5;">${p.puntos} pts</span>
+          <span style="font-weight:600;color:#209dd5;">${p.totalPuntos.toFixed(2)} pts</span>
         </li>
       `).join('');
     }
