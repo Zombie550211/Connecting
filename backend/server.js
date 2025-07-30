@@ -225,7 +225,11 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
-    const resultados = await Costumer.find({ fecha: fecha });
+        const resultados = await Costumer.find({ fecha: fecha });
+
+    console.log(`[DEBUG] Documentos encontrados para la fecha ${fecha}:`, resultados.length);
+    // Descomenta la siguiente línea si quieres ver los documentos completos (puede ser mucho texto)
+    // console.log(JSON.stringify(resultados, null, 2));
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
@@ -242,6 +246,10 @@ app.get('/api/graficas', protect, async (req, res) => {
         ventasPorProducto[costumer.producto] = (ventasPorProducto[costumer.producto] || 0) + 1;
       }
     });
+
+        console.log('[DEBUG] Datos para gráfica de equipos (ventas):', ventasPorEquipo);
+    console.log('[DEBUG] Datos para gráfica de equipos (puntos):', puntosPorEquipo);
+    console.log('[DEBUG] Datos para gráfica de productos:', ventasPorProducto);
 
     res.json({
       ok: true,
