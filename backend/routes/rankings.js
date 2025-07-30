@@ -102,22 +102,15 @@ router.get('/agentes', async (req, res) => {
       },
       {
         $group: {
-          _id: {
-            agente: '$agente',
-            equipo: '$equipo'
-          },
-          ventas: { $sum: 1 },
-          totalPuntos: { $sum: '$puntaje' }
+          _id: '$agente',
+          ventas: { $sum: 1 }
         }
       },
       {
         $project: {
           _id: 0,
-          agente: '$_id.agente',
-          equipo: '$_id.equipo',
-          ventas: 1,
-          totalPuntos: 1,
-          promedioPuntos: { $divide: ['$totalPuntos', '$ventas'] }
+          agente: '$_id',
+          ventas: 1
         }
       },
       { $sort: { ventas: -1 } },
@@ -171,22 +164,15 @@ router.get('/puntos', async (req, res) => {
       },
       {
         $group: {
-          _id: {
-            agente: '$agente',
-            equipo: '$equipo'
-          },
-          ventas: { $sum: 1 },
+          _id: '$agente',
           totalPuntos: { $sum: '$puntaje' }
         }
       },
       {
         $project: {
           _id: 0,
-          agente: '$_id.agente',
-          equipo: '$_id.equipo',
-          ventas: 1,
-          totalPuntos: 1,
-          promedioPuntos: { $divide: ['$totalPuntos', '$ventas'] }
+          agente: '$_id',
+          totalPuntos: 1
         }
       },
       { $sort: { totalPuntos: -1 } },
