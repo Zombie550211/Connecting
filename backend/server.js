@@ -304,11 +304,56 @@ app.get('/api/graficas', protect, async (req, res) => {
 });
 
 // Ruta para obtener todos los productos únicos
-app.get('/api/productos', protect, async (req, res) => {
+app.get('/api/productos', protect, (req, res) => {
   try {
-    const productos = await Costumer.distinct('producto');
-    // Filtramos cualquier valor nulo o vacío que pueda existir
-    res.json({ ok: true, productos: productos.filter(p => p) });
+    const todosLosProductos = [
+      '225 AT&T AIR',
+      '100 MBPS AT&T',
+      '18 MBPS AT&T',
+      '1G AT&T',
+      '25 MBPS AT&T',
+      '300 MBPS AT&T',
+      '50 MBPS AT&T',
+      '500 MBPS AT&T',
+      '5G AT&T',
+      '75 MBPS AT&T',
+      'ALTAFIBER',
+      'FRONTIER',
+      'HUGHESNET',
+      'MAS LATINO',
+      'MAS ULTRA',
+      'OPTIMO MAS',
+      'OPTIMUM',
+      'SPECTRUM',
+      'VIASAT',
+      'WINDSTREAM',
+      'WOW',
+      'LINEA + CELULAR',
+      'VIVINT',
+      'KINETIC',
+      'SPECTRUM BUSINESS',
+      'AT&T BUSINESS',
+      'DIRECTV BUSINESS',
+      'CONSOLIDATE COMMUNICATION',
+      'ZYPYLFIBER',
+      'SPECTRUM 500',
+      'SPECTRUM 50',
+      'FRONTIER 200',
+      'FRONTIER 500',
+      'SPECTRUM 100',
+      'FRONTIER 100',
+      'FRONTIER 1G',
+      'SPECTRUM 1G',
+      'FRONTIER 2G',
+      'SPECTRUM DOUBLE PLAY PREMIER',
+      'SPECTRUM DOUBLE PLAY ADVANTAGE',
+      'FRONTIER 5G',
+      'EARTHLINK',
+      'BRIGHTSPEED',
+      '2G AT&T',
+      '2G SPECTRUM'
+    ];
+    res.json({ ok: true, productos: todosLosProductos });
   } catch (error) {
     console.error('Error al obtener la lista de productos:', error);
     res.status(500).json({ ok: false, error: 'Error interno del servidor' });
