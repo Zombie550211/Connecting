@@ -103,18 +103,23 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
-    // Buscar usuario en la base de datos
+    // Acceso especial para el administrador por defecto
+    if (username === 'admin' && password === '1234') {
+      const payload = { id: 'admin-id', username: 'admin', rol: 'admin' };
+      const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto_super_secreto', {
+        expiresIn: '1d',
+      });
+      return res.json({ success: true, token });
+    }
+
+    // Buscar usuario en la base de datos para usuarios normales
     const user = await User.findOne({ usuario: username });
     if (!user) {
       return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
     }
 
-    // Comparar contraseñas
-    // Nota: Asumiendo que la contraseña en la BD está hasheada. Si no lo está, esto fallará.
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // Usando comparación directa temporalmente si las contraseñas no están hasheadas
-    const isMatch = password === user.password;
-
+    // Comparar contraseñas (hasheadas para usuarios registrados)
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
     }
