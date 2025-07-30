@@ -412,9 +412,11 @@
     document.getElementById('fechaGraficas').value = hoy;
     document.getElementById('fecha-lead').value = hoy;
 
+    // Crear y luego actualizar las gráficas, esperando que cada paso termine
     crearGraficas();
-    actualizarGraficas();
+    await actualizarGraficas(); // Esperar a que la primera carga de datos se complete
 
+    // Actualizar periódicamente
     setInterval(actualizarGraficas, 30000);
   });
 
@@ -541,83 +543,71 @@
 
   // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
   window.addEventListener('resize', () => {
-    setTimeout(() => {
+    setTimeout(async () => {
       crearGraficas();
+      await actualizarGraficas(); // Volver a cargar los datos después de recrear las gráficas
     }, 150);
   });
 
-  function actualizarGraficas() {
+  async function actualizarGraficas() {
     const fecha = document.getElementById('fechaGraficas').value;
     console.log('🔵 Iniciando actualización de gráficas para la fecha:', fecha);
     
-    fetch(`/api/graficas?fecha=${fecha}`, {
-      credentials: 'include'
-    })
-      .then(res => {
-        console.log('🔵 Respuesta del servidor recibida. Estado:', res.status, res.statusText);
-        if (!res.ok) {
-          console.error('❌ Error en la respuesta del servidor:', res.status, res.statusText);
-          return res.text().then(text => {
-            console.error('Detalles del error:', text);
-            throw new Error(`Error HTTP: ${res.status} - ${res.statusText}`);
-          });
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('📊 Datos recibidos para gráficas:', JSON.stringify(data, null, 2));
-        
-        if (!data.ok) {
-          console.error('❌ Error en los datos recibidos:', data.error || 'Error desconocido');
-          throw new Error(data.error || 'Error en la respuesta del servidor');
-        }
-        
-        // 1. Actualizar gráfica de ventas y puntaje por equipo
+    try {
+      const res = await fetch(`/api/graficas?fecha=${fecha}`, {
+        credentials: 'include'
+      });
+      console.log('🔵 Respuesta del servidor recibida. Estado:', res.status, res.statusText);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error en la respuesta del servidor:', res.status, errorText);
+        throw new Error(`Error HTTP: ${res.status} - ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      console.log('📊 Datos recibidos para gráficas:', JSON.stringify(data, null, 2));
+      
+      if (!data.ok) {
+        console.error('❌ Error en los datos recibidos:', data.error || 'Error desconocido');
+        throw new Error(data.error || 'Error en la respuesta del servidor');
+      }
+      
+      // 1. Actualizar gráfica de ventas y puntaje por equipo
+      if (ventasTeamChart) {
         console.log('🔄 Actualizando gráfica de equipos...');
         equipos.forEach((equipo, i) => {
-          const equipoKey = equipo.toUpperCase(); // Convertir a mayúsculas para la búsqueda
+          const equipoKey = equipo.toUpperCase();
           const ventas = data.ventasPorEquipo[equipoKey] || 0;
           const puntos = data.puntosPorEquipo[equipoKey] || 0;
-          
-          console.log(`   Equipo: ${equipo}, Ventas: ${ventas}, Puntos: ${puntos}`);
-          
-          // Actualizar datos en la gráfica
           ventasTeamChart.data.datasets[0].data[i] = ventas;
           ventasTeamChart.data.datasets[1].data[i] = puntos;
         });
-        
-        // Actualizar y redibujar la gráfica de equipos
+        ventasTeamChart.update();
         const hayDatosTeam = data.ventasPorEquipo && Object.keys(data.ventasPorEquipo).length > 0;
         mostrarNoData(!hayDatosTeam, 'no-data-team');
         console.log('✅ Gráfica de equipos actualizada');
+      }
 
-        // 2. Actualizar gráfica de ventas por producto
+      // 2. Actualizar gráfica de ventas por producto
+      if (productosChart) {
         console.log('🔄 Actualizando gráfica de productos...');
         const ventasDelDia = data.ventasPorProducto || {};
-        
-        // Usar la lista completa de productos como etiquetas
-        const labelsProductos = todosLosProductos;
-        // Mapear los datos de ventas a la lista completa de productos
         const dataProductos = todosLosProductos.map(producto => ventasDelDia[producto] || 0);
-
-        console.log(`   Mostrando ${labelsProductos.length} productos en total.`);
-
-        productosChart.data.labels = labelsProductos;
+        productosChart.data.labels = todosLosProductos;
         productosChart.data.datasets[0].data = dataProductos;
         productosChart.update();
-        console.log('✅ Gráfica de productos actualizada con lista completa.');
-
-        // Mostrar mensaje si no hay datos
         const hayDataProd = dataProductos.some(d => d > 0);
         mostrarNoData(!hayDataProd, 'no-data-producto');
-        
-        console.log('✅ Actualización de gráficas completada');
-      })
-      .catch(err => {
-        console.error("❌ Error al cargar gráficas:", err);
-        mostrarNoData(true, 'no-data-team');
-        mostrarNoData(true, 'no-data-producto');
-      });
+        console.log('✅ Gráfica de productos actualizada con lista completa.');
+      }
+      
+      console.log('✅ Actualización de gráficas completada');
+
+    } catch (err) {
+      console.error("❌ Error al cargar gráficas:", err);
+      mostrarNoData(true, 'no-data-team');
+      mostrarNoData(true, 'no-data-producto');
+    }
   }
 
   function mostrarNoData(show, elementId) {
