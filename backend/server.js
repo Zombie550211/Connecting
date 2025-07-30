@@ -189,6 +189,73 @@ app.get('/api/facturacion/:anio/:mes', protect, (req, res) => {
   }
 });
 
+// Ruta para guardar nuevos leads
+app.post('/api/leads', protect, async (req, res) => {
+  try {
+    const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
+
+    const newLead = new CrmAgente({
+      dia_venta: fecha,
+      team: team,
+      agente: agent,
+      servicios: producto, // Mapeando 'producto' del form a 'servicios' del modelo
+      puntaje: puntaje,
+      numero_de_cuenta: cuenta,
+      telefono_principal: telefono,
+      direccion: direccion,
+      zip: zip,
+      estatus: 'Pending' // Asignar un estado por defecto
+    });
+
+    await newLead.save();
+    res.status(201).json({ success: true, message: 'Lead guardado exitosamente' });
+
+  } catch (error) {
+    console.error('Error al guardar el lead:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+});
+
+// Nueva ruta para las gráficas de la página de leads
+const CrmAgente = require('./models/crm_agente');
+app.get('/api/graficas', protect, async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    if (!fecha) {
+      return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
+    }
+
+    const resultados = await CrmAgente.find({ dia_venta: fecha });
+
+    const ventasPorEquipo = {};
+    const puntosPorEquipo = {};
+    resultados.forEach(lead => {
+      if (lead.team) {
+        ventasPorEquipo[lead.team] = (ventasPorEquipo[lead.team] || 0) + 1;
+        puntosPorEquipo[lead.team] = (puntosPorEquipo[lead.team] || 0) + (lead.puntaje || 0);
+      }
+    });
+
+    const ventasPorProducto = {};
+    resultados.forEach(lead => {
+      if (lead.servicios) { // Asumiendo que 'servicios' es el campo para producto
+        ventasPorProducto[lead.servicios] = (ventasPorProducto[lead.servicios] || 0) + 1;
+      }
+    });
+
+    res.json({
+      ok: true,
+      ventasPorEquipo,
+      puntosPorEquipo,
+      ventasPorProducto
+    });
+
+  } catch (error) {
+    console.error('Error al obtener datos para gráficas:', error);
+    res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+  }
+});
+
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 

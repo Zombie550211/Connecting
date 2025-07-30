@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Costumer = require('../models/costumer');
+const CrmAgente = require('../models/crm_agente');
 
 function getFechaLocalHoy() {
   const hoy = new Date();
@@ -15,11 +15,11 @@ router.get('/summary', async (req, res) => {
     let fechaHoy = getFechaLocalHoy();
 
     if (from && to) {
-      filtroFechas = { fecha: { $gte: from, $lte: to } };
+            filtroFechas = { dia_venta: { $gte: from, $lte: to } };
     } else if (from) {
-      filtroFechas = { fecha: { $gte: from } };
+            filtroFechas = { dia_venta: { $gte: from } };
     } else if (to) {
-      filtroFechas = { fecha: { $lte: to } };
+            filtroFechas = { dia_venta: { $lte: to } };
     }
 
     // Ventas Hoy: si hay filtro y equivale a un solo día, toma ese día, si no, usa hoy
@@ -41,10 +41,10 @@ router.get('/summary', async (req, res) => {
     }
 
     const [ventasHoy, leadsPendientes, clientes, ventasMes] = await Promise.all([
-      Costumer.countDocuments({ fecha: fechaParaVentasHoy }),
-      Costumer.countDocuments({ ...filtroFechas, estado: 'Pending' }),
-      Costumer.countDocuments(filtroFechas),
-      Costumer.countDocuments({ fecha: { $gte: inicioMes, $lte: finMes } })
+      CrmAgente.countDocuments({ dia_venta: fechaParaVentasHoy }),
+      CrmAgente.countDocuments({ ...filtroFechas, estatus: 'Pending' }),
+      CrmAgente.countDocuments(filtroFechas),
+      CrmAgente.countDocuments({ dia_venta: { $gte: inicioMes, $lte: finMes } })
     ]);
     res.json({ ventasHoy, leadsPendientes, clientes, ventasMes });
   } catch (err) {
