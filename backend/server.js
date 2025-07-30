@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('./models/user');
 
 // Inicialización de la aplicación
 const app = express();
@@ -58,18 +60,42 @@ const protect = (req, res, next) => {
 // Rutas de autenticación
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, mensaje: 'Usuario y contraseña son requeridos.' });
+  }
+
   try {
-    // Autenticación de ejemplo (reemplazar con lógica de BD)
-    if (username === 'admin' && password === '1234') {
-      const payload = { id: 'admin-id', username: 'admin', rol: 'admin' };
-      const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto_super_secreto', {
-        expiresIn: '1d',
-      });
-      res.json({ success: true, token });
-    } else {
-      res.status(401).json({ success: false, mensaje: 'Credenciales inválidas' });
+    // Buscar usuario en la base de datos
+    const user = await User.findOne({ usuario: username });
+    if (!user) {
+      return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
     }
+
+    // Comparar contraseñas
+    // Nota: Asumiendo que la contraseña en la BD está hasheada. Si no lo está, esto fallará.
+    // const isMatch = await bcrypt.compare(password, user.password);
+    // Usando comparación directa temporalmente si las contraseñas no están hasheadas
+    const isMatch = password === user.password;
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
+    }
+
+    // Crear payload para el token
+    const payload = {
+      id: user._id,
+      usuario: user.usuario,
+      rol: user.rol || 'agente' // Asignar un rol por defecto si no existe
+    };
+
+    // Firmar el token
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto_super_secreto', {
+      expiresIn: '1d',
+    });
+
+    res.json({ success: true, token });
+
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ success: false, mensaje: 'Error interno del servidor' });
