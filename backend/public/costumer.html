@@ -546,19 +546,29 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 2 * 60 * 1000); // 2 minutos = 120,000 ms
 });
 
-function inicializarFiltroMesAnio() {
-  const hoy = new Date();
+function inicializarFiltros() {
   const mesSelect = document.getElementById("filtro-mes");
   const anioSelect = document.getElementById("filtro-anio");
-  mesSelect.innerHTML = Array.from({length:12}, (_,i)=>`<option value="${i}">${["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][i]}</option>`).join('');
-  for(let y = hoy.getFullYear()-2; y <= hoy.getFullYear()+1; y++) {
-    let opt = document.createElement('option');
+  const hoy = new Date();
+
+  mesSelect.innerHTML = '<option value="">Mes</option>';
+  for (let i = 0; i < 12; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = new Date(0, i).toLocaleString('es', { month: 'long' });
+    mesSelect.appendChild(opt);
+  }
+
+  anioSelect.innerHTML = '<option value="">Año</option>';
+  const anioActual = hoy.getFullYear();
+  for (let y = anioActual; y >= 2020; y--) {
+    const opt = document.createElement('option');
     opt.value = y;
     opt.textContent = y;
     anioSelect.appendChild(opt);
   }
-  mesSelect.value = hoy.getMonth();
-  anioSelect.value = hoy.getFullYear();
+  mesSelect.value = "";
+  anioSelect.value = "";
 }
 
 async function cargarCostumers() {
@@ -573,11 +583,14 @@ async function cargarCostumers() {
     
     let url = '/api/costumers';
 
-    if (desde || hasta) {
-      url += `?${desde ? 'fechaDesde=' + desde : ''}${desde && hasta ? '&' : ''}${hasta ? 'fechaHasta=' + hasta : ''}`;
-    } else {
-      url += `?mes=${mes}&anio=${anio}`;
-    }
+    const params = new URLSearchParams({
+      fechaDesde: desde,
+      fechaHasta: hasta,
+      mes: mes,
+      anio: anio
+    });
+
+    url += `?${params.toString()}`;
     
     console.log('🔍 [FRONTEND] URL de la petición:', url);
     console.log('🔍 [FRONTEND] Realizando fetch...');

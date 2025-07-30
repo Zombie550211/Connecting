@@ -151,18 +151,32 @@ app.get('/api/costumers', protect, async (req, res) => {
   try {
     const { fechaDesde, fechaHasta, mes, anio } = req.query;
     let query = {};
+    const dateFilter = {};
 
-    if (fechaDesde && fechaHasta) {
-      query.fecha = { $gte: fechaDesde, $lte: fechaHasta };
-    } else if (mes && anio) {
+    // Construir el filtro de fecha de forma flexible
+    if (fechaDesde) {
+      dateFilter.$gte = fechaDesde;
+    }
+    if (fechaHasta) {
+      dateFilter.$lte = fechaHasta;
+    }
+
+    // Si no se usan los selectores de fecha, usar mes y año
+    if (!fechaDesde && !fechaHasta && mes && anio) {
       const mesNum = parseInt(mes, 10);
       const anioNum = parseInt(anio, 10);
-      const primerDia = new Date(anioNum, mesNum, 1);
-      const ultimoDia = new Date(anioNum, mesNum + 1, 0);
-      query.fecha = {
-        $gte: primerDia.toISOString().split('T')[0],
-        $lte: ultimoDia.toISOString().split('T')[0]
-      };
+
+      if (!isNaN(mesNum) && !isNaN(anioNum)) {
+        const primerDia = new Date(anioNum, mesNum, 1);
+        const ultimoDia = new Date(anioNum, mesNum + 1, 0);
+        dateFilter.$gte = primerDia.toISOString().split('T')[0];
+        dateFilter.$lte = ultimoDia.toISOString().split('T')[0];
+      }
+    }
+
+    // Solo añadir el filtro de fecha a la consulta si se construyó algo
+    if (Object.keys(dateFilter).length > 0) {
+      query.fecha = dateFilter;
     }
 
     const resultados = await Costumer.find(query);
