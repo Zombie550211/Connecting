@@ -58,6 +58,43 @@ const protect = (req, res, next) => {
 };
 
 // Rutas de autenticación
+app.post('/api/register', async (req, res) => {
+  const { nombre, apellido, correo, username, password } = req.body;
+
+  if (!nombre || !apellido || !correo || !username || !password) {
+    return res.status(400).json({ success: false, mensaje: 'Todos los campos son requeridos.' });
+  }
+
+  try {
+    // Verificar si el usuario o el correo ya existen
+    const existingUser = await User.findOne({ $or: [{ usuario: username }, { correo: correo }] });
+    if (existingUser) {
+      return res.status(409).json({ success: false, mensaje: 'El usuario o correo electrónico ya está en uso.' });
+    }
+
+    // Hashear la contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Crear nuevo usuario
+    const newUser = new User({
+      nombre,
+      apellido,
+      correo,
+      usuario: username,
+      password: hashedPassword
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ success: true, mensaje: 'Usuario registrado exitosamente.' });
+
+  } catch (error) {
+    console.error('Error en registro:', error);
+    res.status(500).json({ success: false, mensaje: 'Error interno del servidor.' });
+  }
+});
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
