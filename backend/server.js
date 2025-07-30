@@ -194,30 +194,30 @@ app.post('/api/leads', protect, async (req, res) => {
   try {
     const { fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip } = req.body;
 
-    const newLead = new CrmAgente({
-      dia_venta: fecha,
-      team: team,
+    const newCostumer = new Costumer({
+      fecha: fecha,
+      equipo: team,
       agente: agent,
-      servicios: producto, // Mapeando 'producto' del form a 'servicios' del modelo
+      producto: producto,
       puntaje: puntaje,
-      numero_de_cuenta: cuenta,
-      telefono_principal: telefono,
+      cuenta: cuenta,
+      telefono: telefono,
       direccion: direccion,
       zip: zip,
-      estatus: 'Pending' // Asignar un estado por defecto
+      estado: 'Pending' // Asignar estado pendiente por defecto
     });
 
-    await newLead.save();
-    res.status(201).json({ success: true, message: 'Lead guardado exitosamente' });
+    await newCostumer.save();
+    res.status(201).json({ success: true, message: 'Lead guardado exitosamente en la colección Costumer.' });
 
   } catch (error) {
-    console.error('Error al guardar el lead:', error);
-    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    console.error('Error al guardar el lead en Costumer:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor al guardar en Costumer' });
   }
 });
 
 // Nueva ruta para las gráficas de la página de leads
-const CrmAgente = require('./models/crm_agente');
+const Costumer = require('./models/costumer');
 app.get('/api/graficas', protect, async (req, res) => {
   try {
     const { fecha } = req.query;
@@ -225,21 +225,21 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
-    const resultados = await CrmAgente.find({ dia_venta: fecha });
+    const resultados = await Costumer.find({ fecha: fecha });
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
-    resultados.forEach(lead => {
-      if (lead.team) {
-        ventasPorEquipo[lead.team] = (ventasPorEquipo[lead.team] || 0) + 1;
-        puntosPorEquipo[lead.team] = (puntosPorEquipo[lead.team] || 0) + (lead.puntaje || 0);
+    resultados.forEach(costumer => {
+      if (costumer.equipo) {
+        ventasPorEquipo[costumer.equipo] = (ventasPorEquipo[costumer.equipo] || 0) + 1;
+        puntosPorEquipo[costumer.equipo] = (puntosPorEquipo[costumer.equipo] || 0) + (costumer.puntaje || 0);
       }
     });
 
     const ventasPorProducto = {};
-    resultados.forEach(lead => {
-      if (lead.servicios) { // Asumiendo que 'servicios' es el campo para producto
-        ventasPorProducto[lead.servicios] = (ventasPorProducto[lead.servicios] || 0) + 1;
+    resultados.forEach(costumer => {
+      if (costumer.producto) {
+        ventasPorProducto[costumer.producto] = (ventasPorProducto[costumer.producto] || 0) + 1;
       }
     });
 
