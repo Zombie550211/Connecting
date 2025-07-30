@@ -564,11 +564,12 @@
         // 1. Actualizar gráfica de ventas y puntaje por equipo
         console.log('🔄 Actualizando gráfica de equipos...');
         let hayDataTeam = false;
-        equipos.forEach((team, i) => {
-          const ventas = data.ventasPorEquipo && data.ventasPorEquipo[team] ? data.ventasPorEquipo[team] : 0;
-          const puntos = data.puntosPorEquipo && data.puntosPorEquipo[team] ? data.puntosPorEquipo[team] : 0;
+        equipos.forEach((equipo, i) => {
+          const equipoKey = equipo.toUpperCase(); // Convertir a mayúsculas para la búsqueda
+          const ventas = data.ventasPorEquipo[equipoKey] || 0;
+          const puntos = data.puntosPorEquipo[equipoKey] || 0;
           
-          console.log(`   Equipo: ${team}, Ventas: ${ventas}, Puntos: ${puntos}`);
+          console.log(`   Equipo: ${equipo}, Ventas: ${ventas}, Puntos: ${puntos}`);
           
           // Actualizar datos en la gráfica
           ventasTeamChart.data.datasets[0].data[i] = ventas;

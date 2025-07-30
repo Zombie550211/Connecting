@@ -227,10 +227,6 @@ app.get('/api/graficas', protect, async (req, res) => {
 
         const resultados = await Costumer.find({ fecha: fecha });
 
-    console.log(`[DEBUG] Documentos encontrados para la fecha ${fecha}:`, resultados.length);
-    // Descomenta la siguiente línea si quieres ver los documentos completos (puede ser mucho texto)
-    // console.log(JSON.stringify(resultados, null, 2));
-
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
     resultados.forEach(costumer => {
@@ -247,9 +243,7 @@ app.get('/api/graficas', protect, async (req, res) => {
       }
     });
 
-        console.log('[DEBUG] Datos para gráfica de equipos (ventas):', ventasPorEquipo);
-    console.log('[DEBUG] Datos para gráfica de equipos (puntos):', puntosPorEquipo);
-    console.log('[DEBUG] Datos para gráfica de productos:', ventasPorProducto);
+    
 
     res.json({
       ok: true,
