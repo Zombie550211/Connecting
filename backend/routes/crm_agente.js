@@ -42,7 +42,7 @@ router.get('/clientes', async (req, res) => {
 });
 
 // Obtener métricas de ventas mensuales
-const getMetricasVentas = async (req, res) => {
+router.get('/metricas-ventas', verifyToken, async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
@@ -88,9 +88,6 @@ const getMetricasVentas = async (req, res) => {
     console.error('Error al obtener métricas de ventas:', error);
     res.status(500).json({ error: 'Error al obtener las métricas de ventas' });
   }
-};
-
-// Ruta protegida con JWT
-router.get('/metricas-ventas', verifyToken, getMetricasVentas);
+});
 
 module.exports = router;
