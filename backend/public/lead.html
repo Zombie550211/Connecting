@@ -341,10 +341,6 @@
           <h5>Ranking de Agentes (Puntos)</h5>
           <canvas id="chartPuntos" class="chart-canvas"></canvas>
         </div>
-        <div id="grafico-equipos" class="chart-container" style="display: none;">
-          <h5>Ranking de Equipos (Ventas)</h5>
-          <canvas id="chartEquipos" class="chart-canvas"></canvas>
-        </div>
       </section>
     </div>
   </main>
@@ -429,18 +425,16 @@
   }
 
   // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
-  let chartAgentes, chartPuntos, chartEquipos;
+  let chartAgentes, chartPuntos;
 
   function crearGraficas() {
     destroyChart(chartAgentes);
     destroyChart(chartPuntos);
-    destroyChart(chartEquipos);
 
     const agentesCanvas = document.getElementById("chartAgentes");
     const puntosCanvas = document.getElementById("chartPuntos");
-    const equiposCanvas = document.getElementById("chartEquipos");
 
-    if (!agentesCanvas || !puntosCanvas || !equiposCanvas) {
+    if (!agentesCanvas || !puntosCanvas) {
       console.error("Error: No se encontraron todos los canvas para las gráficas.");
       return;
     }
@@ -485,18 +479,7 @@
       plugins: [ChartDataLabels]
     });
 
-    // Canvas 3: Equipos
-    const ctxEquipos = setHiDPICanvas(equiposCanvas, equiposCanvas.parentElement);
-    chartEquipos = new Chart(ctxEquipos, {
-      type: 'bar',
-      data: { labels: [], datasets: [{ label: 'Ventas por Equipo', data: [], backgroundColor: '#007bff', borderRadius: 6 }] },
-      options: {
-        animation: true, responsive: true, maintainAspectRatio: false,
-        plugins: { datalabels: { display: true, color: '#000', anchor: 'end', align: 'top', font: { weight: 'bold' }, formatter: v => v }, legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } }, x: { grid: { display: false } } }
-      },
-      plugins: [ChartDataLabels]
-    });
+
   }
 
   // Redibuja charts al cambiar tamaño para mantener nitidez/responsividad
@@ -522,18 +505,15 @@
 
     document.getElementById('grafico-agentes').style.display = 'none';
     document.getElementById('grafico-puntos').style.display = 'none';
-    document.getElementById('grafico-equipos').style.display = 'none';
 
     try {
-      const [agentesRes, puntosRes, equiposRes] = await Promise.all([
+      const [agentesRes, puntosRes] = await Promise.all([
         fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`),
-        fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`),
-        fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`)
+        fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`)
       ]);
 
       const agentesData = agentesRes.ok ? await agentesRes.json() : { success: false, data: [] };
       const puntosData = puntosRes.ok ? await puntosRes.json() : { success: false, data: [] };
-      const equiposData = equiposRes.ok ? await equiposRes.json() : { success: false, data: [] };
 
       if (agentesData.success && agentesData.data.length > 0) {
         document.getElementById('grafico-agentes').style.display = 'block';
@@ -551,15 +531,6 @@
         chartPuntos.update();
       } else {
         console.log("No hay datos para el ranking de puntos.");
-      }
-
-      if (equiposData.success && equiposData.data.length > 0) {
-        document.getElementById('grafico-equipos').style.display = 'block';
-        chartEquipos.data.labels = equiposData.data.map(d => d.equipo);
-        chartEquipos.data.datasets[0].data = equiposData.data.map(d => d.ventas);
-        chartEquipos.update();
-      } else {
-        console.log("No hay datos para el ranking de equipos.");
       }
 
     } catch (error) {
