@@ -639,63 +639,62 @@
   });
 
   async function actualizarGraficas() {
-    const fecha = document.getElementById('fechaGraficas').value;
-    console.log('🔵 Iniciando actualización de gráficas para la fecha:', fecha);
-    
+    const fechaInput = document.getElementById('fechaGraficas').value;
+    if (!fechaInput) {
+      console.error("No se ha seleccionado una fecha para las gráficas.");
+      return;
+    }
+
+    const fecha = new Date(fechaInput);
+    const anio = fecha.getUTCFullYear();
+    const mes = fecha.getUTCMonth();
+
+    console.log(`🔵 Actualizando gráficas para Mes: ${mes}, Año: ${anio}`);
+
+    document.getElementById('grafico-agentes').style.display = 'none';
+    document.getElementById('grafico-puntos').style.display = 'none';
+    document.getElementById('grafico-equipos').style.display = 'none';
+
     try {
-      const res = await fetch(`/api/graficas?fecha=${fecha}`, {
-        credentials: 'include'
-      });
-      console.log('🔵 Respuesta del servidor recibida. Estado:', res.status, res.statusText);
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('❌ Error en la respuesta del servidor:', res.status, errorText);
-        throw new Error(`Error HTTP: ${res.status} - ${res.statusText}`);
-      }
-      
-      const data = await res.json();
-      console.log('📊 Datos recibidos para gráficas:', JSON.stringify(data, null, 2));
-      
-      if (!data.ok) {
-        console.error('❌ Error en los datos recibidos:', data.error || 'Error desconocido');
-        throw new Error(data.error || 'Error en la respuesta del servidor');
-      }
-      
-      // 1. Actualizar gráfica de ventas y puntaje por equipo
-      if (ventasTeamChart) {
-        console.log('🔄 Actualizando gráfica de equipos...');
-        equipos.forEach((equipo, i) => {
-          const equipoKey = equipo.toUpperCase();
-          const ventas = data.ventasPorEquipo[equipoKey] || 0;
-          const puntos = data.puntosPorEquipo[equipoKey] || 0;
-          ventasTeamChart.data.datasets[0].data[i] = ventas;
-          ventasTeamChart.data.datasets[1].data[i] = puntos;
-        });
-        ventasTeamChart.update();
-        const hayDatosTeam = data.ventasPorEquipo && Object.keys(data.ventasPorEquipo).length > 0;
-        mostrarNoData(!hayDatosTeam, 'no-data-team');
-        console.log('✅ Gráfica de equipos actualizada');
+      const [agentesRes, puntosRes, equiposRes] = await Promise.all([
+        fetch(`/api/rankings/agentes?mes=${mes}&anio=${anio}`),
+        fetch(`/api/rankings/puntos?mes=${mes}&anio=${anio}`),
+        fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`)
+      ]);
+
+      const agentesData = agentesRes.ok ? await agentesRes.json() : { success: false, data: [] };
+      const puntosData = puntosRes.ok ? await puntosRes.json() : { success: false, data: [] };
+      const equiposData = equiposRes.ok ? await equiposRes.json() : { success: false, data: [] };
+
+      if (agentesData.success && agentesData.data.length > 0) {
+        document.getElementById('grafico-agentes').style.display = 'block';
+        chartAgentes.data.labels = agentesData.data.map(d => d.agente);
+        chartAgentes.data.datasets[0].data = agentesData.data.map(d => d.ventas);
+        chartAgentes.update();
+      } else {
+        console.log("No hay datos para el ranking de agentes.");
       }
 
-      // 2. Actualizar gráfica de ventas por producto
-      if (productosChart) {
-        console.log('🔄 Actualizando gráfica de productos...');
-        const ventasDelDia = data.ventasPorProducto || {};
-        const dataProductos = todosLosProductos.map(producto => ventasDelDia[producto] || 0);
-        productosChart.data.labels = todosLosProductos;
-        productosChart.data.datasets[0].data = dataProductos;
-        productosChart.update();
-        const hayDataProd = dataProductos.some(d => d > 0);
-        mostrarNoData(!hayDataProd, 'no-data-producto');
-        console.log('✅ Gráfica de productos actualizada con lista completa.');
+      if (puntosData.success && puntosData.data.length > 0) {
+        document.getElementById('grafico-puntos').style.display = 'block';
+        chartPuntos.data.labels = puntosData.data.map(d => d.agente);
+        chartPuntos.data.datasets[0].data = puntosData.data.map(d => d.totalPuntos);
+        chartPuntos.update();
+      } else {
+        console.log("No hay datos para el ranking de puntos.");
       }
-      
-      console.log('✅ Actualización de gráficas completada');
 
-    } catch (err) {
-      console.error("❌ Error al cargar gráficas:", err);
-      mostrarNoData(true, 'no-data-team');
-      mostrarNoData(true, 'no-data-producto');
+      if (equiposData.success && equiposData.data.length > 0) {
+        document.getElementById('grafico-equipos').style.display = 'block';
+        chartEquipos.data.labels = equiposData.data.map(d => d.equipo);
+        chartEquipos.data.datasets[0].data = equiposData.data.map(d => d.ventas);
+        chartEquipos.update();
+      } else {
+        console.log("No hay datos para el ranking de equipos.");
+      }
+
+    } catch (error) {
+      console.error('🔴 Error fatal al actualizar las gráficas:', error);
     }
   }
 
