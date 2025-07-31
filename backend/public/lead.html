@@ -432,9 +432,17 @@
     async function crearGraficas(mes, anio) {
       try {
         console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
+        
+        // Obtener token desde localStorage
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        };
+
         const [equiposRes, productosRes] = await Promise.all([
-          fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`),
-          fetch(`/api/rankings/productos?mes=${mes}&anio=${anio}`)
+          fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`, { headers }),
+          fetch(`/api/rankings/productos?mes=${mes}&anio=${anio}`, { headers })
         ]);
 
         if (!equiposRes.ok || !productosRes.ok) {
@@ -550,9 +558,13 @@
         zip: form.zip.value,
       };
 
+      const token = localStorage.getItem('token');
       fetch("/api/leads", { 
         method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }, 
         body: JSON.stringify(body) 
       })
         .then(res => {
