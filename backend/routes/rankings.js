@@ -136,12 +136,9 @@ router.get('/productos', async (req, res) => {
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
   const { mes, anio, dia } = req.query;
-  if ((!mes || !anio) && !dia) {
-    return res.status(400).json({ success: false, message: 'Se requieren los parámetros mes y año, o el parámetro dia' });
-  }
 
   try {
-    let matchStage;
+    let matchStage = null;
     if (dia) {
       matchStage = {
         $expr: {
@@ -162,7 +159,7 @@ router.get('/productos', async (req, res) => {
           ]
         }
       };
-    } else {
+    } else if (mes && anio) {
       const mesNum = parseInt(mes) + 1;
       const anioNum = parseInt(anio);
       matchStage = {
@@ -186,13 +183,17 @@ router.get('/productos', async (req, res) => {
         }
       };
     }
+    // Si no se pasa ningún filtro, no aplicar $match de fecha (traer todo)
+
 
     // Agrupar por servicio (servicios) y contar ventas
-    const productosRankingRaw = await CrmAgente.aggregate([
-      { $match: matchStage },
+    const pipeline = [];
+    if (matchStage) pipeline.push({ $match: matchStage });
+    pipeline.push(
       { $group: { _id: "$servicios", ventas: { $sum: 1 } } },
       { $project: { _id: 0, producto: "$_id", ventas: 1 } }
-    ]);
+    );
+    const productosRankingRaw = await CrmAgente.aggregate(pipeline);
 
     // Mapear a objeto para fácil acceso
     const productosMap = {};
