@@ -109,8 +109,8 @@ router.get('/productos', async (req, res) => {
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
   const { mes, anio, dia } = req.query;
-  if (!mes || !anio) {
-    return res.status(400).json({ success: false, message: 'Mes y año son requeridos' });
+  if ((!mes || !anio) && !dia) {
+    return res.status(400).json({ success: false, message: 'Se requieren los parámetros mes y año, o el parámetro dia' });
   }
 
   try {
