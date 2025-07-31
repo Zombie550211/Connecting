@@ -208,7 +208,18 @@
     .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
     .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
     .charts-section .charts-filter button:hover { background: #126de4; }
-    .chart-container { background: #fff; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px #0001; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
+    .chart-container { 
+      background: #fff; 
+      padding: 15px 20px; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 10px; 
+      box-shadow: 0 2px 10px #0001; 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      min-height: 400px; 
+      height: 400px;
+    }
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
     .chart-container {
       position: relative;
@@ -224,7 +235,7 @@
       height: 100% !important;
       max-width: 100%;
       max-height: 100%;
-      aspect-ratio: 16 / 5;
+      min-height: 350px;
       display: block;
       background: transparent;
     }
@@ -380,6 +391,45 @@
 
   // --- ARRAYS ---
   const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
+  
+  // --- FUNCIONES PARA MÉTRICAS DE VENTAS ---
+  async function cargarMetricasVentas() {
+    try {
+      const fecha = new Date();
+      const mes = fecha.getMonth() + 1; // Los meses en JS van de 0 a 11
+      const anio = fecha.getFullYear();
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No se encontró el token de autenticación');
+        return;
+      }
+      
+      // Obtener métricas de la API
+      const response = await fetch(`/api/crm-agente/metricas-ventas?mes=${mes}&anio=${anio}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar las métricas de ventas');
+      }
+      
+      const data = await response.json();
+      
+      // Actualizar la interfaz de usuario
+      document.getElementById('ventas-mes').textContent = data.totalClientes || '0';
+      document.getElementById('total-ventas').textContent = `$${(data.totalVentas || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      
+    } catch (error) {
+      console.error('Error al cargar métricas de ventas:', error);
+      // Mostrar valores por defecto en caso de error
+      document.getElementById('ventas-mes').textContent = '0';
+      document.getElementById('total-ventas').textContent = '$0.00';
+    }
+  }
 
   // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
   document.addEventListener("DOMContentLoaded", () => {
@@ -601,8 +651,12 @@
     // Eventos para actualizar gráficas
     actualizarBtn.addEventListener('click', actualizarGraficas);
     
-    // Carga inicial de gráficas
+    // Carga inicial de métricas y gráficas
+    cargarMetricasVentas();
     actualizarGraficas();
+    
+    // Actualizar métricas cada minuto (opcional)
+    setInterval(cargarMetricasVentas, 60000);
 
     // --- LÓGICA DE FORMULARIO ---
     crmForm.addEventListener("submit", function (e) {

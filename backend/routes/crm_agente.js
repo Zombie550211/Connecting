@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CrmAgente = require('../models/crm_agente');
+const { verifyToken } = require('../middleware/auth');
 
 // Obtener clientes para la tabla costumer desde crm agente
 router.get('/clientes', async (req, res) => {
@@ -39,5 +40,57 @@ router.get('/clientes', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Obtener métricas de ventas mensuales
+const getMetricasVentas = async (req, res) => {
+  try {
+    const { mes, anio } = req.query;
+    
+    // Validar parámetros
+    if (!mes || !anio) {
+      return res.status(400).json({ error: 'Se requieren los parámetros mes y año' });
+    }
+    
+    // Crear fechas para el rango del mes
+    const fechaInicio = new Date(anio, mes - 1, 1);
+    const fechaFin = new Date(anio, mes, 0, 23, 59, 59);
+    
+    // Consulta para contar clientes en el mes
+    const totalClientes = await CrmAgente.countDocuments({
+      dia_venta: { $gte: fechaInicio, $lte: fechaFin }
+    });
+    
+    // Consulta para sumar los puntajes (ventas) del mes
+    const resultadoVentas = await CrmAgente.aggregate([
+      {
+        $match: {
+          dia_venta: { $gte: fechaInicio, $lte: fechaFin },
+          // Asegurarse de que puntaje es un número
+          puntaje: { $type: 'number' }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalVentas: { $sum: '$puntaje' }
+        }
+      }
+    ]);
+    
+    const totalVentas = resultadoVentas[0]?.totalVentas || 0;
+    
+    res.json({
+      totalClientes,
+      totalVentas
+    });
+    
+  } catch (error) {
+    console.error('Error al obtener métricas de ventas:', error);
+    res.status(500).json({ error: 'Error al obtener las métricas de ventas' });
+  }
+};
+
+// Ruta protegida con JWT
+router.get('/metricas-ventas', verifyToken, getMetricasVentas);
 
 module.exports = router;
