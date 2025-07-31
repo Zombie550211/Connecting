@@ -332,9 +332,10 @@
         <div class="charts-filter">
           <h2 class="chart-title">Estadísticas de Leads</h2>
           <div class="date-filters">
-            <select id="mes-filtro"></select>
-            <select id="anio-filtro"></select>
-            <button id="actualizar-graficas">Actualizar</button>
+  <input type="date" id="dia-filtro" style="margin-right:10px;">
+  <select id="mes-filtro"></select>
+  <select id="anio-filtro"></select>
+  <button id="actualizar-graficas">Actualizar</button>
           </div>
         </div>
         <!-- Contenedor para la primera fila de gráficas -->
@@ -429,10 +430,13 @@
     let teamChartInstance = null;
     let productChartInstance = null;
 
-    async function crearGraficas(mes, anio) {
+    async function crearGraficas(mes, anio, dia) {
       try {
-        console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
-        
+        if (dia) {
+          console.log(`Obteniendo datos para dia=${dia}`);
+        } else {
+          console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
+        }
         // Obtener token desde localStorage
         const token = localStorage.getItem('token');
         const headers = {
@@ -440,9 +444,18 @@
           'Authorization': `Bearer ${token}`
         };
 
+        let equiposUrl, productosUrl;
+        if (dia) {
+          equiposUrl = `/api/rankings/equipos?dia=${dia}`;
+          productosUrl = `/api/rankings/productos?dia=${dia}`;
+        } else {
+          equiposUrl = `/api/rankings/equipos?mes=${mes}&anio=${anio}`;
+          productosUrl = `/api/rankings/productos?mes=${mes}&anio=${anio}`;
+        }
+
         const [equiposRes, productosRes] = await Promise.all([
-          fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`, { headers }),
-          fetch(`/api/rankings/productos?mes=${mes}&anio=${anio}`, { headers })
+          fetch(equiposUrl, { headers }),
+          fetch(productosUrl, { headers })
         ]);
 
         if (!equiposRes.ok || !productosRes.ok) {
@@ -532,7 +545,12 @@
 
     // Función para actualizar gráficas con los filtros seleccionados
     function actualizarGraficas() {
-      crearGraficas(mesFiltro.value, anioFiltro.value);
+      const dia = document.getElementById('dia-filtro').value;
+      if (dia) {
+        crearGraficas(null, null, dia);
+      } else {
+        crearGraficas(mesFiltro.value, anioFiltro.value, null);
+      }
     }
 
     // Eventos para actualizar gráficas
