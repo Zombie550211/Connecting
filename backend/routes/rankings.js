@@ -187,7 +187,7 @@ router.get('/productos', async (req, res) => {
       };
     }
 
-    // Agrupar por servicio y contar ventas
+    // Agrupar por servicio (servicios) y contar ventas
     const productosRankingRaw = await CrmAgente.aggregate([
       { $match: matchStage },
       { $group: { _id: "$servicios", ventas: { $sum: 1 } } },
