@@ -210,16 +210,17 @@
     .charts-section .charts-filter button:hover { background: #126de4; }
     .chart-container { 
       background: #fff; 
-      padding: 15px 20px; 
+      padding: 100px 50px; 
       border: 1px solid #e2e8f0; 
       border-radius: 10px; 
       box-shadow: 0 2px 10px #0001; 
       width: 100%;
+      max-width: 1200px;
       display: flex; 
       flex-direction: column; 
-      min-height: 400px; 
-      height: 400px;
-      margin-bottom: 20px;
+      min-height: 500px; 
+      height: 500px;
+      margin: 0 auto 30px;
       position: relative;
     }
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
@@ -237,14 +238,14 @@
       height: 100% !important;
       max-width: 100%;
       max-height: 100%;
-      min-height: 350px;
+      min-height: 450px;
       display: block;
       background: transparent;
       position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
+      left: 20px;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
     }
     .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
     @media (max-width: 1100px) {
@@ -372,18 +373,18 @@
         </div>
         <!-- Contenedor para ambas gráficas alineadas -->
         <div class="charts-graphs-row">
-          <div class="chart-card">
-            <h3 class="chart-subtitle">Ventas y Puntaje por Team</h3>
-            <div class="chart-container">
-              <canvas id="team-chart" class="chart-canvas"></canvas>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3 class="chart-subtitle">Ventas por Producto</h3>
-            <div class="chart-container">
-              <canvas id="product-chart" class="chart-canvas"></canvas>
-            </div>
-          </div>
+          <div class="chart-card" style="width: 100%;">
+        <h3 class="chart-subtitle" style="font-size: 1.5rem; margin-bottom: 20px;">Ventas y Puntaje por Team</h3>
+        <div class="chart-container">
+          <canvas id="team-chart" class="chart-canvas"></canvas>
+        </div>
+      </div>
+      <div class="chart-card" style="width: 100%;">
+        <h3 class="chart-subtitle" style="font-size: 1.5rem; margin-bottom: 20px;">Ventas por Producto</h3>
+        <div class="chart-container">
+          <canvas id="product-chart" class="chart-canvas"></canvas>
+        </div>
+      </div>
         </div>
       </section>
     </div>
