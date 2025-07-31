@@ -333,17 +333,17 @@
           <input type="date" id="fechaGraficas" />
           <button type="button" onclick="actualizarGraficas()">Ver gráficas</button>
         </div>
-        <div class="chart-container">
-          <canvas id="ventasTeamChart" class="chart-canvas"></canvas>
-          <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
+        <div id="grafico-agentes" class="chart-container" style="display: none;">
+          <h5>Ranking de Agentes (Ventas)</h5>
+          <canvas id="chartAgentes" class="chart-canvas"></canvas>
         </div>
-        <div class="chart-container">
+        <div id="grafico-puntos" class="chart-container" style="display: none;">
+          <h5>Ranking de Agentes (Puntos)</h5>
+          <canvas id="chartPuntos" class="chart-canvas"></canvas>
+        </div>
+        <div id="grafico-equipos" class="chart-container" style="display: none;">
+          <h5>Ranking de Equipos (Ventas)</h5>
           <canvas id="chartEquipos" class="chart-canvas"></canvas>
-          <div id="chartEquipos-no-data" class="no-data-msg" style="display: none;">No hay datos para esta fecha</div>
-        </div>
-        <div class="chart-container">
-          <canvas id="chartProductos" class="chart-canvas"></canvas>
-          <div id="chartProductos-no-data" class="no-data-msg" style="display: none;">No hay datos para esta fecha</div>
         </div>
       </section>
     </div>
@@ -429,38 +429,36 @@
   }
 
   // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
-  let ventasTeamChart, productosChart, chartEquipos, chartProductos;
+  let chartAgentes, chartPuntos, chartEquipos;
 
   function crearGraficas() {
-    destroyChart(ventasTeamChart);
-    destroyChart(productosChart);
+    destroyChart(chartAgentes);
+    destroyChart(chartPuntos);
     destroyChart(chartEquipos);
-    destroyChart(chartProductos);
 
-    // Calcula dimensiones reales del contenedor
-    const teamCanvas = document.getElementById("ventasTeamChart");
-    const prodCanvas = document.getElementById("productosChart");
+    const agentesCanvas = document.getElementById("chartAgentes");
+    const puntosCanvas = document.getElementById("chartPuntos");
     const equiposCanvas = document.getElementById("chartEquipos");
-    const productosCanvas = document.getElementById("chartProductos");
-    const teamParent = teamCanvas.parentElement;
-    const prodParent = prodCanvas.parentElement;
+
+    if (!agentesCanvas || !puntosCanvas || !equiposCanvas) {
+        console.error("Error: No se encontraron todos los canvas para las gráficas.");
+        return;
+    }
+
+    const agentesParent = agentesCanvas.parentElement;
+    const puntosParent = puntosCanvas.parentElement;
     const equiposParent = equiposCanvas.parentElement;
-    const productosParent = productosCanvas.parentElement;
 
-    // Usa getBoundingClientRect para obtener tamaño real responsivo
-    const teamRect = teamParent.getBoundingClientRect();
-    const prodRect = prodParent.getBoundingClientRect();
+    const agentesRect = agentesParent.getBoundingClientRect();
+    const puntosRect = puntosParent.getBoundingClientRect();
     const equiposRect = equiposParent.getBoundingClientRect();
-    const productosRect = productosParent.getBoundingClientRect();
 
-    const width1 = Math.max(600, teamRect.width || 1200);
-    const height1 = Math.max(200, teamRect.height || 400);
-    const width2 = Math.max(600, prodRect.width || 1200);
-    const height2 = Math.max(200, prodRect.height || 400);
+    const width1 = Math.max(600, agentesRect.width || 1200);
+    const height1 = Math.max(200, agentesRect.height || 400);
+    const width2 = Math.max(600, puntosRect.width || 1200);
+    const height2 = Math.max(200, puntosRect.height || 400);
     const width3 = Math.max(600, equiposRect.width || 1200);
     const height3 = Math.max(200, equiposRect.height || 400);
-    const width4 = Math.max(600, productosRect.width || 1200);
-    const height4 = Math.max(200, productosRect.height || 400);
 
     // Ajusta el canvas para pantallas retina/4K (HiDPI)
     function setHiDPICanvas(canvas, width, height) {
