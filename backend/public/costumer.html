@@ -599,6 +599,11 @@ async function cargarCostumers() {
     
     const data = await res.json();
     console.log('🔍 [FRONTEND] Datos recibidos del backend:', data);
+    if (Array.isArray(data.clientes)) {
+      console.log('🔍 [FRONTEND] Primer cliente:', data.clientes[0]);
+    } else {
+      console.warn('⚠️ [FRONTEND] data.clientes no es un array:', data.clientes);
+    }
     
     if (!data.clientes) {
       console.error("❌ [FRONTEND] No se recibieron clientes del backend:", data);
@@ -707,6 +712,7 @@ function agregarEventosFiltrosMesAnio() {
 function renderizarTablaCostumers(filas) {
   const tbody = document.getElementById("bodyTablaCostumers");
   tbody.innerHTML = "";
+  console.log('🔍 [FRONTEND] Filas a renderizar:', filas);
   if (!filas.length) {
     tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No hay clientes registrados.</td></tr>`;
     return;
