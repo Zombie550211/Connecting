@@ -106,6 +106,8 @@ router.get('/equipos', async (req, res) => {
 
 // Obtener ranking por producto
 router.get('/productos', async (req, res) => {
+  console.log('--- [API /productos] ---');
+  console.log('Query params:', req.query);
   const { mes, anio } = req.query;
   if (!mes || !anio) {
     return res.status(400).json({ success: false, message: 'Mes y año son requeridos' });
@@ -162,6 +164,7 @@ router.get('/productos', async (req, res) => {
         }
       };
     }
+    console.log('matchStage:', JSON.stringify(matchStage, null, 2));
     const productosRanking = await CrmAgente.aggregate([
       {
         $addFields: {
@@ -193,8 +196,9 @@ router.get('/productos', async (req, res) => {
 
     res.json({ success: true, data: productosRanking });
   } catch (error) {
-    console.error("Error en ranking de productos:", error);
-    res.status(500).json({ success: false, message: 'Error en el servidor' });
+    console.error("[API /productos] Error:", error);
+    if (error.stack) console.error(error.stack);
+    res.status(500).json({ success: false, message: 'Error en el servidor', details: error.message });
   }
 });
 
