@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const CrmAgente = require('../models/crm_agente'); // Usando el modelo correcto para los nuevos datos
+const CrmAgente = require('../models/crm_agente'); // Usando el modelo correcto para los equipos
+const Costumer = require('../models/costumer'); // Usando el modelo correcto para productos/servicios
 
 
 // Obtener ranking de equipos
@@ -119,6 +120,11 @@ router.get('/equipos', async (req, res) => {
 
 // Obtener ranking por producto
 router.get('/productos', async (req, res) => {
+  // NUEVO: Ranking de productos por campo 'servicios' de costumers
+  // Lista fija de servicios/productos
+  const SERVICIOS = [
+    "AT&T AIR", "AT&T", "SPECTRUM", "FRONTIER", "OPTIMO MAS", "MAS ULTRA", "HUGHESNET", "VIASAT", "VIVINT", "WOW", "ZYPLYFIBER", "BRIGHTSPEED", "LINEA + CELULAR"
+  ];
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
   const { mes, anio, dia } = req.query;
@@ -127,98 +133,47 @@ router.get('/productos', async (req, res) => {
   }
 
   try {
-    const mesNum = parseInt(mes) + 1; // Mes en JS es 0-11, en Mongo es 1-12
-    const anioNum = parseInt(anio);
-
-    // Ranking de productos: agrupa por 'producto' y suma las ventas.
+    // --- Nuevo cálculo usando Costumer y campo 'servicios' ---
     let matchStage;
     if (dia) {
       matchStage = {
         $expr: {
           $eq: [
-            {
-              $dateToString: {
-                format: "%Y-%m-%d",
-                date: {
-                  $cond: [
-                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                    "$dia_venta",
-                    { $dateFromString: { dateString: "$dia_venta" } }
-                  ]
-                }
-              }
-            },
+            "$fecha",
             dia
           ]
         }
       };
     } else {
-      const mesNum = parseInt(mes) + 1;
-      const anioNum = parseInt(anio);
       matchStage = {
         $expr: {
           $and: [
-            { $eq: [{$month: {
-              $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
-              ]
-            }}, mesNum] },
-            { $eq: [{$year: {
-              $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
-              ]
-            }}, anioNum] }
+            { $eq: [{$month: { $dateFromString: { dateString: "$fecha" } }}, parseInt(mes) + 1] },
+            { $eq: [{$year: { $dateFromString: { dateString: "$fecha" } }}, parseInt(anio)] }
           ]
         }
       };
     }
-    console.log('matchStage:', JSON.stringify(matchStage, null, 2));
-    // Lista fija de productos (ajusta según tus productos reales)
-    const PRODUCTOS = [
-      "Fibra 100MB", "Fibra 200MB", "Fibra 300MB", "Fibra 500MB", "Fibra 1000MB", "Internet Inalámbrico", "TV", "Telefonía" 
-    ];
-    const productosRankingRaw = await CrmAgente.aggregate([
-      {
-        $addFields: {
-          dia_venta_date: {
-            $cond: [
-              { $eq: [ { $type: "$dia_venta" }, "date" ] },
-              "$dia_venta",
-              { $dateFromString: { dateString: "$dia_venta" } }
-            ]
-          }
-        }
-      },
+
+    const serviciosRankingRaw = await Costumer.aggregate([
       { $match: matchStage },
-      {
-        $group: {
-          _id: '$producto',
+      { $group: {
+          _id: "$servicios",
           ventas: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          producto: '$_id',
-          ventas: 1
-        }
-      }
+      }},
+      { $project: { _id: 0, servicio: "$_id", ventas: 1 } }
     ]);
     // Mapear a objeto para fácil acceso
-    const productosMap = {};
-    productosRankingRaw.forEach(p => {
-      productosMap[p.producto] = p;
+    const serviciosMap = {};
+    serviciosRankingRaw.forEach(s => {
+      serviciosMap[s.servicio] = s;
     });
-    // Construir arreglo final con todos los productos
-    const productosRanking = PRODUCTOS.map(producto => ({
-      producto,
-      ventas: productosMap[producto]?.ventas || 0
+    // Construir arreglo final con todos los servicios
+    const serviciosRanking = SERVICIOS.map(servicio => ({
+      producto: servicio,
+      ventas: serviciosMap[servicio]?.ventas || 0
     }));
-    res.json({ success: true, data: productosRanking });
+    res.json({ success: true, data: serviciosRanking });
   } catch (error) {
     console.error("[API /productos] Error:", error);
     if (error.stack) console.error(error.stack);
