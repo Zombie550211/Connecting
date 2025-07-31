@@ -369,6 +369,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const rankingsRoutes = require('./routes/rankings');
 app.use('/api/rankings', protect, rankingsRoutes);
 
+// Nueva ruta para clientes desde CrmAgente
+const crmAgenteRoutes = require('./routes/crm_agente');
+app.use('/api/crm-agente', protect, crmAgenteRoutes);
+
 // Ruta raíz que redirige al login
 app.get('/', (req, res) => {
   res.redirect('/login.html');

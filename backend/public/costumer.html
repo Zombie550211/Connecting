@@ -581,16 +581,8 @@ async function cargarCostumers() {
     
     console.log('🔍 [FRONTEND] Filtros actuales:', { desde, hasta, mes, anio });
     
-    let url = '/api/costumers';
-
-    const params = new URLSearchParams({
-      fechaDesde: desde,
-      fechaHasta: hasta,
-      mes: mes,
-      anio: anio
-    });
-
-    url += `?${params.toString()}`;
+    let url = '/api/crm-agente/clientes'; // NUEVO ENDPOINT
+    // El endpoint de crm-agente/clientes no requiere filtros por ahora
     
     console.log('🔍 [FRONTEND] URL de la petición:', url);
     console.log('🔍 [FRONTEND] Realizando fetch...');
@@ -608,19 +600,19 @@ async function cargarCostumers() {
     const data = await res.json();
     console.log('🔍 [FRONTEND] Datos recibidos del backend:', data);
     
-    if (!data.costumers) {
-      console.error("❌ [FRONTEND] No se recibieron costumers del backend:", data);
+    if (!data.clientes) {
+      console.error("❌ [FRONTEND] No se recibieron clientes del backend:", data);
       return;
     }
     
-    console.log('🔍 [FRONTEND] Número de costumers recibidos:', data.costumers.length);
-    datosCostumers = data.costumers.map(item => ({
+    console.log('🔍 [FRONTEND] Número de clientes recibidos:', data.clientes.length);
+    datosCostumers = data.clientes.map(item => ({
       "_id": item._id,
-      "FECHA": item.FECHA || "",
+      "FECHA": item.FECHA_VENTA || "",
       "TEAM": item.TEAM || "",
       "AGENTE": item.AGENTE || "",
       "PRODUCTO": item.PRODUCTO || "",
-      "FECHA_INSTALACION": item.FECHA_INSTALACION || "",
+      "FECHA_INSTALACION": item.FECHA_DE_INSTALACION || "",
       "ESTADO": item.ESTADO || "Pending",
       "PUNTAJE": item.PUNTAJE || 0,
       "CUENTA": item.CUENTA || 'Elige',
