@@ -270,25 +270,19 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
-    // Consultar ambas colecciones en paralelo
-    const [crmAgenteResults, costumerResults] = await Promise.all([
-      CrmAgente.find({ fecha: fecha }).lean(), // Para gráficas de equipos y puntos
-      Costumer.find({ fecha: fecha }).lean()   // Para gráfica de productos
-    ]);
+    const resultados = await CrmAgente.find({ fecha: fecha });
 
-    // Calcular ventas y puntos por equipo desde CrmAgente
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
-    crmAgenteResults.forEach(item => {
+    const ventasPorProducto = {};
+
+    resultados.forEach(item => {
+      // Procesar ventas y puntos por equipo
       if (item.equipo) {
         ventasPorEquipo[item.equipo] = (ventasPorEquipo[item.equipo] || 0) + 1;
         puntosPorEquipo[item.equipo] = (puntosPorEquipo[item.equipo] || 0) + (item.puntaje || 0);
       }
-    });
-
-    // Calcular ventas por producto desde Costumer
-    const ventasPorProducto = {};
-    costumerResults.forEach(item => {
+      // Procesar ventas por producto
       if (item.producto) {
         ventasPorProducto[item.producto] = (ventasPorProducto[item.producto] || 0) + 1;
       }
