@@ -41,8 +41,8 @@ router.get('/clientes', async (req, res) => {
   }
 });
 
-// Middleware para obtener métricas de ventas mensuales
-const getMetricasVentas = async (req, res, next) => {
+// Ruta para métricas de ventas
+router.get('/metricas-ventas', verifyToken, async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
@@ -79,18 +79,15 @@ const getMetricasVentas = async (req, res, next) => {
     
     const totalVentas = resultadoVentas[0]?.totalVentas || 0;
     
-    res.json({
+    return res.json({
       totalClientes,
       totalVentas
     });
     
   } catch (error) {
     console.error('Error al obtener métricas de ventas:', error);
-    res.status(500).json({ error: 'Error al obtener las métricas de ventas' });
+    return res.status(500).json({ error: 'Error al obtener las métricas de ventas' });
   }
-};
-
-// Ruta para métricas de ventas
-router.get('/metricas-ventas', verifyToken, getMetricasVentas);
+});
 
 module.exports = router;
