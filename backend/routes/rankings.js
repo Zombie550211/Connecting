@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CrmAgente = require('../models/crmAgente'); // Cambiado de Costumer a CrmAgente
+const CrmAgente = require('../models/crm_agente'); // Corregido el nombre del archivo del modelo
 
 
 // Obtener ranking de equipos
