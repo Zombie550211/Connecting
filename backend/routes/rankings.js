@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Costumer = require('../models/costumer');
+const CrmAgente = require('../models/crm_agente'); // Usando el modelo correcto para los nuevos datos
 
 
 // Obtener ranking de equipos
@@ -19,41 +19,34 @@ router.get('/equipos', async (req, res) => {
     const mesNum = parseInt(mes) + 1; // Se suma 1 porque JS usa meses 0-11 y Mongo 1-12
     const anioNum = parseInt(anio);
     
-    // Agrupar por equipo y sumar ventas
-    const equiposRanking = await Costumer.aggregate([
-      {
-        $addFields: {
-          fecha_convertida: { $dateFromString: { dateString: '$fecha', format: '%Y-%m-%d', onError: new Date(0) } }
-        }
-      },
+    // Ranking de equipos: agrupa por 'team', suma las ventas y el puntaje.
+    const equiposRanking = await CrmAgente.aggregate([
       {
         $match: {
           $expr: {
             $and: [
-              { $eq: [{ $month: '$fecha_convertida' }, mesNum] },
-              { $eq: [{ $year: '$fecha_convertida' }, anioNum] }
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
             ]
           }
         }
       },
       {
         $group: {
-          _id: '$equipo',
+          _id: '$team',
           ventas: { $sum: 1 },
-          totalPuntos: { $sum: '$puntaje' }
+          puntaje: { $sum: '$puntaje' }
         }
       },
       {
         $project: {
           _id: 0,
-          equipo: '$_id',
+          team: '$_id',
           ventas: 1,
-          totalPuntos: 1,
-          promedioPuntos: { $divide: ['$totalPuntos', '$ventas'] }
+          puntaje: 1
         }
       },
-      { $sort: { ventas: -1 } },
-      { $limit: 3 }
+      { $sort: { team: 1 } }
     ]);
 
     res.json({ success: true, data: equiposRanking });
@@ -67,7 +60,53 @@ router.get('/equipos', async (req, res) => {
   }
 });
 
-// Obtener ranking de agentes
+// Obtener ranking por producto
+router.get('/productos', async (req, res) => {
+  const { mes, anio } = req.query;
+  if (!mes || !anio) {
+    return res.status(400).json({ success: false, message: 'Mes y año son requeridos' });
+  }
+
+  try {
+    const mesNum = parseInt(mes) + 1; // Mes en JS es 0-11, en Mongo es 1-12
+    const anioNum = parseInt(anio);
+
+    // Ranking de productos: agrupa por 'producto' y suma las ventas.
+    const productosRanking = await CrmAgente.aggregate([
+      {
+        $match: {
+          $expr: {
+            $and: [
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$producto',
+          ventas: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          producto: '$_id',
+          ventas: 1
+        }
+      },
+      { $sort: { ventas: -1 } }
+    ]);
+
+    res.json({ success: true, data: productosRanking });
+  } catch (error) {
+    console.error("Error en ranking de productos:", error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// Obtener ranking de agentes (por ventas) - ESTA RUTA YA NO SE USA EN LAS GRÁFICAS NUEVAS
 router.get('/agentes', async (req, res) => {
   try {
     const { mes, anio } = req.query;
@@ -84,18 +123,13 @@ router.get('/agentes', async (req, res) => {
     const anioNum = parseInt(anio);
     
     // Agrupar por agente y sumar ventas
-    const agentesRanking = await Costumer.aggregate([
-      {
-        $addFields: {
-          fecha_convertida: { $dateFromString: { dateString: '$fecha', format: '%Y-%m-%d', onError: new Date(0) } }
-        }
-      },
+    const agentesRanking = await CrmAgente.aggregate([
       {
         $match: {
           $expr: {
             $and: [
-              { $eq: [{ $month: '$fecha_convertida' }, mesNum] },
-              { $eq: [{ $year: '$fecha_convertida' }, anioNum] }
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
             ]
           }
         }
@@ -128,7 +162,7 @@ router.get('/agentes', async (req, res) => {
   }
 });
 
-// Obtener ranking por puntos
+// Obtener ranking de agentes (por puntos) - ESTA RUTA YA NO SE USA EN LAS GRÁFICAS NUEVAS
 router.get('/puntos', async (req, res) => {
   try {
     const { mes, anio } = req.query;
