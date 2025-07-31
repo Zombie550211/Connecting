@@ -447,6 +447,12 @@
     let productChartInstance = null;
 
     async function crearGraficas(mes, anio, dia) {
+      if (teamChartInstance) {
+        teamChartInstance.destroy();
+      }
+      if (productChartInstance) {
+        productChartInstance.destroy();
+      }
       try {
         if (dia) {
           console.log(`Obteniendo datos para dia=${dia}`);
