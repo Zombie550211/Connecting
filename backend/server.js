@@ -270,6 +270,8 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
+    console.log(`Buscando datos para la fecha: ${fecha}`); // <-- LOG DE DIAGNÓSTICO
+
     const resultados = await CrmAgente.find({ dia_venta: fecha });
 
     const ventasPorEquipo = {};
