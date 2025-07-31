@@ -368,13 +368,16 @@
 
   // --- ARRAYS ---
   const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-  let todosLosProductos = []; // Variable para guardar la lista completa de productos
 
-  // --- AGENTES POR TEAM ---
-  const agentesPorTeam = {
-    "Team Irania": ["Irvin Cruz", "Josue Renderos", "Julissa Rubio", "Miguel Nunez", "Pamela Urrutia", "Roxana Martinez", "Estefany Amaya","Giselle Diaz","Tatiana Ayala" ],
-    "Team Pleitez": ["Diego Mejia", "Ellen Diaz", "Fabricio Panameño", "Luis Chavarria", "Mauricio Rivera", "Steven Varela", "Evelyn Garcia", "Andy Lopez","Cristopher Urrutia", "Abigail Galdamez"],
-    "Team Roberto": ["Lucia Ferman","Daniela Bonilla", "Francisco Aguilar", "Ingrid Garcia", "Lisbeth Cortez", "Nelson Ceren","David Quinteros"],
+  // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
+  document.addEventListener("DOMContentLoaded", () => {
+    // --- INICIALIZACIÓN DE ELEMENTOS ---
+    const selects = {
+      team: document.getElementById("team"),
+      agent: document.getElementById("agent"),
+      producto: document.getElementById("producto"),
+      cuenta: document.getElementById("cuenta"),
+      puntaje: document.getElementById("puntaje")
     };
     const mesFiltro = document.getElementById('mes-filtro');
     const anioFiltro = document.getElementById('anio-filtro');
@@ -417,32 +420,40 @@
     // --- LLENADO DE FILTROS DE FECHA PARA GRÁFICAS ---
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const anioActual = new Date().getFullYear();
-    meses.forEach((mes, i) => mesFiltro.add(new Option(mes, i)));
+    meses.forEach((mes, i) => mesFiltro.add(new Option(mes, i + 1))); // Meses en MongoDB son 1-12, no 0-11
     for (let i = anioActual; i >= 2022; i--) anioFiltro.add(new Option(i, i));
-    mesFiltro.value = new Date().getMonth();
+    mesFiltro.value = new Date().getMonth() + 1; // Ajuste para MongoDB
     anioFiltro.value = anioActual;
 
     // --- LÓGICA DE GRÁFICAS ---
-    window.teamChartInstance = null;
-    window.productChartInstance = null;
+    let teamChartInstance = null;
+    let productChartInstance = null;
 
     async function crearGraficas(mes, anio) {
       try {
+        console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
         const [equiposRes, productosRes] = await Promise.all([
           fetch(`/api/rankings/equipos?mes=${mes}&anio=${anio}`),
           fetch(`/api/rankings/productos?mes=${mes}&anio=${anio}`)
         ]);
 
-        if (!equiposRes.ok || !productosRes.ok) throw new Error('Error al obtener datos');
+        if (!equiposRes.ok || !productosRes.ok) {
+          console.error('Error en respuestas:', equiposRes.status, productosRes.status);
+          throw new Error('Error al obtener datos');
+        }
 
         const equiposData = await equiposRes.json();
         const productosData = await productosRes.json();
+        
+        console.log('Datos de equipos:', equiposData);
+        console.log('Datos de productos:', productosData);
 
-        if (window.teamChartInstance) window.teamChartInstance.destroy();
-        if (window.productChartInstance) window.productChartInstance.destroy();
+        if (teamChartInstance) teamChartInstance.destroy();
+        if (productChartInstance) productChartInstance.destroy();
 
+        // Gráfica de equipos (ventas y puntaje)
         const teamCtx = document.getElementById('team-chart').getContext('2d');
-        window.teamChartInstance = new Chart(teamCtx, {
+        teamChartInstance = new Chart(teamCtx, {
           type: 'bar',
           data: {
             labels: equiposData.data.map(e => e.team),
@@ -457,38 +468,70 @@
             }]
           },
           options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' }, datalabels: { anchor: 'end', align: 'end', formatter: v => Math.round(v*100)/100, color: '#333', font: { weight: 'bold' } } },
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { position: 'top' }, 
+              datalabels: { 
+                anchor: 'end', 
+                align: 'end', 
+                formatter: v => Math.round(v*100)/100, 
+                color: '#333', 
+                font: { weight: 'bold' } 
+              } 
+            },
             scales: { y: { beginAtZero: true } }
           },
           plugins: [ChartDataLabels]
         });
 
+        // Gráfica de productos (ventas)
         const productCtx = document.getElementById('product-chart').getContext('2d');
-        window.productChartInstance = new Chart(productCtx, {
+        productChartInstance = new Chart(productCtx, {
           type: 'bar',
           data: {
             labels: productosData.data.map(p => p.producto),
-            datasets: [{ label: 'Ventas', data: productosData.data.map(p => p.ventas), backgroundColor: '#22b3ec' }]
+            datasets: [{ 
+              label: 'Ventas', 
+              data: productosData.data.map(p => p.ventas), 
+              backgroundColor: '#22b3ec' 
+            }]
           },
           options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'end', color: '#333', font: { weight: 'bold' } } },
-            scales: { y: { beginAtZero: true }, x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } } }
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { display: false }, 
+              datalabels: { 
+                anchor: 'end', 
+                align: 'end', 
+                color: '#333', 
+                font: { weight: 'bold' } 
+              } 
+            },
+            scales: { 
+              y: { beginAtZero: true }, 
+              x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } } 
+            }
           },
           plugins: [ChartDataLabels]
         });
       } catch (error) {
         console.error("Error al crear gráficas:", error);
+        alert("Error al cargar las gráficas. Revisa la consola para más detalles.");
       }
     }
 
+    // Función para actualizar gráficas con los filtros seleccionados
     function actualizarGraficas() {
       crearGraficas(mesFiltro.value, anioFiltro.value);
     }
 
+    // Eventos para actualizar gráficas
     actualizarBtn.addEventListener('click', actualizarGraficas);
-    actualizarGraficas(); // Carga inicial
+    
+    // Carga inicial de gráficas
+    actualizarGraficas();
 
     // --- LÓGICA DE FORMULARIO ---
     crmForm.addEventListener("submit", function (e) {
@@ -507,7 +550,11 @@
         zip: form.zip.value,
       };
 
-      fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      fetch("/api/leads", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(body) 
+      })
         .then(res => {
           if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
           return res.json();
@@ -515,7 +562,7 @@
         .then(() => {
           alert("Lead guardado exitosamente.");
           crmForm.reset();
-          document.getElementById('fecha-lead').value = new Date().toISOString().slice(0, 10);
+          document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
           actualizarGraficas();
         })
         .catch(error => {
@@ -523,103 +570,6 @@
           alert("Hubo un error al guardar el lead.");
         });
     });
-  });
-</script>
-<script>
-  const token = localStorage.getItem('token');
-
-  // 1. VERIFICACIÓN INMEDIATA DEL TOKEN
-  if (!token) {
-    window.location.href = '/login.html';
-  } else {
-    // Verificar si el token es válido con el backend
-    fetch('/api/check-auth', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        localStorage.removeItem('token'); // Limpiar token inválido
-        window.location.href = '/login.html';
-      }
-    })
-    .catch(() => {
-      window.location.href = '/login.html';
-    });
-  }
-
-  // --- Configuración global de fetch para incluir el token ---
-  const originalFetch = fetch;
-  window.fetch = function(url, options) {
-    options = options || {};
-    options.headers = options.headers || {};
-    options.headers['Authorization'] = `Bearer ${token}`;
-    return originalFetch(url, options);
-  };
-
-  // --- Formulario Lead ---
-  document.getElementById("crmForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const fecha = document.getElementById("fecha-lead").value;
-    const team = document.getElementById("team").value;
-    const agent = document.getElementById("agent").value;
-    const producto = document.getElementById("producto").value;
-    const puntajeVal = document.getElementById("puntaje").value;
-    const puntaje = puntajeVal === "Sin Puntaje" || puntajeVal === "Seleccione Puntaje" ? 0 : parseFloat(puntajeVal);
-    const cuenta = document.getElementById("cuenta").value;
-    const telefono = document.getElementById("telefono").value;
-    const direccion = document.getElementById("direccion").value;
-    const zip = document.getElementById("zip").value;
-
-    if (
-      team === "" || agent === "Seleccione Agente" ||
-      producto === "Seleccione Producto" || isNaN(puntaje) ||
-      cuenta === "Seleccione Cuenta" || telefono.trim() === "" ||
-      direccion.trim() === "" || zip.trim() === ""
-    ) {
-      alert("Por favor, complete todos los campos.");
-      return;
-    }
-
-    fetch("/api/leads", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }, // El token se añade automáticamente
-      body: JSON.stringify({ dia_venta: fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
-    })
-      .then(async res => {
-        if (res.status === 401) {
-          alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
-          window.location.href = "/login.html";
-          throw new Error("No autorizado.");
-        }
-        const contentType = res.headers.get('content-type') || '';
-        if (!res.ok) {
-          if (contentType.includes('application/json')) {
-            const errorText = await res.text();
-            console.error("Error en respuesta:", res.status, errorText);
-          } else {
-            console.error("Respuesta inesperada:", res.status, await res.text());
-          }
-          throw new Error("Error al guardar el lead.");
-        }
-        if (contentType.includes('application/json')) {
-          return res.json();
-        } else {
-          throw new Error("Respuesta inesperada del servidor.");
-        }
-      })
-      .then(() => {
-        actualizarGraficas();
-        document.getElementById("crmForm").reset();
-        document.getElementById('fecha-lead').value = new Date().toISOString().slice(0,10);
-        alert("Lead guardado exitosamente.");
-      })
-      .catch(error => {
-        console.error("Error al guardar lead:", error);
-        alert("Hubo un error al guardar el lead. Revisa la consola.");
-      });
   });
 </script>
 </body>
