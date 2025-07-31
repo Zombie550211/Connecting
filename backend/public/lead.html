@@ -829,7 +829,7 @@
     fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" }, // El token se añade automáticamente
-      body: JSON.stringify({ fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
+      body: JSON.stringify({ dia_venta: fecha, team, agent, producto, puntaje, cuenta, telefono, direccion, zip })
     })
       .then(async res => {
         if (res.status === 401) {
