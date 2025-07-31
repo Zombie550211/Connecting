@@ -120,10 +120,18 @@ router.get('/equipos', async (req, res) => {
 
 // Obtener ranking por producto
 router.get('/productos', async (req, res) => {
-  // NUEVO: Ranking de productos por campo 'servicios' de costumers
-  // Lista fija de servicios/productos
-  const SERVICIOS = [
-    "AT&T AIR", "AT&T", "SPECTRUM", "FRONTIER", "OPTIMO MAS", "MAS ULTRA", "HUGHESNET", "VIASAT", "VIVINT", "WOW", "ZYPLYFIBER", "BRIGHTSPEED", "LINEA + CELULAR"
+  // NUEVO: Ranking de productos por campo 'producto' de CrmAgente
+  // Lista fija de productos/servicios
+  const PRODUCTOS_FIJOS = [
+    "225 AT&T AIR", "100 MBPS AT&T", "18 MBPS AT&T", "1G AT&T", "25 MBPS AT&T",
+    "300 MBPS AT&T", "50 MBPS AT&T", "500 MBPS AT&T", "5G AT&T", "75 MBPS AT&T",
+    "ALTAFIBER", "FRONTIER", "HUGHESNET", "MAS LATINO", "MAS ULTRA", "OPTIMO MAS",
+    "OPTIMUM", "SPECTRUM", "VIASAT", "WINDSTREAM", "WOW", "LINEA + CELULAR",
+    "VIVINT", "KINETIC", "SPECTRUM BUSINESS", "AT&T BUSINESS", "DIRECTV BUSINESS",
+    "CONSOLIDATE COMMUNICATION", "ZYPYLFIBER", "SPECTRUM 500", "SPECTRUM 50",
+    "FRONTIER 200", "FRONTIER 500", "SPECTRUM 100", "FRONTIER 100", "FRONTIER 1G",
+    "SPECTRUM 1G", "FRONTIER 2G", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM DOUBLE PLAY ADVANTAGE",
+    "FRONTIER 5G", "EARTHLINK", "BRIGHTSPEED", "2G AT&T", "2G SPECTRUM"
   ];
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
@@ -133,47 +141,70 @@ router.get('/productos', async (req, res) => {
   }
 
   try {
-    // --- Nuevo cálculo usando Costumer y campo 'servicios' ---
     let matchStage;
     if (dia) {
       matchStage = {
         $expr: {
           $eq: [
-            "$fecha",
+            {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: {
+                  $cond: [
+                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                    "$dia_venta",
+                    { $dateFromString: { dateString: "$dia_venta" } }
+                  ]
+                }
+              }
+            },
             dia
           ]
         }
       };
     } else {
+      const mesNum = parseInt(mes) + 1;
+      const anioNum = parseInt(anio);
       matchStage = {
         $expr: {
           $and: [
-            { $eq: [{$month: { $dateFromString: { dateString: "$fecha" } }}, parseInt(mes) + 1] },
-            { $eq: [{$year: { $dateFromString: { dateString: "$fecha" } }}, parseInt(anio)] }
+            { $eq: [{$month: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, mesNum] },
+            { $eq: [{$year: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, anioNum] }
           ]
         }
       };
     }
 
-    const serviciosRankingRaw = await Costumer.aggregate([
+    // Agrupar por servicio y contar ventas
+    const productosRankingRaw = await CrmAgente.aggregate([
       { $match: matchStage },
-      { $group: {
-          _id: "$servicios",
-          ventas: { $sum: 1 }
-      }},
-      { $project: { _id: 0, servicio: "$_id", ventas: 1 } }
+      { $group: { _id: "$servicios", ventas: { $sum: 1 } } },
+      { $project: { _id: 0, producto: "$_id", ventas: 1 } }
     ]);
+
     // Mapear a objeto para fácil acceso
-    const serviciosMap = {};
-    serviciosRankingRaw.forEach(s => {
-      serviciosMap[s.servicio] = s;
+    const productosMap = {};
+    productosRankingRaw.forEach(p => {
+      productosMap[p.producto] = p;
     });
-    // Construir arreglo final con todos los servicios
-    const serviciosRanking = SERVICIOS.map(servicio => ({
-      producto: servicio,
-      ventas: serviciosMap[servicio]?.ventas || 0
+    // Construir arreglo final con todos los productos fijos
+    const productosRanking = PRODUCTOS_FIJOS.map(producto => ({
+      producto,
+      ventas: productosMap[producto]?.ventas || 0
     }));
-    res.json({ success: true, data: serviciosRanking });
+    res.json({ success: true, data: productosRanking });
   } catch (error) {
     console.error("[API /productos] Error:", error);
     if (error.stack) console.error(error.stack);
