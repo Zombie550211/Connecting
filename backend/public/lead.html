@@ -465,6 +465,27 @@
 
         const equiposData = await equiposRes.json();
         const productosData = await productosRes.json();
+
+        // Lista de productos que deben aparecer siempre en la gráfica
+        const PRODUCTOS_FIJOS = [
+          "225 AT&T AIR", "100 MBPS AT&T", "18 MBPS AT&T", "1G AT&T", "25 MBPS AT&T",
+          "300 MBPS AT&T", "50 MBPS AT&T", "500 MBPS AT&T", "5G AT&T", "75 MBPS AT&T",
+          "ALTAFIBER", "FRONTIER", "HUGHESNET", "MAS LATINO", "MAS ULTRA", "OPTIMO MAS",
+          "OPTIMUM", "SPECTRUM", "VIASAT", "WINDSTREAM", "WOW", "LINEA + CELULAR",
+          "VIVINT", "KINETIC", "SPECTRUM BUSINESS", "AT&T BUSINESS", "DIRECTV BUSINESS",
+          "CONSOLIDATE COMMUNICATION", "ZYPYLFIBER", "SPECTRUM 500", "SPECTRUM 50",
+          "FRONTIER 200", "FRONTIER 500", "SPECTRUM 100", "FRONTIER 100", "FRONTIER 1G",
+          "SPECTRUM 1G", "FRONTIER 2G", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM DOUBLE PLAY ADVANTAGE",
+          "FRONTIER 5G", "EARTHLINK", "BRIGHTSPEED", "2G AT&T", "2G SPECTRUM"
+        ];
+        // Crear un diccionario de ventas por producto real
+        const ventasPorProducto = {};
+        productosData.data.forEach(p => {
+          ventasPorProducto[p.producto] = p.ventas;
+        });
+        // Generar arrays alineados a PRODUCTOS_FIJOS
+        const etiquetasProductos = PRODUCTOS_FIJOS;
+        const datosVentas = PRODUCTOS_FIJOS.map(nombre => ventasPorProducto[nombre] || 0);
         
         console.log('Datos de equipos:', equiposData);
         console.log('Datos de productos:', productosData);
@@ -511,10 +532,10 @@
         productChartInstance = new Chart(productCtx, {
           type: 'bar',
           data: {
-            labels: productosData.data.map(p => p.producto),
+            labels: etiquetasProductos,
             datasets: [{ 
               label: 'Ventas', 
-              data: productosData.data.map(p => p.ventas), 
+              data: datosVentas, 
               backgroundColor: '#22b3ec' 
             }]
           },
