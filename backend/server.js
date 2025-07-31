@@ -270,21 +270,28 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
-        const resultados = await CrmAgente.find({ fecha: fecha });
+    // Consultar ambas colecciones en paralelo
+    const [costumerResults, crmAgenteResults] = await Promise.all([
+        Costumer.find({ fecha: fecha }).lean(),
+        CrmAgente.find({ fecha: fecha }).lean()
+    ]);
+
+    // Combinar los resultados
+    const resultados = [...costumerResults, ...crmAgenteResults];
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
-    resultados.forEach(costumer => {
-      if (costumer.equipo) {
-        ventasPorEquipo[costumer.equipo] = (ventasPorEquipo[costumer.equipo] || 0) + 1;
-        puntosPorEquipo[costumer.equipo] = (puntosPorEquipo[costumer.equipo] || 0) + (costumer.puntaje || 0);
-      }
-    });
-
     const ventasPorProducto = {};
-    resultados.forEach(costumer => {
-      if (costumer.producto) {
-        ventasPorProducto[costumer.producto] = (ventasPorProducto[costumer.producto] || 0) + 1;
+
+    resultados.forEach(item => {
+      // Procesar ventas y puntos por equipo
+      if (item.equipo) {
+        ventasPorEquipo[item.equipo] = (ventasPorEquipo[item.equipo] || 0) + 1;
+        puntosPorEquipo[item.equipo] = (puntosPorEquipo[item.equipo] || 0) + (item.puntaje || 0);
+      }
+      // Procesar ventas por producto
+      if (item.producto) {
+        ventasPorProducto[item.producto] = (ventasPorProducto[item.producto] || 0) + 1;
       }
     });
 
