@@ -140,25 +140,8 @@ router.get('/productos', async (req, res) => {
   try {
     let matchStage = null;
     if (dia) {
-      matchStage = {
-        $expr: {
-          $eq: [
-            {
-              $dateToString: {
-                format: "%Y-%m-%d",
-                date: {
-                  $cond: [
-                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                    "$dia_venta",
-                    { $dateFromString: { dateString: "$dia_venta" } }
-                  ]
-                }
-              }
-            },
-            dia
-          ]
-        }
-      };
+      // Normalizar campo dia_venta a string YYYY-MM-DD
+      matchStage = { dia_venta_str: dia };
     } else if (mes && anio) {
       const mesNum = parseInt(mes) + 1;
       const anioNum = parseInt(anio);
@@ -188,6 +171,20 @@ router.get('/productos', async (req, res) => {
 
     // Agrupar por servicio (servicios) y contar ventas
     const pipeline = [];
+    // Si hay filtro por día, primero agregamos campo normalizado
+    if (dia) {
+      pipeline.unshift({
+        $addFields: {
+          dia_venta_str: {
+            $cond: [
+              { $eq: [ { $type: "$dia_venta" }, "date" ] },
+              { $dateToString: { format: "%Y-%m-%d", date: "$dia_venta" } },
+              "$dia_venta"
+            ]
+          }
+        }
+      });
+    }
     if (matchStage) pipeline.push({ $match: matchStage });
     pipeline.push(
       { $group: { _id: "$servicios", ventas: { $sum: 1 } } },
