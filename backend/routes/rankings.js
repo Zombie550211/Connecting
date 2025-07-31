@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Costumer = require('../models/costumer');
+const CrmAgente = require('../models/crmAgente'); // Cambiado de Costumer a CrmAgente
 
 
 // Obtener ranking de equipos
@@ -20,25 +20,20 @@ router.get('/equipos', async (req, res) => {
     const anioNum = parseInt(anio);
     
     // Agrupar por equipo y sumar ventas
-    const equiposRanking = await Costumer.aggregate([
-      {
-        $addFields: {
-          fecha_convertida: { $dateFromString: { dateString: '$fecha', format: '%Y-%m-%d', onError: new Date(0) } }
-        }
-      },
+    const equiposRanking = await CrmAgente.aggregate([
       {
         $match: {
           $expr: {
             $and: [
-              { $eq: [{ $month: '$fecha_convertida' }, mesNum] },
-              { $eq: [{ $year: '$fecha_convertida' }, anioNum] }
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
             ]
           }
         }
       },
       {
         $group: {
-          _id: '$equipo',
+          _id: '$team', // Cambiado de 'equipo' a 'team'
           ventas: { $sum: 1 },
           totalPuntos: { $sum: '$puntaje' }
         }
@@ -46,7 +41,7 @@ router.get('/equipos', async (req, res) => {
       {
         $project: {
           _id: 0,
-          equipo: '$_id',
+          equipo: '$_id', // Se mantiene 'equipo' para el frontend
           ventas: 1,
           totalPuntos: 1,
           promedioPuntos: { $divide: ['$totalPuntos', '$ventas'] }
@@ -84,18 +79,13 @@ router.get('/agentes', async (req, res) => {
     const anioNum = parseInt(anio);
     
     // Agrupar por agente y sumar ventas
-    const agentesRanking = await Costumer.aggregate([
-      {
-        $addFields: {
-          fecha_convertida: { $dateFromString: { dateString: '$fecha', format: '%Y-%m-%d', onError: new Date(0) } }
-        }
-      },
+    const agentesRanking = await CrmAgente.aggregate([
       {
         $match: {
           $expr: {
             $and: [
-              { $eq: [{ $month: '$fecha_convertida' }, mesNum] },
-              { $eq: [{ $year: '$fecha_convertida' }, anioNum] }
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
             ]
           }
         }
@@ -145,19 +135,14 @@ router.get('/puntos', async (req, res) => {
     const anioNum = parseInt(anio);
     
     // Agrupar por agente y sumar puntos
-    const puntosRanking = await Costumer.aggregate([
-      {
-        $addFields: {
-          fecha_convertida: { $dateFromString: { dateString: '$fecha', format: '%Y-%m-%d', onError: new Date(0) } }
-        }
-      },
+    const puntosRanking = await CrmAgente.aggregate([
       {
         $match: {
           puntaje: { $exists: true, $ne: null },
           $expr: {
             $and: [
-              { $eq: [{ $month: '$fecha_convertida' }, mesNum] },
-              { $eq: [{ $year: '$fecha_convertida' }, anioNum] }
+              { $eq: [{ $month: '$dia_venta' }, mesNum] },
+              { $eq: [{ $year: '$dia_venta' }, anioNum] }
             ]
           }
         }

@@ -441,188 +441,59 @@
     const equiposCanvas = document.getElementById("chartEquipos");
 
     if (!agentesCanvas || !puntosCanvas || !equiposCanvas) {
-        console.error("Error: No se encontraron todos los canvas para las gráficas.");
-        return;
+      console.error("Error: No se encontraron todos los canvas para las gráficas.");
+      return;
     }
 
-    const agentesParent = agentesCanvas.parentElement;
-    const puntosParent = puntosCanvas.parentElement;
-    const equiposParent = equiposCanvas.parentElement;
-
-    const agentesRect = agentesParent.getBoundingClientRect();
-    const puntosRect = puntosParent.getBoundingClientRect();
-    const equiposRect = equiposParent.getBoundingClientRect();
-
-    const width1 = Math.max(600, agentesRect.width || 1200);
-    const height1 = Math.max(200, agentesRect.height || 400);
-    const width2 = Math.max(600, puntosRect.width || 1200);
-    const height2 = Math.max(200, puntosRect.height || 400);
-    const width3 = Math.max(600, equiposRect.width || 1200);
-    const height3 = Math.max(200, equiposRect.height || 400);
-
-    // Ajusta el canvas para pantallas retina/4K (HiDPI)
-    function setHiDPICanvas(canvas, width, height) {
+    function setHiDPICanvas(canvas, parent) {
+      const rect = parent.getBoundingClientRect();
+      const width = Math.max(600, rect.width || 1200);
+      const height = Math.max(200, rect.height || 400);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
       const ctx = canvas.getContext('2d');
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
       return ctx;
     }
 
-    // Canvas 1
-    const ctxTeam = setHiDPICanvas(teamCanvas, width1, height1);
-    ventasTeamChart = new Chart(ctxTeam, {
+    // Canvas 1: Agentes
+    const ctxAgentes = setHiDPICanvas(agentesCanvas, agentesCanvas.parentElement);
+    chartAgentes = new Chart(ctxAgentes, {
       type: 'bar',
-      data: {
-        labels: equipos,
-        datasets: [
-          {
-            label: 'Ventas',
-            data: equipos.map(() => 0),
-            backgroundColor: '#007bff',
-            borderRadius: 6
-          },
-          {
-            label: 'Puntaje',
-            data: equipos.map(() => 0),
-            backgroundColor: '#dc3545',
-            borderRadius: 6
-          }
-        ]
-      },
+      data: { labels: [], datasets: [{ label: 'Ventas por Agente', data: [], backgroundColor: '#28a745', borderRadius: 6 }] },
       options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'top',
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { position: 'top' }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
+        animation: true, responsive: true, maintainAspectRatio: false,
+        plugins: { datalabels: { display: true, color: '#fff', anchor: 'end', align: 'start', offset: -20, font: { weight: 'bold' }, formatter: (v, ctx) => `${ctx.chart.data.labels[ctx.dataIndex]}: ${v}` }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } }, x: { grid: { display: false } } }
       },
       plugins: [ChartDataLabels]
     });
 
-    // Canvas 2
-    const ctxProducto = setHiDPICanvas(prodCanvas, width2, height2);
-    productosChart = new Chart(ctxProducto, {
+    // Canvas 2: Puntos
+    const ctxPuntos = setHiDPICanvas(puntosCanvas, puntosCanvas.parentElement);
+    chartPuntos = new Chart(ctxPuntos, {
       type: 'bar',
-      data: {
-        labels: todosLosProductos,
-        datasets: [{
-          label: 'Ventas por Producto',
-          data: todosLosProductos.map(() => 0),
-          backgroundColor: '#007bff',
-          borderRadius: 6
-        }]
-      },
+      data: { labels: [], datasets: [{ label: 'Puntos por Agente', data: [], backgroundColor: '#ffc107', borderRadius: 6 }] },
       options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'start',
-            offset: -5,
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
+        animation: true, responsive: true, maintainAspectRatio: false,
+        plugins: { datalabels: { display: true, color: '#000', anchor: 'end', align: 'top', font: { weight: 'bold' }, formatter: v => v }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } }, x: { grid: { display: false } } }
       },
       plugins: [ChartDataLabels]
     });
 
-    // Canvas 3
-    const ctxEquipos = setHiDPICanvas(equiposCanvas, width3, height3);
+    // Canvas 3: Equipos
+    const ctxEquipos = setHiDPICanvas(equiposCanvas, equiposCanvas.parentElement);
     chartEquipos = new Chart(ctxEquipos, {
       type: 'bar',
-      data: {
-        labels: equipos,
-        datasets: [{
-          label: 'Ventas por Equipo',
-          data: equipos.map(() => 0),
-          backgroundColor: '#007bff',
-          borderRadius: 6
-        }]
-      },
+      data: { labels: [], datasets: [{ label: 'Ventas por Equipo', data: [], backgroundColor: '#007bff', borderRadius: 6 }] },
       options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'top',
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
-      },
-      plugins: [ChartDataLabels]
-    });
-
-    // Canvas 4
-    const ctxProductos = setHiDPICanvas(productosCanvas, width4, height4);
-    chartProductos = new Chart(ctxProductos, {
-      type: 'bar',
-      data: {
-        labels: todosLosProductos,
-        datasets: [{
-          label: 'Ventas por Producto',
-          data: todosLosProductos.map(() => 0),
-          backgroundColor: '#007bff',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#000',
-            anchor: 'end',
-            align: 'start',
-            offset: -5,
-            font: { weight: 'bold' },
-            formatter: value => value
-          },
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false } }
-        }
+        animation: true, responsive: true, maintainAspectRatio: false,
+        plugins: { datalabels: { display: true, color: '#000', anchor: 'end', align: 'top', font: { weight: 'bold' }, formatter: v => v }, legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } }, x: { grid: { display: false } } }
       },
       plugins: [ChartDataLabels]
     });
