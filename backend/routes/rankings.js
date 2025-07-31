@@ -6,20 +6,62 @@ const CrmAgente = require('../models/crm_agente'); // Usando el modelo correcto 
 // Obtener ranking de equipos
 router.get('/equipos', async (req, res) => {
   try {
-    const { mes, anio } = req.query;
+    const { mes, anio, dia } = req.query;
     
-    // Validar mes y año
-    if (!mes || !anio) {
+    if ((!mes || !anio) && !dia) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Se requieren los parámetros mes y año' 
+        error: 'Se requieren los parámetros mes y año, o el parámetro dia' 
       });
     }
 
-    const mesNum = parseInt(mes) + 1; // Se suma 1 porque JS usa meses 0-11 y Mongo 1-12
-    const anioNum = parseInt(anio);
-    
-    // Ranking de equipos: agrupa por 'team', suma las ventas y el puntaje.
+    let matchStage;
+    if (dia) {
+      // Filtro exacto por día (YYYY-MM-DD)
+      matchStage = {
+        $expr: {
+          $eq: [
+            {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: {
+                  $cond: [
+                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                    "$dia_venta",
+                    { $dateFromString: { dateString: "$dia_venta" } }
+                  ]
+                }
+              }
+            },
+            dia
+          ]
+        }
+      };
+    } else {
+      const mesNum = parseInt(mes) + 1;
+      const anioNum = parseInt(anio);
+      matchStage = {
+        $expr: {
+          $and: [
+            { $eq: [{$month: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, mesNum] },
+            { $eq: [{$year: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, anioNum] }
+          ]
+        }
+      };
+    }
+
     const equiposRanking = await CrmAgente.aggregate([
       {
         $addFields: {
@@ -32,16 +74,7 @@ router.get('/equipos', async (req, res) => {
           }
         }
       },
-      {
-        $match: {
-          $expr: {
-            $and: [
-              { $eq: [{$month: '$dia_venta_date'}, mesNum] },
-              { $eq: [{$year: '$dia_venta_date'}, anioNum] }
-            ]
-          }
-        }
-      },
+      { $match: matchStage },
       {
         $group: {
           _id: '$team',
@@ -83,6 +116,52 @@ router.get('/productos', async (req, res) => {
     const anioNum = parseInt(anio);
 
     // Ranking de productos: agrupa por 'producto' y suma las ventas.
+    const { mes, anio, dia } = req.query;
+    let matchStage;
+    if (dia) {
+      matchStage = {
+        $expr: {
+          $eq: [
+            {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: {
+                  $cond: [
+                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                    "$dia_venta",
+                    { $dateFromString: { dateString: "$dia_venta" } }
+                  ]
+                }
+              }
+            },
+            dia
+          ]
+        }
+      };
+    } else {
+      const mesNum = parseInt(mes) + 1;
+      const anioNum = parseInt(anio);
+      matchStage = {
+        $expr: {
+          $and: [
+            { $eq: [{$month: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, mesNum] },
+            { $eq: [{$year: {
+              $cond: [
+                { $eq: [ { $type: "$dia_venta" }, "date" ] },
+                "$dia_venta",
+                { $dateFromString: { dateString: "$dia_venta" } }
+              ]
+            }}, anioNum] }
+          ]
+        }
+      };
+    }
     const productosRanking = await CrmAgente.aggregate([
       {
         $addFields: {
@@ -95,16 +174,7 @@ router.get('/productos', async (req, res) => {
           }
         }
       },
-      {
-        $match: {
-          $expr: {
-            $and: [
-              { $eq: [{$month: '$dia_venta_date'}, mesNum] },
-              { $eq: [{$year: '$dia_venta_date'}, anioNum] }
-            ]
-          }
-        }
-      },
+      { $match: matchStage },
       {
         $group: {
           _id: '$producto',
