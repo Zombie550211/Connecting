@@ -123,15 +123,13 @@ router.get('/productos', async (req, res) => {
   // NUEVO: Ranking de productos por campo 'producto' de CrmAgente
   // Lista fija de productos/servicios
   const PRODUCTOS_FIJOS = [
-    "225 AT&T AIR", "100 MBPS AT&T", "18 MBPS AT&T", "1G AT&T", "25 MBPS AT&T",
-    "300 MBPS AT&T", "50 MBPS AT&T", "500 MBPS AT&T", "5G AT&T", "75 MBPS AT&T",
-    "ALTAFIBER", "FRONTIER", "HUGHESNET", "MAS LATINO", "MAS ULTRA", "OPTIMO MAS",
-    "OPTIMUM", "SPECTRUM", "VIASAT", "WINDSTREAM", "WOW", "LINEA + CELULAR",
-    "VIVINT", "KINETIC", "SPECTRUM BUSINESS", "AT&T BUSINESS", "DIRECTV BUSINESS",
-    "CONSOLIDATE COMMUNICATION", "ZYPYLFIBER", "SPECTRUM 500", "SPECTRUM 50",
-    "FRONTIER 200", "FRONTIER 500", "SPECTRUM 100", "FRONTIER 100", "FRONTIER 1G",
-    "SPECTRUM 1G", "FRONTIER 2G", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM DOUBLE PLAY ADVANTAGE",
-    "FRONTIER 5G", "EARTHLINK", "BRIGHTSPEED", "2G AT&T", "2G SPECTRUM"
+    "ATT AIR",
+    "FRONTIER 5 GIG",
+    "INTERNET + TELEFONO + TV",
+    "FRONTIER",
+    "ATT AIR", // (puede haber duplicados, limpiar si es necesario)
+    "FRONTIER INTERNET SERVICIOS"
+    // Agrega aquí todos los valores únicos que veas en tu base bajo 'servicios'.
   ];
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
