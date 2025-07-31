@@ -62,7 +62,11 @@ router.get('/equipos', async (req, res) => {
       };
     }
 
-    const equiposRanking = await CrmAgente.aggregate([
+    // Lista fija de teams (ajusta según tus equipos reales)
+    const TEAMS = [
+      "TEAM IRANIA", "TEAM PLEITEZ", "TEAM ROBERTO", "TEAM LINEAS", "TEAM RANALD", "TEAM MARISOL"
+    ];
+    const equiposRankingRaw = await CrmAgente.aggregate([
       {
         $addFields: {
           dia_venta_date: {
@@ -89,10 +93,19 @@ router.get('/equipos', async (req, res) => {
           ventas: 1,
           puntaje: 1
         }
-      },
-      { $sort: { team: 1 } }
+      }
     ]);
-
+    // Mapear a objeto para fácil acceso
+    const equiposMap = {};
+    equiposRankingRaw.forEach(e => {
+      equiposMap[e.team] = e;
+    });
+    // Construir arreglo final con todos los teams
+    const equiposRanking = TEAMS.map(team => ({
+      team,
+      ventas: equiposMap[team]?.ventas || 0,
+      puntaje: equiposMap[team]?.puntaje || 0
+    }));
     res.json({ success: true, data: equiposRanking });
   } catch (error) {
     console.error('Error al obtener ranking de equipos:', error);
@@ -164,7 +177,11 @@ router.get('/productos', async (req, res) => {
       };
     }
     console.log('matchStage:', JSON.stringify(matchStage, null, 2));
-    const productosRanking = await CrmAgente.aggregate([
+    // Lista fija de productos (ajusta según tus productos reales)
+    const PRODUCTOS = [
+      "Fibra 100MB", "Fibra 200MB", "Fibra 300MB", "Fibra 500MB", "Fibra 1000MB", "Internet Inalámbrico", "TV", "Telefonía" 
+    ];
+    const productosRankingRaw = await CrmAgente.aggregate([
       {
         $addFields: {
           dia_venta_date: {
@@ -189,10 +206,18 @@ router.get('/productos', async (req, res) => {
           producto: '$_id',
           ventas: 1
         }
-      },
-      { $sort: { ventas: -1 } }
+      }
     ]);
-
+    // Mapear a objeto para fácil acceso
+    const productosMap = {};
+    productosRankingRaw.forEach(p => {
+      productosMap[p.producto] = p;
+    });
+    // Construir arreglo final con todos los productos
+    const productosRanking = PRODUCTOS.map(producto => ({
+      producto,
+      ventas: productosMap[producto]?.ventas || 0
+    }));
     res.json({ success: true, data: productosRanking });
   } catch (error) {
     console.error("[API /productos] Error:", error);
