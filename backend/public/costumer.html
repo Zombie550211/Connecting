@@ -587,7 +587,12 @@ async function cargarCostumers() {
     console.log('🔍 [FRONTEND] URL de la petición:', url);
     console.log('🔍 [FRONTEND] Realizando fetch...');
 
-    const res = await fetch(url);
+    const token = localStorage.getItem("token");
+    const res = await fetch(url, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
     console.log('🔍 [FRONTEND] Respuesta recibida - Status:', res.status);
     
     if (!res.ok) {
