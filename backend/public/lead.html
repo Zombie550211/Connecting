@@ -395,19 +395,35 @@
         "Team Randal": ["Randal", "Josue", "Elian"],
         "Team Marisol": ["Marisol", "Isabella", "Naidelyn"],
       },
-      productos: [
-        "225 AT&T AIR", "25 AT&T", "75 AT&T", "300 AT&T", "1G AT&T",
-        "2GB SPECTRUM", "500 SPECTRUM", "SPECTRUM BUSSINES", "SPECTRUM ADVENTAGE",
-        "2GB FRONTIER", "500 FRONTIER", "OPTIMO MAS", "MAS ULTRA", "HUGHESNET",
-        "VIASAT", "VIVINT", "WOW", "ZYPLYFIBER", "BRIGHTSPEED", "LINEA + CELULAR"
-      ],
+      productos: [], // Se llenará dinámicamente con fetch
       cuentas: ["Nueva", "Winback", "Agregado"]
     };
 
     // --- LLENADO DE SELECTS DEL FORMULARIO ---
-    Object.keys(data.teams).forEach(team => selects.team.add(new Option(team, team)));
-    data.productos.forEach(p => selects.producto.add(new Option(p, p)));
-    data.cuentas.forEach(c => selects.cuenta.add(new Option(c, c)));
+    async function llenarProductosDinamicamente() {
+      try {
+        const resp = await fetch('/api/rankings/productos/lista');
+        const { success, data } = await resp.json();
+        if (success && Array.isArray(data)) {
+          selects.producto.innerHTML = '<option value="">Seleccione Producto</option>' + data.map(p => `<option value="${p}">${p}</option>`).join('');
+          window.LISTA_PRODUCTOS = data;
+        } else {
+          selects.producto.innerHTML = '<option value="">(Error cargando productos)</option>';
+          window.LISTA_PRODUCTOS = [];
+        }
+      } catch (e) {
+        selects.producto.innerHTML = '<option value="">(Error cargando productos)</option>';
+        window.LISTA_PRODUCTOS = [];
+      }
+    }
+
+    async function llenarSelects() {
+      Object.keys(data.teams).forEach(team => selects.team.add(new Option(team, team)));
+      data.cuentas.forEach(c => selects.cuenta.add(new Option(c, c)));
+      await llenarProductosDinamicamente();
+    }
+
+    llenarSelects();
 
     selects.team.addEventListener("change", function () {
       selects.agent.innerHTML = '<option>Seleccione Agente</option>';
@@ -467,31 +483,14 @@
         const productosData = await productosRes.json();
 
         // Lista de productos que deben aparecer siempre en la gráfica
-        const PRODUCTOS_FIJOS = [
-          "225 AT&T AIR", "100 MBPS AT&T", "18 MBPS AT&T", "1G AT&T", "25 MBPS AT&T",
-          "300 MBPS AT&T", "50 MBPS AT&T", "500 MBPS AT&T", "5G AT&T", "75 MBPS AT&T",
-          "ALTAFIBER", "FRONTIER", "HUGHESNET", "MAS LATINO", "MAS ULTRA", "OPTIMO MAS",
-          "OPTIMUM", "SPECTRUM", "VIASAT", "WINDSTREAM", "WOW", "LINEA + CELULAR",
-          "VIVINT", "KINETIC", "SPECTRUM BUSINESS", "AT&T BUSINESS", "DIRECTV BUSINESS",
-          "CONSOLIDATE COMMUNICATION", "ZYPYLFIBER", "SPECTRUM 500", "SPECTRUM 50",
-          "FRONTIER 200", "FRONTIER 500", "SPECTRUM 100", "FRONTIER 100", "FRONTIER 1G",
-          "SPECTRUM 1G", "FRONTIER 2G", "SPECTRUM DOUBLE PLAY PREMIER", "SPECTRUM DOUBLE PLAY ADVANTAGE",
-          "FRONTIER 5G", "EARTHLINK", "BRIGHTSPEED", "2G AT&T", "2G SPECTRUM"
-        ];
-        // Crear un diccionario de ventas por producto real
-        const ventasPorProducto = {};
-        productosData.data.forEach(p => {
-          ventasPorProducto[p.producto] = p.ventas;
-        });
-        // Generar arrays alineados a PRODUCTOS_FIJOS
-        const etiquetasProductos = PRODUCTOS_FIJOS;
-        const datosVentas = PRODUCTOS_FIJOS.map(nombre => ventasPorProducto[nombre] || 0);
-        
-        console.log('Datos de equipos:', equiposData);
-        console.log('Datos de productos:', productosData);
-
-        if (teamChartInstance) teamChartInstance.destroy();
-        if (productChartInstance) productChartInstance.destroy();
+        let productosLabels = productosData.data.map(p => p.producto);
+        if (window.LISTA_PRODUCTOS && Array.isArray(window.LISTA_PRODUCTOS) && window.LISTA_PRODUCTOS.length > 0) {
+          productosLabels = window.LISTA_PRODUCTOS;
+        }
+        // Mapear datos de ventas a la lista dinámica
+        const productosVentasMap = {};
+        productosData.data.forEach(p => { productosVentasMap[p.producto] = p.ventas; });
+        const productosDataFinal = productosLabels.map(p => productosVentasMap[p] || 0);
 
         // Gráfica de equipos (ventas y puntaje)
         const teamCtx = document.getElementById('team-chart').getContext('2d');
@@ -532,15 +531,23 @@
         productChartInstance = new Chart(productCtx, {
           type: 'bar',
           data: {
-            labels: etiquetasProductos,
+            labels: productosLabels,
             datasets: [{ 
-              label: 'Ventas', 
-              data: datosVentas, 
-              backgroundColor: '#22b3ec' 
+              label: 'Ventas por Producto', 
+              data: productosDataFinal, 
+              backgroundColor: '#2ba6cb', 
+              borderColor: '#1e293b', 
+              borderWidth: 2, 
+              borderRadius: 8, 
+              datalabels: { 
+                anchor: 'end', 
+                align: 'end', 
+                color: '#333', 
+                font: { weight: 'bold' } 
+              } 
             }]
           },
           options: {
-            responsive: true, 
             maintainAspectRatio: false,
             plugins: { 
               legend: { display: false }, 

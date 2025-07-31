@@ -326,4 +326,14 @@ router.get('/puntos', async (req, res) => {
   }
 });
 
+// Endpoint para obtener lista única de productos (servicios)
+router.get('/productos/lista', async (req, res) => {
+  try {
+    const listaProductos = await CrmAgente.distinct('servicios');
+    res.json({ success: true, data: listaProductos });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al obtener la lista de productos', details: error.message });
+  }
+});
+
 module.exports = router;
