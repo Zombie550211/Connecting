@@ -338,8 +338,12 @@
           <div id="no-data-team" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
         </div>
         <div class="chart-container">
-          <canvas id="productosChart" class="chart-canvas"></canvas>
-          <div id="no-data-producto" class="no-data-msg" style="display:none">No hay datos para esta fecha</div>
+          <canvas id="chartEquipos" class="chart-canvas"></canvas>
+          <div id="chartEquipos-no-data" class="no-data-msg" style="display: none;">No hay datos para esta fecha</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartProductos" class="chart-canvas"></canvas>
+          <div id="chartProductos-no-data" class="no-data-msg" style="display: none;">No hay datos para esta fecha</div>
         </div>
       </section>
     </div>
@@ -425,26 +429,38 @@
   }
 
   // Responsive, retina, y nítidas SIEMPRE (4K, retina, FHD)
-  let ventasTeamChart, productosChart;
+  let ventasTeamChart, productosChart, chartEquipos, chartProductos;
 
   function crearGraficas() {
     destroyChart(ventasTeamChart);
     destroyChart(productosChart);
+    destroyChart(chartEquipos);
+    destroyChart(chartProductos);
 
     // Calcula dimensiones reales del contenedor
     const teamCanvas = document.getElementById("ventasTeamChart");
     const prodCanvas = document.getElementById("productosChart");
+    const equiposCanvas = document.getElementById("chartEquipos");
+    const productosCanvas = document.getElementById("chartProductos");
     const teamParent = teamCanvas.parentElement;
     const prodParent = prodCanvas.parentElement;
+    const equiposParent = equiposCanvas.parentElement;
+    const productosParent = productosCanvas.parentElement;
 
     // Usa getBoundingClientRect para obtener tamaño real responsivo
     const teamRect = teamParent.getBoundingClientRect();
     const prodRect = prodParent.getBoundingClientRect();
+    const equiposRect = equiposParent.getBoundingClientRect();
+    const productosRect = productosParent.getBoundingClientRect();
 
     const width1 = Math.max(600, teamRect.width || 1200);
     const height1 = Math.max(200, teamRect.height || 400);
     const width2 = Math.max(600, prodRect.width || 1200);
     const height2 = Math.max(200, prodRect.height || 400);
+    const width3 = Math.max(600, equiposRect.width || 1200);
+    const height3 = Math.max(200, equiposRect.height || 400);
+    const width4 = Math.max(600, productosRect.width || 1200);
+    const height4 = Math.max(200, productosRect.height || 400);
 
     // Ajusta el canvas para pantallas retina/4K (HiDPI)
     function setHiDPICanvas(canvas, width, height) {
@@ -506,6 +522,79 @@
     // Canvas 2
     const ctxProducto = setHiDPICanvas(prodCanvas, width2, height2);
     productosChart = new Chart(ctxProducto, {
+      type: 'bar',
+      data: {
+        labels: todosLosProductos,
+        datasets: [{
+          label: 'Ventas por Producto',
+          data: todosLosProductos.map(() => 0),
+          backgroundColor: '#007bff',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        animation: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            color: '#000',
+            anchor: 'end',
+            align: 'start',
+            offset: -5,
+            font: { weight: 'bold' },
+            formatter: value => value
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // Canvas 3
+    const ctxEquipos = setHiDPICanvas(equiposCanvas, width3, height3);
+    chartEquipos = new Chart(ctxEquipos, {
+      type: 'bar',
+      data: {
+        labels: equipos,
+        datasets: [{
+          label: 'Ventas por Equipo',
+          data: equipos.map(() => 0),
+          backgroundColor: '#007bff',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        animation: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            color: '#000',
+            anchor: 'end',
+            align: 'top',
+            font: { weight: 'bold' },
+            formatter: value => value
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { display: false }, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // Canvas 4
+    const ctxProductos = setHiDPICanvas(productosCanvas, width4, height4);
+    chartProductos = new Chart(ctxProductos, {
       type: 'bar',
       data: {
         labels: todosLosProductos,

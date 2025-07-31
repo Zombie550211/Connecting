@@ -270,7 +270,7 @@ app.get('/api/graficas', protect, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
     }
 
-        const resultados = await Costumer.find({ fecha: fecha });
+        const resultados = await CrmAgente.find({ fecha: fecha });
 
     const ventasPorEquipo = {};
     const puntosPorEquipo = {};
