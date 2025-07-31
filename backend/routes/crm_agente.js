@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const CrmAgente = require('../models/crm_agente');
-const { verifyToken } = require('../middleware/auth');
+// Nota: El middleware 'protect' ya se aplica en server.js
+// No necesitamos importar verifyToken aquí para evitar doble autenticación
 
 // Obtener clientes para la tabla costumer desde crm agente
 router.get('/clientes', async (req, res) => {
@@ -42,7 +43,8 @@ router.get('/clientes', async (req, res) => {
 });
 
 // Ruta para métricas de ventas
-router.get('/metricas-ventas', verifyToken, async (req, res) => {
+// Nota: No usamos verifyToken aquí porque ya se aplica 'protect' en server.js
+router.get('/metricas-ventas', async (req, res) => {
   try {
     const { mes, anio } = req.query;
     
