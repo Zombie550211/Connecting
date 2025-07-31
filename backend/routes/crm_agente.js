@@ -41,8 +41,8 @@ router.get('/clientes', async (req, res) => {
   }
 });
 
-// Obtener métricas de ventas mensuales
-router.get('/metricas-ventas', verifyToken, async (req, res) => {
+// Middleware para obtener métricas de ventas mensuales
+const getMetricasVentas = async (req, res, next) => {
   try {
     const { mes, anio } = req.query;
     
@@ -88,6 +88,9 @@ router.get('/metricas-ventas', verifyToken, async (req, res) => {
     console.error('Error al obtener métricas de ventas:', error);
     res.status(500).json({ error: 'Error al obtener las métricas de ventas' });
   }
-});
+};
+
+// Ruta para métricas de ventas
+router.get('/metricas-ventas', verifyToken, getMetricasVentas);
 
 module.exports = router;
