@@ -219,10 +219,10 @@
       width: 100%;
       max-width: 100%;
       display: flex; 
-      flex-direction: column; 
-      min-height: 50px; 
-      height: 450px;
-      margin: 0 0 10px 0;
+      flex-direction: column;
+      height: auto;
+      min-height: 350px;
+      margin: 0 0 20px 0;
       position: relative;
     }
     .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
@@ -233,17 +233,19 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      justify-content: center;
+      align-items: center;
     }
     .chart-canvas {
       width: 100% !important;
-      height: 100% !important;
-      max-width: 100%;
-      min-height: 450px;
+      height: auto !important;
+      max-height: 100%;
+      min-height: 300px;
       display: block;
       background: transparent;
       position: relative;
-      margin-top: 15px;
+      margin: 15px auto 0;
+      aspect-ratio: 16/9;
     }
     .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
     @media (max-width: 1100px) {
