@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const CrmAgente = require('../models/crm_agente');
+const Costumer = require('../models/costumer');
 // Nota: El middleware 'protect' ya se aplica en server.js
 // No necesitamos importar verifyToken aquí para evitar doble autenticación
 
 // Obtener clientes para la tabla costumer desde crm agente
 router.get('/clientes', async (req, res) => {
   try {
-    const clientes = await CrmAgente.find({}, {
+    const clientes = await Costumer.find({}, {
       dia_venta: 1,
       team: 1,
       agente: 1,
@@ -23,17 +23,17 @@ router.get('/clientes', async (req, res) => {
     });
     // Mapear los campos al formato esperado por el frontend
     const clientesMapeados = clientes.map(c => ({
-      FECHA_VENTA: c.dia_venta || '',
-      TEAM: c.team || '',
+      FECHA_VENTA: c.fecha || '',
+      TEAM: c.equipo || '',
       AGENTE: c.agente || '',
-      PRODUCTO: c.servicios || '',
-      FECHA_DE_INSTALACION: c.dia_instalacion || '',
-      ESTADO: c.status || '',
+      PRODUCTO: c.servicios || c.producto || '',
+      FECHA_DE_INSTALACION: c.dia_venta_a_instalacion || '',
+      ESTADO: c.estado || '',
       PUNTAJE: c.puntaje || 0,
-      CUENTA: c.numero_de_cuenta || '',
-      TELEFONO: c.telefono_principal || '',
+      CUENTA: c.numero_de_cuenta || c.cuenta || '',
+      TELEFONO: c.telefono || '',
       DIRECCION: c.direccion || '',
-      ZIP: c.zip_code || '',
+      ZIP: c.zip || '',
       _id: c._id
     }));
     res.json({ clientes: clientesMapeados });
@@ -58,15 +58,15 @@ router.get('/metricas-ventas', async (req, res) => {
     const fechaFin = new Date(anio, mes, 0, 23, 59, 59);
     
     // Consulta para contar clientes en el mes
-    const totalClientes = await CrmAgente.countDocuments({
-      dia_venta: { $gte: fechaInicio, $lte: fechaFin }
+    const totalClientes = await Costumer.countDocuments({
+      fecha: { $gte: fechaInicio.toISOString().split('T')[0], $lte: fechaFin.toISOString().split('T')[0] }
     });
     
     // Consulta para sumar los puntajes (ventas) del mes
-    const resultadoVentas = await CrmAgente.aggregate([
+    const resultadoVentas = await Costumer.aggregate([
       {
         $match: {
-          dia_venta: { $gte: fechaInicio, $lte: fechaFin },
+          fecha: { $gte: fechaInicio.toISOString().split('T')[0], $lte: fechaFin.toISOString().split('T')[0] },
           // Asegurarse de que puntaje es un número
           puntaje: { $type: 'number' }
         }
