@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CrmAgente = require('../models/crm_agente'); // Usando el modelo correcto para los equipos
-const Costumer = require('../models/costumer'); // Usando el modelo correcto para productos/servicios
+const Costumer = require('../models/costumer'); // Usando el modelo Costumer para todas las consultas
 
 
 // Obtener ranking de equipos
@@ -67,14 +66,14 @@ router.get('/equipos', async (req, res) => {
     const TEAMS = [
       "TEAM IRANIA", "TEAM PLEITEZ", "TEAM ROBERTO", "TEAM LINEAS", "TEAM RANALD", "TEAM MARISOL"
     ];
-    const equiposRankingRaw = await CrmAgente.aggregate([
+    const equiposRankingRaw = await Costumer.aggregate([
       {
         $addFields: {
           dia_venta_date: {
             $cond: [
-              { $eq: [ { $type: "$dia_venta" }, "date" ] },
-              "$dia_venta",
-              { $dateFromString: { dateString: "$dia_venta" } }
+              { $eq: [ { $type: "$fecha" }, "date" ] },
+              "$fecha",
+              { $dateFromString: { dateString: "$fecha" } }
             ]
           }
         }
@@ -82,7 +81,7 @@ router.get('/equipos', async (req, res) => {
       { $match: matchStage },
       {
         $group: {
-          _id: '$team',
+          _id: '$equipo',
           ventas: { $sum: 1 },
           puntaje: { $sum: '$puntaje' }
         }
@@ -120,17 +119,16 @@ router.get('/equipos', async (req, res) => {
 
 // Obtener ranking por producto
 router.get('/productos', async (req, res) => {
-  // NUEVO: Ranking de productos por campo 'producto' de CrmAgente
-  // Lista fija de productos/servicios
-  const PRODUCTOS_FIJOS = [
-    "ATT AIR",
-    "FRONTIER 5 GIG",
-    "INTERNET + TELEFONO + TV",
-    "FRONTIER",
-    "ATT AIR", // (puede haber duplicados, limpiar si es necesario)
-    "FRONTIER INTERNET SERVICIOS"
-    // Agrega aquí todos los valores únicos que veas en tu base bajo 'servicios'.
-  ];
+  // NUEVO: Ranking de productos por campo 'producto' de Costumer
+    // Lista fija de productos/servicios (usando el campo 'servicios' del modelo Costumer)
+    const PRODUCTOS_FIJOS = [
+      "ATT AIR",
+      "FRONTIER 5 GIG",
+      "INTERNET + TELEFONO + TV",
+      "FRONTIER",
+      "FRONTIER INTERNET SERVICIOS",
+      // Agregar más productos según sea necesario
+    ].filter((item, index, self) => self.indexOf(item) === index); // Eliminar duplicados
   console.log('--- [API /productos] ---');
   console.log('Query params:', req.query);
   const { mes, anio, dia } = req.query;
@@ -167,7 +165,7 @@ router.get('/productos', async (req, res) => {
     // Si no se pasa ningún filtro, no aplicar $match de fecha (traer todo)
 
 
-    // Agrupar por servicio (servicios) y contar ventas
+    // Agrupar por servicio (campo 'servicios' del modelo Costumer) y contar ventas
     const pipeline = [];
     // Si hay filtro por día, primero agregamos campo normalizado
     if (dia) {
@@ -175,20 +173,42 @@ router.get('/productos', async (req, res) => {
         $addFields: {
           dia_venta_str: {
             $cond: [
-              { $eq: [ { $type: "$dia_venta" }, "date" ] },
-              { $dateToString: { format: "%Y-%m-%d", date: "$dia_venta" } },
-              "$dia_venta"
+              { $eq: [ { $type: "$fecha" }, "date" ] },
+              { $dateToString: { format: "%Y-%m-%d", date: "$fecha" } },
+              "$fecha"
             ]
           }
         }
       });
     }
-    if (matchStage) pipeline.push({ $match: matchStage });
+    
+    // Asegurarse de que matchStage use los campos correctos del modelo Costumer
+    if (matchStage) {
+      // Ajustar el matchStage para usar el campo 'fecha' en lugar de 'dia_venta'
+      if (matchStage.$expr) {
+        if (matchStage.$expr.$and) {
+          matchStage.$expr.$and = matchStage.$expr.$and.map(cond => {
+            if (cond.$eq && Array.isArray(cond.$eq) && cond.$eq[1] && 
+                typeof cond.$eq[1] === 'object' && cond.$eq[1].$cond) {
+              // Actualizar las referencias a dia_venta en las condiciones de fecha
+              const condStr = JSON.stringify(cond);
+              const updatedCondStr = condStr.replace(/\$dia_venta/g, '\$fecha');
+              return JSON.parse(updatedCondStr);
+            }
+            return cond;
+          });
+        }
+      }
+      pipeline.push({ $match: matchStage });
+    }
+    
     pipeline.push(
       { $group: { _id: "$servicios", ventas: { $sum: 1 } } },
       { $project: { _id: 0, producto: "$_id", ventas: 1 } }
     );
-    const productosRankingRaw = await CrmAgente.aggregate(pipeline);
+    
+    console.log('Pipeline de agregación para productos:', JSON.stringify(pipeline, null, 2));
+    const productosRankingRaw = await Costumer.aggregate(pipeline);
 
     // Mapear a objeto para fácil acceso
     const productosMap = {};
