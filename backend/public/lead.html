@@ -403,60 +403,9 @@
   
   // --- FUNCIONES PARA MÉTRICAS DE VENTAS ---
   async function cargarMetricasVentas() {
-    try {
-      const fecha = new Date();
-      const mes = fecha.getMonth() + 1; // Los meses en JS van de 0 a 11
-      const anio = fecha.getFullYear();
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No se encontró el token de autenticación');
-        return;
-      }
-      
-      // Obtener métricas de la API
-      const response = await fetch(`/api/crm-agente/metricas-ventas?mes=${mes}&anio=${anio}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar las métricas de ventas');
-      }
-      
-      const data = await response.json();
-      
-      // Actualizar la interfaz de usuario solo si los elementos existen
-      const ventasMesEl = document.getElementById('ventas-mes');
-      const totalVentasEl = document.getElementById('total-ventas');
-      
-      if (ventasMesEl) {
-        ventasMesEl.textContent = data.totalClientes || '0';
-      } else {
-        console.warn('Elemento #ventas-mes no encontrado en el DOM');
-      }
-      
-      if (totalVentasEl) {
-        totalVentasEl.textContent = `$${(data.totalVentas || 0).toLocaleString('es-ES', { 
-          minimumFractionDigits: 2, 
-          maximumFractionDigits: 2 
-        })}`;
-      } else {
-        console.warn('Elemento #total-ventas no encontrado en el DOM');
-      }
-      
-    } catch (error) {
-      console.error('Error al cargar métricas de ventas:', error);
-      
-      // Mostrar valores por defecto solo si los elementos existen
-      const ventasMesEl = document.getElementById('ventas-mes');
-      const totalVentasEl = document.getElementById('total-ventas');
-      
-      if (ventasMesEl) ventasMesEl.textContent = '0';
-      if (totalVentasEl) totalVentasEl.textContent = '$0.00';
-    }
+    // Esta función está obsoleta ya que no hay elementos en el DOM para mostrar las métricas
+    // Se mantiene por compatibilidad pero no realiza ninguna acción
+    return;
   }
 
   // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
@@ -545,54 +494,90 @@
     let productChartInstance = null;
 
     async function crearGraficas(mes, anio, dia) {
-      // Verificar si los elementos del canvas existen antes de intentar usarlos
-      const teamChartEl = document.getElementById('team-chart');
-      const productChartEl = document.getElementById('product-chart');
-      
-      if (!teamChartEl || !productChartEl) {
-        console.warn('No se encontraron los elementos de las gráficas en el DOM');
-        return;
-      }
-
-      // Destruir instancias anteriores si existen
-      if (teamChartInstance) {
-        teamChartInstance.destroy();
-      }
-      if (productChartInstance) {
-        productChartInstance.destroy();
-      }
-      
       try {
-        if (dia) {
-          console.log(`Obteniendo datos para dia=${dia}`);
-        } else {
-          console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
+        // Verificar que los elementos del DOM existan
+        const teamChartEl = document.getElementById('team-chart');
+        const productChartEl = document.getElementById('product-chart');
+        
+        if (!teamChartEl || !productChartEl) {
+          console.error('No se encontraron los elementos de las gráficas');
+          return;
         }
         
-        // Obtener token desde localStorage
+        // Destruir instancias anteriores si existen
+        if (window.teamChartInstance) {
+          window.teamChartInstance.destroy();
+        }
+        if (window.productChartInstance) {
+          window.productChartInstance.destroy();
+        }
+        
+        // Mostrar mensaje de carga
+        teamChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
+        productChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
+        
+        // Validar fechas
+        const hoy = new Date();
+        let params = new URLSearchParams();
+        
+        if (dia) {
+          // Validar que la fecha no sea futura
+          const fechaDia = new Date(dia);
+          if (fechaDia > hoy) {
+            console.warn('No se pueden mostrar datos para fechas futuras');
+            dia = null; // Ignorar el filtro de día si es futuro
+          } else {
+            params.append('dia', dia);
+          }
+        }
+        
+        // Si no hay día o era inválido, usar mes y año
+        if (!dia) {
+          // Validar mes y año
+          const mesNum = mes ? parseInt(mes) : hoy.getMonth() + 1;
+          const anioNum = anio ? parseInt(anio) : hoy.getFullYear();
+          
+          // Asegurar que el mes esté en rango 1-12
+          if (mesNum < 1 || mesNum > 12) {
+            console.warn('Mes fuera de rango, usando mes actual');
+            mes = hoy.getMonth() + 1;
+          } else {
+            mes = mesNum;
+          }
+          
+          // Asegurar que el año sea razonable (ej. no más de 10 años en el futuro)
+          if (anioNum > hoy.getFullYear() + 10) {
+            console.warn('Año en el futuro distante, usando año actual');
+            anio = hoy.getFullYear();
+          } else {
+            anio = anioNum;
+          }
+          
+          params.append('mes', mes);
+          params.append('anio', anio);
+        }
+        
+        console.log('Obteniendo datos para', dia ? `dia=${dia}` : `mes=${mes}, anio=${anio}`);
+        
+        // Obtener token de autenticación
         const token = localStorage.getItem('token');
         if (!token) {
           console.error('No se encontró el token de autenticación');
           return;
         }
         
-        const headers = {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+        // Configuración común para las peticiones fetch
+        const fetchOptions = {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         };
-
-        let equiposUrl, productosUrl;
-        if (dia) {
-          equiposUrl = `/api/rankings/equipos?dia=${dia}`;
-          productosUrl = `/api/rankings/productos?dia=${dia}`;
-        } else {
-          equiposUrl = `/api/rankings/equipos?mes=${mes}&anio=${anio}`;
-          productosUrl = `/api/rankings/productos?mes=${mes}&anio=${anio}`;
-        }
-
+        
+        // Obtener datos de equipos y productos en paralelo
         const [equiposRes, productosRes] = await Promise.all([
-          fetch(equiposUrl, { headers }),
-          fetch(productosUrl, { headers })
+          fetch(`/api/rankings/equipos?${params.toString()}`, fetchOptions),
+          fetch(`/api/rankings/productos?${params.toString()}`, fetchOptions)
         ]);
 
         if (!equiposRes.ok || !productosRes.ok) {
