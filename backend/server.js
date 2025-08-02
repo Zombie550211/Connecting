@@ -8,6 +8,10 @@ const bcrypt = require('bcryptjs');
 const User = require('./models/user');
 const CrmAgente = require('./models/crm_agente');
 const Costumer = require('./models/costumer');
+const summaryRoutes = require('./routes/summary');
+const crmAgenteRoutes = require('./routes/crm_agente');
+const costumerRoutes = require('./routes/costumer');
+const graficasRoutes = require('./routes/graficas');
 
 // Inicialización de la aplicación
 const app = express();
@@ -366,8 +370,10 @@ app.get('/api/productos', protect, (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ruta para clientes desde CrmAgente
-const crmAgenteRoutes = require('./routes/crm_agente');
 app.use('/api/crm-agente', protect, crmAgenteRoutes);
+app.use('/api/costumer', protect, costumerRoutes);
+app.use('/api/summary', summaryRoutes);
+app.use('/api', graficasRoutes);
 
 // Ruta raíz que redirige al login
 app.get('/', (req, res) => {

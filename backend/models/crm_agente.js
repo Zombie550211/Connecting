@@ -12,6 +12,7 @@ const crmAgenteSchema = new mongoose.Schema({
   // Campos de servicio
   tipo_servicios: { type: String },
   servicios: { type: String },
+  producto: { type: String }, // Campo para el producto (usado en gráficas)
   mercado: { type: String },
   comentario: { type: String },
   
