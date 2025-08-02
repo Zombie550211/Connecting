@@ -22,7 +22,7 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
-      --form-width: 400px;
+      --form-width: 420px;
     }
     * { box-sizing: border-box; }
     body {
@@ -51,11 +51,18 @@
     }
     .graph-canvas {
       width: 100% !important;
-      height: 180px !important;
-      min-height: 180px;
+      height: 100% !important;
+      min-height: 250px;
     }
     .graph-container {
-      min-height: 240px;
+      min-height: 300px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      padding: 15px;
     }
     .graph-container h3 {
       font-size: 0.95em;
@@ -138,19 +145,25 @@
     .lead-content-row {
       display: flex;
       flex-direction: row;
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+      gap: 25px;
+      max-width: 1600px;
+      margin: 20px auto;
       width: 100%;
-      align-items: flex-start;
+      height: calc(100vh - 100px);
+      min-height: 650px;
+      padding: 0 20px;
+      align-items: stretch;
     }
     .form-section {
       background: white;
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 25px;
       box-shadow: var(--sombra);
       width: var(--form-width);
       flex-shrink: 0;
+      overflow-y: auto;
+      max-height: 100%;
+      border: 1px solid var(--gris-borde);
     }
     .form-section h2 {
       font-weight: 700;
@@ -357,25 +370,68 @@
     const configComun = {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: 10
+      },
       plugins: {
         legend: {
-          display: false
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          padding: 10,
+          titleFont: {
+            size: 13
+          },
+          bodyFont: {
+            size: 12
+          },
+          boxPadding: 4
         }
       },
       scales: {
         y: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
+            color: 'rgba(0, 0, 0, 0.04)'
           },
           ticks: {
-            stepSize: 1
+            padding: 8,
+            font: {
+              size: 11
+            }
+          },
+          title: {
+            display: true,
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            padding: { bottom: 10 }
           }
         },
         x: {
           grid: {
             display: false
+          },
+          ticks: {
+            font: {
+              size: 11
+            }
           }
+        }
+      },
+      elements: {
+        bar: {
+          borderRadius: 6,
+          borderSkipped: false,
         }
       }
     };
