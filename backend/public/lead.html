@@ -513,9 +513,11 @@
       // Limpiar el contenedor
       container.innerHTML = '';
       
-      // Crear un nuevo canvas
+      // Crear un nuevo canvas con el ID correcto
       const newCanvas = document.createElement('canvas');
       newCanvas.id = elementId + '-canvas';
+      newCanvas.style.width = '100%';
+      newCanvas.style.height = '100%';
       container.appendChild(newCanvas);
       
       return newCanvas;
@@ -548,6 +550,9 @@
         // Mostrar mensaje de carga
         teamChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
         productChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
+        
+        // Forzar repintado del DOM
+        await new Promise(resolve => setTimeout(resolve, 50));
         
         // Validar fechas
         const hoy = new Date();
