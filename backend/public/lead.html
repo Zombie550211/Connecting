@@ -860,14 +860,14 @@
       // Procesar datos para las gráficas
       const datosReales = {
         ventasEquipo: {
-          labels: ventasArray.length > 0 ? 
-            ventasArray.map(item => item.equipo || item.team || `Equipo ${item._id}`) : 
+          labels: ventasData.length > 0 ? 
+            ventasData.map(item => item.equipo || item.team || `Equipo ${item._id}`) : 
             ['Equipo A', 'Equipo B', 'Equipo C'],
-          ventas: ventasArray.length > 0 ? 
-            ventasArray.map(item => item.ventas || item.count || 0) : 
+          ventas: ventasData.length > 0 ? 
+            ventasData.map(item => item.ventas || item.count || 0) : 
             [15, 12, 8],
-          puntajes: ventasArray.length > 0 ? 
-            ventasArray.map(item => item.puntaje || item.score || 0) : 
+          puntajes: ventasData.length > 0 ? 
+            ventasData.map(item => item.puntaje || item.score || 0) : 
             [75, 60, 40]
         },
         ventasProducto: {
