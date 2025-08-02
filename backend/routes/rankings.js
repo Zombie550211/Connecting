@@ -26,9 +26,9 @@ router.get('/equipos', async (req, res) => {
                 format: "%Y-%m-%d",
                 date: {
                   $cond: [
-                    { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                    "$dia_venta",
-                    { $dateFromString: { dateString: "$dia_venta" } }
+                    { $eq: [ { $type: "$fecha" }, "date" ] },
+                    "$fecha",
+                    { $dateFromString: { dateString: "$fecha" } }
                   ]
                 }
               }
@@ -45,16 +45,16 @@ router.get('/equipos', async (req, res) => {
           $and: [
             { $eq: [{$month: {
               $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
+                { $eq: [ { $type: "$fecha" }, "date" ] },
+                "$fecha",
+                { $dateFromString: { dateString: "$fecha" } }
               ]
             }}, mesNum] },
             { $eq: [{$year: {
               $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
+                { $eq: [ { $type: "$fecha" }, "date" ] },
+                "$fecha",
+                { $dateFromString: { dateString: "$fecha" } }
               ]
             }}, anioNum] }
           ]
@@ -136,8 +136,26 @@ router.get('/productos', async (req, res) => {
   try {
     let matchStage = null;
     if (dia) {
-      // Normalizar campo dia_venta a string YYYY-MM-DD
-      matchStage = { dia_venta_str: dia };
+      // Filtrar por fecha exacta usando el campo 'fecha'
+      matchStage = {
+        $expr: {
+          $eq: [
+            {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: {
+                  $cond: [
+                    { $eq: [ { $type: "$fecha" }, "date" ] },
+                    "$fecha",
+                    { $dateFromString: { dateString: "$fecha" } }
+                  ]
+                }
+              }
+            },
+            dia
+          ]
+        }
+      };
     } else if (mes && anio) {
       const mesNum = parseInt(mes) + 1;
       const anioNum = parseInt(anio);
@@ -146,16 +164,16 @@ router.get('/productos', async (req, res) => {
           $and: [
             { $eq: [{$month: {
               $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
+                { $eq: [ { $type: "$fecha" }, "date" ] },
+                "$fecha",
+                { $dateFromString: { dateString: "$fecha" } }
               ]
             }}, mesNum] },
             { $eq: [{$year: {
               $cond: [
-                { $eq: [ { $type: "$dia_venta" }, "date" ] },
-                "$dia_venta",
-                { $dateFromString: { dateString: "$dia_venta" } }
+                { $eq: [ { $type: "$fecha" }, "date" ] },
+                "$fecha",
+                { $dateFromString: { dateString: "$fecha" } }
               ]
             }}, anioNum] }
           ]
@@ -167,20 +185,7 @@ router.get('/productos', async (req, res) => {
 
     // Agrupar por servicio (campo 'servicios' del modelo Costumer) y contar ventas
     const pipeline = [];
-    // Si hay filtro por día, primero agregamos campo normalizado
-    if (dia) {
-      pipeline.unshift({
-        $addFields: {
-          dia_venta_str: {
-            $cond: [
-              { $eq: [ { $type: "$fecha" }, "date" ] },
-              { $dateToString: { format: "%Y-%m-%d", date: "$fecha" } },
-              "$fecha"
-            ]
-          }
-        }
-      });
-    }
+    // Ya no necesitamos agregar el campo dia_venta_str ya que ahora usamos $expr
     
     // Asegurarse de que matchStage use los campos correctos del modelo Costumer
     if (matchStage) {
