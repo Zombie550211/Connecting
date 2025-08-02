@@ -900,6 +900,38 @@
         productosData = [];
       }
       
+      // Lista completa de productos requeridos
+      const todosLosProductos = [
+        '225 AT&T AIR', '100 MBPS AT&T', '18 MBPS AT&T', '1G AT&T',
+        '25 MBPS AT&T', '300 MBPS AT&T', '50 MBPS AT&T', '500 MBPS AT&T',
+        '5G AT&T', '75 MBPS AT&T', 'ALTAFIBER', 'FRONTIER',
+        'HUGHESNET', 'MAS LATINO', 'MAS ULTRA', 'OPTIMO MAS',
+        'OPTIMUM', 'SPECTRUM', 'VIASAT', 'WINDSTREAM',
+        'WOW', 'LINEA + CELULAR', 'VIVINT', 'KINETIC',
+        'SPECTRUM BUSINESS', 'AT&T BUSINESS', 'DIRECTV BUSINESS',
+        'CONSOLIDATE COMMUNICATION', 'ZYPYLFIBER', 'SPECTRUM 500',
+        'SPECTRUM 50', 'FRONTIER 200', 'FRONTIER 500', 'SPECTRUM 100',
+        'FRONTIER 100', 'FRONTIER 1G', 'SPECTRUM 1G', 'FRONTIER 2G',
+        'SPECTRUM DOUBLE PLAY PREMIER', 'SPECTRUM DOUBLE PLAY ADVANTAGE',
+        'FRONTIER 5G', 'EARTHLINK', 'BRIGHTSPEED', '2G AT&T', '2G SPECTRUM'
+      ];
+
+      // Crear un mapa de productos con sus ventas (inicialmente en 0)
+      const ventasPorProducto = {};
+      todosLosProductos.forEach(producto => {
+        ventasPorProducto[producto] = 0;
+      });
+
+      // Actualizar con los datos reales
+      if (Array.isArray(productosData)) {
+        productosData.forEach(item => {
+          const producto = (item.producto || item._id || '').toUpperCase().trim();
+          if (producto && ventasPorProducto.hasOwnProperty(producto)) {
+            ventasPorProducto[producto] = item.ventas || item.count || 0;
+          }
+        });
+      }
+
       // Procesar datos para las gráficas
       const datosReales = {
         ventasEquipo: {
@@ -914,12 +946,8 @@
             [75, 60, 40]
         },
         ventasProducto: {
-          labels: productosData.length > 0 ? 
-            productosData.map(item => item.producto || item._id || 'Sin nombre') : 
-            ['100 MBPS AT&T', '300 MBPS AT&T', '500 MBPS AT&T', '1G AT&T'],
-          datos: productosData.length > 0 ? 
-            productosData.map(item => item.ventas || item.count || 0) : 
-            [10, 15, 8, 12]
+          labels: todosLosProductos,
+          datos: todosLosProductos.map(producto => ventasPorProducto[producto] || 0)
         }
       };
       
