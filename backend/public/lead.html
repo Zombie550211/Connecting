@@ -792,6 +792,49 @@
 
   }
 
+  // Función para actualizar la gráfica de ventas y puntaje
+  function actualizarGraficaVentasPuntaje(datos) {
+    if (!ventasPuntajeChart) {
+      console.error('La gráfica de ventas y puntaje no está inicializada');
+      return;
+    }
+
+    // Actualizar los datos de la gráfica
+    ventasPuntajeChart.data.labels = datos.labels;
+    
+    // Actualizar datos de ventas
+    if (ventasPuntajeChart.data.datasets[0]) {
+      ventasPuntajeChart.data.datasets[0].data = datos.ventas;
+    }
+    
+    // Actualizar datos de puntajes
+    if (ventasPuntajeChart.data.datasets[1]) {
+      ventasPuntajeChart.data.datasets[1].data = datos.puntajes;
+    }
+    
+    // Actualizar la gráfica
+    ventasPuntajeChart.update();
+  }
+
+  // Función para actualizar la gráfica de ventas por producto
+  function actualizarGraficaVentasProducto(datos) {
+    if (!ventasProductoChart) {
+      console.error('La gráfica de productos no está inicializada');
+      return;
+    }
+
+    // Actualizar los datos de la gráfica
+    ventasProductoChart.data.labels = datos.labels;
+    
+    // Actualizar datos de ventas
+    if (ventasProductoChart.data.datasets[0]) {
+      ventasProductoChart.data.datasets[0].data = datos.datos;
+    }
+    
+    // Actualizar la gráfica
+    ventasProductoChart.update();
+  }
+
   // Función para actualizar las gráficas con datos reales del servidor
   async function actualizarGraficas(fecha = null) {
     try {
