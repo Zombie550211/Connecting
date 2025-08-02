@@ -428,15 +428,34 @@
       
       const data = await response.json();
       
-      // Actualizar la interfaz de usuario
-      document.getElementById('ventas-mes').textContent = data.totalClientes || '0';
-      document.getElementById('total-ventas').textContent = `$${(data.totalVentas || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      // Actualizar la interfaz de usuario solo si los elementos existen
+      const ventasMesEl = document.getElementById('ventas-mes');
+      const totalVentasEl = document.getElementById('total-ventas');
+      
+      if (ventasMesEl) {
+        ventasMesEl.textContent = data.totalClientes || '0';
+      } else {
+        console.warn('Elemento #ventas-mes no encontrado en el DOM');
+      }
+      
+      if (totalVentasEl) {
+        totalVentasEl.textContent = `$${(data.totalVentas || 0).toLocaleString('es-ES', { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}`;
+      } else {
+        console.warn('Elemento #total-ventas no encontrado en el DOM');
+      }
       
     } catch (error) {
       console.error('Error al cargar métricas de ventas:', error);
-      // Mostrar valores por defecto en caso de error
-      document.getElementById('ventas-mes').textContent = '0';
-      document.getElementById('total-ventas').textContent = '$0.00';
+      
+      // Mostrar valores por defecto solo si los elementos existen
+      const ventasMesEl = document.getElementById('ventas-mes');
+      const totalVentasEl = document.getElementById('total-ventas');
+      
+      if (ventasMesEl) ventasMesEl.textContent = '0';
+      if (totalVentasEl) totalVentasEl.textContent = '$0.00';
     }
   }
 
@@ -472,17 +491,26 @@
     // --- LLENADO DE SELECTS DEL FORMULARIO ---
     async function llenarProductosDinamicamente() {
       try {
-        const resp = await fetch('/api/rankings/productos/lista');
-        const { success, data } = await resp.json();
-        if (success && Array.isArray(data)) {
-          selects.producto.innerHTML = '<option value="">Seleccione Producto</option>' + data.map(p => `<option value="${p}">${p}</option>`).join('');
-          window.LISTA_PRODUCTOS = data;
-        } else {
-          selects.producto.innerHTML = '<option value="">(Error cargando productos)</option>';
-          window.LISTA_PRODUCTOS = [];
+        // Usar la misma lista de productos que está definida en el backend
+        const PRODUCTOS_FIJOS = [
+          "ATT AIR",
+          "FRONTIER 5 GIG",
+          "INTERNET + TELEFONO + TV",
+          "FRONTIER",
+          "FRONTIER INTERNET SERVICIOS"
+        ];
+        
+        // Actualizar el select de productos
+        if (selects.producto) {
+          selects.producto.innerHTML = '<option value="">Seleccione Producto</option>' + 
+            PRODUCTOS_FIJOS.map(p => `<option value="${p}">${p}</option>`).join('');
+          window.LISTA_PRODUCTOS = PRODUCTOS_FIJOS;
         }
       } catch (e) {
-        selects.producto.innerHTML = '<option value="">(Error cargando productos)</option>';
+        console.error('Error al cargar productos:', e);
+        if (selects.producto) {
+          selects.producto.innerHTML = '<option value="">(Error cargando productos)</option>';
+        }
         window.LISTA_PRODUCTOS = [];
       }
     }
@@ -517,20 +545,37 @@
     let productChartInstance = null;
 
     async function crearGraficas(mes, anio, dia) {
+      // Verificar si los elementos del canvas existen antes de intentar usarlos
+      const teamChartEl = document.getElementById('team-chart');
+      const productChartEl = document.getElementById('product-chart');
+      
+      if (!teamChartEl || !productChartEl) {
+        console.warn('No se encontraron los elementos de las gráficas en el DOM');
+        return;
+      }
+
+      // Destruir instancias anteriores si existen
       if (teamChartInstance) {
         teamChartInstance.destroy();
       }
       if (productChartInstance) {
         productChartInstance.destroy();
       }
+      
       try {
         if (dia) {
           console.log(`Obteniendo datos para dia=${dia}`);
         } else {
           console.log(`Obteniendo datos para mes=${mes} y año=${anio}`);
         }
+        
         // Obtener token desde localStorage
         const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No se encontró el token de autenticación');
+          return;
+        }
+        
         const headers = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -552,76 +597,99 @@
 
         if (!equiposRes.ok || !productosRes.ok) {
           console.error('Error en respuestas:', equiposRes.status, productosRes.status);
-          throw new Error('Error al obtener datos');
+          throw new Error('Error al obtener datos de las gráficas');
         }
 
         const equiposData = await equiposRes.json();
         const productosData = await productosRes.json();
 
+        // Verificar que los datos tengan el formato esperado
+        if (!equiposData || !equiposData.data || !Array.isArray(equiposData.data)) {
+          console.error('Formato de datos de equipos inválido:', equiposData);
+          throw new Error('Formato de datos de equipos inválido');
+        }
+        
+        if (!productosData || !productosData.data || !Array.isArray(productosData.data)) {
+          console.error('Formato de datos de productos inválido:', productosData);
+          throw new Error('Formato de datos de productos inválido');
+        }
+
         // Lista de productos que deben aparecer siempre en la gráfica
-        let productosLabels = productosData.data.map(p => p.producto);
+        let productosLabels = productosData.data.map(p => p.producto || '').filter(Boolean);
         if (window.LISTA_PRODUCTOS && Array.isArray(window.LISTA_PRODUCTOS) && window.LISTA_PRODUCTOS.length > 0) {
           productosLabels = window.LISTA_PRODUCTOS;
         }
+        
         // Mapear datos de ventas a la lista dinámica
         const productosVentasMap = {};
-        productosData.data.forEach(p => { productosVentasMap[p.producto] = p.ventas; });
+        productosData.data.forEach(p => { 
+          if (p.producto) {
+            productosVentasMap[p.producto] = p.ventas || 0; 
+          }
+        });
+        
         const productosDataFinal = productosLabels.map(p => productosVentasMap[p] || 0);
 
         // Gráfica de equipos (ventas y puntaje)
-        const teamCtx = document.getElementById('team-chart').getContext('2d');
-        teamChartInstance = new Chart(teamCtx, {
-          type: 'bar',
-          data: {
-            labels: equiposData.data.map(e => e.team),
-            datasets: [{
-              label: 'Ventas',
-              data: equiposData.data.map(e => e.ventas),
-              backgroundColor: '#22b3ec',
-            }, {
-              label: 'Puntaje',
-              data: equiposData.data.map(e => e.puntaje),
-              backgroundColor: '#ef4444',
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 2,
-            plugins: { 
-              legend: { position: 'top' }, 
-              datalabels: { 
-                anchor: 'end', 
-                align: 'end', 
-                formatter: v => Math.round(v*100)/100, 
-                color: '#333', 
-                font: { weight: 'bold' } 
-              } 
+        const teamCtx = teamChartEl.getContext('2d');
+        if (teamCtx) {
+          teamChartInstance = new Chart(teamCtx, {
+            type: 'bar',
+            data: {
+              labels: equiposData.data.map(e => e.team || 'Sin equipo').filter(Boolean),
+              datasets: [{
+                label: 'Ventas',
+                data: equiposData.data.map(e => e.ventas || 0),
+                backgroundColor: '#22b3ec',
+              }, {
+                label: 'Puntaje',
+                data: equiposData.data.map(e => e.puntaje || 0),
+                backgroundColor: '#ef4444',
+              }]
             },
-            scales: { y: { beginAtZero: true } }
-          },
-          plugins: [ChartDataLabels]
-        });
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              aspectRatio: 2,
+              plugins: { 
+                legend: { position: 'top' }, 
+                datalabels: { 
+                  anchor: 'end', 
+                  align: 'end', 
+                  formatter: v => Math.round(v*100)/100, 
+                  color: '#333', 
+                  font: { weight: 'bold' } 
+                } 
+              },
+              scales: { y: { beginAtZero: true } }
+            },
+            plugins: [ChartDataLabels]
+          });
+        }
 
         // Gráfica de productos (ventas)
-        const productCtx = document.getElementById('product-chart').getContext('2d');
-        productChartInstance = new Chart(productCtx, {
-          type: 'bar',
-          data: {
-            labels: productosLabels,
-            datasets: [{ 
-              label: 'Ventas por Producto', 
-              data: productosDataFinal, 
-              backgroundColor: '#2ba6cb', 
-              borderColor: '#1e293b', 
-              borderWidth: 2, 
-              borderRadius: 8, 
-              datalabels: { 
-                anchor: 'end', 
-                align: 'end', 
-                color: '#333', 
+        const productCtx = productChartEl.getContext('2d');
+        if (productCtx) {
+          productChartInstance = new Chart(productCtx, {
+            type: 'bar',
+            data: {
+              labels: productosLabels,
+              datasets: [{ 
+                label: 'Ventas por Producto', 
+                data: productosDataFinal, 
+                backgroundColor: '#2ba6cb', 
+                borderColor: '#1e293b', 
+                borderWidth: 2, 
+                borderRadius: 8, 
+                datalabels: { 
+                  anchor: 'end', 
+                  align: 'end', 
+                  color: '#333', 
                 font: { weight: 'bold' } 
-              } 
+              },
+              barThickness: 'flex',
+              maxBarThickness: 30,
+              minBarLength: 0
             }]
           },
           options: {
@@ -637,12 +705,24 @@
               } 
             },
             scales: { 
-              y: { beginAtZero: true }, 
-              x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } } 
+              y: { 
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }, 
+              x: { 
+                ticks: { 
+                  autoSkip: false, 
+                  maxRotation: 90, 
+                  minRotation: 45 
+                } 
+              } 
             }
           },
           plugins: [ChartDataLabels]
         });
+      }
       } catch (error) {
         console.error("Error al crear gráficas:", error);
         alert("Error al cargar las gráficas. Revisa la consola para más detalles.");
