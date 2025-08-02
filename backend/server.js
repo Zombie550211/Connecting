@@ -365,11 +365,7 @@ app.get('/api/productos', protect, (req, res) => {
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Importar y usar otras rutas
-const rankingsRoutes = require('./routes/rankings');
-app.use('/api/rankings', protect, rankingsRoutes);
-
-// Nueva ruta para clientes desde CrmAgente
+// Ruta para clientes desde CrmAgente
 const crmAgenteRoutes = require('./routes/crm_agente');
 app.use('/api/crm-agente', protect, crmAgenteRoutes);
 
@@ -385,7 +381,6 @@ app.get('/api', (req, res) => {
     endpoints: {
       login: 'POST /api/login',
       costumers: 'GET /api/costumers',
-      rankings: 'GET /api/rankings',
       facturacion: 'GET /api/facturacion/:anio/:mes'
     }
   });

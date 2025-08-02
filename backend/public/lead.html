@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title> Connecting </title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -126,20 +124,6 @@
       width: 100%;
       align-items: flex-start;
     }
-    .charts-graphs-row {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      width: 100%;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-    @media (max-width: 1100px) {
-      .charts-graphs-row {
-        flex-direction: column;
-        gap: 18px;
-      }
-    }
     .form-section {
       background: #fff;
       border-radius: 18px;
@@ -194,63 +178,7 @@
     .form-section button[type="submit"]:hover {
       background: #183153;
     }
-    /* CHARTS SECTION */
-    .charts-section {
-      flex: 2;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      height: 100%;
-      width: 100%;
-      padding: 15px;
-      box-sizing: border-box;
-    }
-    .charts-section .charts-filter { margin-bottom: 20px; padding: 10px 15px; background: #f3f7fa; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;}
-    .charts-section .charts-filter label { font-weight: 600; margin-bottom: 0;}
-    .charts-section .charts-filter input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid #b4c5d4;}
-    .charts-section .charts-filter button { width: auto; padding: 9px 20px; margin: 0; background: #2196f3; border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background-color 0.3s;}
-    .charts-section .charts-filter button:hover { background: #126de4; }
-    .chart-container { 
-      background: #fff; 
-      padding: 15px; 
-      border: 1px solid #e2e8f0; 
-      border-radius: 8px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-      width: 100%;
-      max-width: 100%;
-      display: flex; 
-      flex-direction: column;
-      height: auto;
-      min-height: 300px;
-      margin: 0 0 15px 0;
-      position: relative;
-    }
-    .chart-container h3 { margin-top: 0; font-weight: 700; margin-bottom: 10px;}
-    .chart-container {
-      position: relative;
-      width: 100%;
-      min-height: 0;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      overflow: hidden;
-    }
-    .chart-canvas {
-      width: 100% !important;
-      height: auto !important;
-      max-height: 400px;
-      min-height: 250px;
-      display: block;
-      background: transparent;
-      position: relative;
-      margin: 10px auto 0;
-      aspect-ratio: 4/3;
-    }
-    .no-data-msg { color: #d32f2f; font-weight: bold; text-align: center; margin-top: 10px;}
     @media (max-width: 1100px) {
-      .charts-section .charts-filter, .form-section { padding: 12px 7vw; }
       .lead-content-row { flex-direction: column; gap: 13px; }
       .main-content { padding: 14px 2vw; }
     }
@@ -265,9 +193,6 @@
       .main-content { padding: 12px 2px; }
       .lead-content-row { flex-direction: column; gap: 7px;}
       .form-section { padding: 13px 7px;}
-      .chart-container {padding: 7px 2vw;}
-      .charts-section .charts-filter {padding: 7px 2vw;}
-      .chart-canvas { aspect-ratio: 16/12; }
     }
   </style>
 </head>
@@ -361,33 +286,6 @@
           <button type="submit">Guardar Lead</button>
         </form>
       </section>
-      <!-- GRÁFICAS -->
-      <section class="charts-section" id="charts-panel">
-        <div class="charts-filter">
-          <h2 class="chart-title">Estadísticas de Leads</h2>
-          <div class="date-filters">
-  <input type="date" id="dia-filtro" style="margin-right:10px;">
-  <select id="mes-filtro"></select>
-  <select id="anio-filtro"></select>
-  <button id="actualizar-graficas">Actualizar</button>
-          </div>
-        </div>
-        <!-- Contenedor para ambas gráficas alineadas -->
-        <div class="charts-graphs-row">
-          <div class="chart-card" style="width: 100%;">
-        <h3 class="chart-subtitle" style="font-size: 1.2rem; font-weight: 600; margin: 0 0 15px 0; color: #333;">Ventas y Puntaje por Team</h3>
-        <div class="chart-container">
-          <canvas id="team-chart" class="chart-canvas"></canvas>
-        </div>
-      </div>
-      <div class="chart-card" style="width: 100%;">
-        <h3 class="chart-subtitle" style="font-size: 1.2rem; font-weight: 600; margin: 0 0 15px 0; color: #333;">Ventas por Producto</h3>
-        <div class="chart-container">
-          <canvas id="product-chart" class="chart-canvas"></canvas>
-        </div>
-      </div>
-        </div>
-      </section>
     </div>
   </main>
 </div>
@@ -396,16 +294,6 @@
   function logout() {
     fetch('/logout', { credentials: 'include' })
       .then(() => window.location.href = '/login.html');
-  }
-
-  // --- ARRAYS ---
-  const equipos = ["Team Irania", "Team Pleitez", "Team Roberto", "Team Lineas", "Team Randal", "Team Marisol"];
-  
-  // --- FUNCIONES PARA MÉTRICAS DE VENTAS ---
-  async function cargarMetricasVentas() {
-    // Esta función está obsoleta ya que no hay elementos en el DOM para mostrar las métricas
-    // Se mantiene por compatibilidad pero no realiza ninguna acción
-    return;
   }
 
   // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
@@ -418,9 +306,6 @@
       cuenta: document.getElementById("cuenta"),
       puntaje: document.getElementById("puntaje")
     };
-    const mesFiltro = document.getElementById('mes-filtro');
-    const anioFiltro = document.getElementById('anio-filtro');
-    const actualizarBtn = document.getElementById('actualizar-graficas');
     const crmForm = document.getElementById("crmForm");
 
     // --- DATOS PARA LOS SELECTS ---
@@ -480,303 +365,7 @@
     });
 
     document.getElementById('fecha-lead').value = new Date().toISOString().slice(0, 10);
-
-    // --- LLENADO DE FILTROS DE FECHA PARA GRÁFICAS ---
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    const anioActual = new Date().getFullYear();
-    meses.forEach((mes, i) => mesFiltro.add(new Option(mes, i + 1))); // Meses en MongoDB son 1-12, no 0-11
-    for (let i = anioActual; i >= 2022; i--) anioFiltro.add(new Option(i, i));
-    mesFiltro.value = new Date().getMonth() + 1; // Ajuste para MongoDB
-    anioFiltro.value = anioActual;
-
-    // --- LÓGICA DE GRÁFICAS ---
-    let teamChartInstance = null;
-    let productChartInstance = null;
-
-    // Función para limpiar un gráfico existente
-    function limpiarGrafico(chartInstance) {
-      if (chartInstance) {
-        try {
-          chartInstance.destroy();
-        } catch (e) {
-          console.warn('Error al destruir gráfico:', e);
-        }
-      }
-      return null;
-    }
-
-    // Función para limpiar un contenedor de gráfico
-    function limpiarContenedor(elementId) {
-      const container = document.getElementById(elementId);
-      if (!container) return null;
-      
-      // Limpiar el contenedor
-      container.innerHTML = '';
-      
-      // Crear un nuevo canvas
-      const newCanvas = document.createElement('canvas');
-      newCanvas.id = elementId + '-canvas';
-      container.appendChild(newCanvas);
-      
-      return newCanvas;
-    }
-
-    async function crearGraficas(mes, anio, dia) {
-      // Limpiar instancias anteriores
-      teamChartInstance = limpiarGrafico(teamChartInstance);
-      productChartInstance = limpiarGrafico(productChartInstance);
-      
-      try {
-        // Verificar que los elementos del DOM existan
-        const teamChartContainer = document.getElementById('team-chart');
-        const productChartContainer = document.getElementById('product-chart');
-        
-        if (!teamChartContainer || !productChartContainer) {
-          console.error('No se encontraron los contenedores de las gráficas');
-          return;
-        }
-        
-        // Limpiar contenedores y obtener referencias a los canvas
-        const teamCanvas = limpiarContenedor('team-chart');
-        const productCanvas = limpiarContenedor('product-chart');
-        
-        if (!teamCanvas || !productCanvas) {
-          console.error('No se pudieron crear los elementos canvas');
-          return;
-        }
-        
-        // Mostrar mensaje de carga
-        teamChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
-        productChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
-        
-        // Validar fechas
-        const hoy = new Date();
-        let params = new URLSearchParams();
-        
-        if (dia) {
-          // Validar que la fecha no sea futura
-          const fechaDia = new Date(dia);
-          if (fechaDia > hoy) {
-            console.warn('No se pueden mostrar datos para fechas futuras');
-            dia = null; // Ignorar el filtro de día si es futuro
-          } else {
-            params.append('dia', dia);
-          }
-        }
-        
-        // Si no hay día o era inválido, usar mes y año
-        if (!dia) {
-          // Validar mes y año
-          const mesNum = mes ? parseInt(mes) : hoy.getMonth() + 1;
-          const anioNum = anio ? parseInt(anio) : hoy.getFullYear();
-          
-          // Asegurar que el mes esté en rango 1-12
-          if (mesNum < 1 || mesNum > 12) {
-            console.warn('Mes fuera de rango, usando mes actual');
-            mes = hoy.getMonth() + 1;
-          } else {
-            mes = mesNum;
-          }
-          
-          // Asegurar que el año sea razonable (ej. no más de 10 años en el futuro)
-          if (anioNum > hoy.getFullYear() + 10) {
-            console.warn('Año en el futuro distante, usando año actual');
-            anio = hoy.getFullYear();
-          } else {
-            anio = anioNum;
-          }
-          
-          params.append('mes', mes);
-          params.append('anio', anio);
-        }
-        
-        console.log('Obteniendo datos para', dia ? `dia=${dia}` : `mes=${mes}, anio=${anio}`);
-        
-        // Obtener token de autenticación
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No se encontró el token de autenticación');
-          return;
-        }
-        
-        // Configuración común para las peticiones fetch
-        const fetchOptions = {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        };
-        
-        // Obtener datos de equipos y productos en paralelo
-        const [equiposRes, productosRes] = await Promise.all([
-          fetch(`/api/rankings/equipos?${params.toString()}`, fetchOptions),
-          fetch(`/api/rankings/productos?${params.toString()}`, fetchOptions)
-        ]);
-
-        if (!equiposRes.ok || !productosRes.ok) {
-          console.error('Error en respuestas:', equiposRes.status, productosRes.status);
-          throw new Error('Error al obtener datos de las gráficas');
-        }
-
-        const equiposData = await equiposRes.json();
-        const productosData = await productosRes.json();
-
-        // Verificar que los datos tengan el formato esperado
-        if (!equiposData || !equiposData.data || !Array.isArray(equiposData.data)) {
-          console.error('Formato de datos de equipos inválido:', equiposData);
-          throw new Error('Formato de datos de equipos inválido');
-        }
-        
-        if (!productosData || !productosData.data || !Array.isArray(productosData.data)) {
-          console.error('Formato de datos de productos inválido:', productosData);
-          throw new Error('Formato de datos de productos inválido');
-        }
-
-        // Lista de productos que deben aparecer siempre en la gráfica
-        let productosLabels = productosData.data.map(p => p.producto || '').filter(Boolean);
-        if (window.LISTA_PRODUCTOS && Array.isArray(window.LISTA_PRODUCTOS) && window.LISTA_PRODUCTOS.length > 0) {
-          productosLabels = window.LISTA_PRODUCTOS;
-        }
-        
-        // Mapear datos de ventas a la lista dinámica
-        const productosVentasMap = {};
-        productosData.data.forEach(p => { 
-          if (p.producto) {
-            productosVentasMap[p.producto] = p.ventas || 0;
-          }
-        });
-        
-        const productosDataFinal = productosLabels.map(p => productosVentasMap[p] || 0);
-
-        // Obtener referencias a los canvas
-        const teamChartCanvas = document.getElementById('team-chart-canvas');
-        const productChartCanvas = document.getElementById('product-chart-canvas');
-
-        // Crear gráfica de equipos
-        if (teamChartCanvas) {
-          const teamCtx = teamChartCanvas.getContext('2d');
-          if (teamCtx) {
-            teamChartInstance = new Chart(teamCtx, {
-              type: 'bar',
-              data: {
-                labels: equiposData.data.map(e => e.team || 'Sin equipo').filter(Boolean),
-                datasets: [{
-                  label: 'Ventas',
-                  data: equiposData.data.map(e => e.ventas || 0),
-                  backgroundColor: '#22b3ec',
-                }, {
-                  label: 'Puntaje',
-                  data: equiposData.data.map(e => e.puntaje || 0),
-                  backgroundColor: '#ef4444',
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2,
-                plugins: { 
-                  legend: { position: 'top' }, 
-                  datalabels: { 
-                    anchor: 'end', 
-                    align: 'end', 
-                    formatter: v => Math.round(v*100)/100, 
-                    color: '#333', 
-                    font: { weight: 'bold' } 
-                  }
-                },
-                scales: { 
-                  y: { 
-                    beginAtZero: true,
-                    ticks: {
-                      precision: 0
-                    }
-                  }
-                }
-              },
-              plugins: [ChartDataLabels]
-            });
-          }
-        }
-
-        // Crear gráfica de productos
-        if (productChartCanvas) {
-          const productCtx = productChartCanvas.getContext('2d');
-          if (productCtx) {
-            productChartInstance = new Chart(productCtx, {
-              type: 'bar',
-              data: {
-                labels: productosLabels,
-                datasets: [{
-                  label: 'Ventas por Producto',
-                  data: productosDataFinal,
-                  backgroundColor: '#2ba6cb',
-                  borderColor: '#1e293b',
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  barThickness: 'flex',
-                  maxBarThickness: 30,
-                  minBarLength: 0
-                }]
-              },
-              options: {
-                maintainAspectRatio: true,
-                aspectRatio: 2,
-                plugins: { 
-                  legend: { display: false }, 
-                  datalabels: { 
-                    anchor: 'end', 
-                    align: 'end', 
-                    color: '#333',
-                    font: { weight: 'bold' },
-                    formatter: v => Math.round(v*100)/100
-                  } 
-                },
-                scales: { 
-                  y: { 
-                    beginAtZero: true,
-                    ticks: {
-                      precision: 0
-                    }
-                  },
-                  x: { 
-                    ticks: { 
-                      autoSkip: false, 
-                      maxRotation: 90, 
-                      minRotation: 45 
-                    } 
-                  } 
-                }
-              },
-              plugins: [ChartDataLabels]
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error al crear gráficas:", error);
-        alert("Error al cargar las gráficas. Revisa la consola para más detalles.");
-      }
-    }
-
-    // Función para actualizar gráficas con los filtros seleccionados
-    function actualizarGraficas() {
-      const dia = document.getElementById('dia-filtro').value;
-      if (dia) {
-        crearGraficas(null, null, dia);
-      } else {
-        crearGraficas(mesFiltro.value, anioFiltro.value, null);
-      }
-    }
-
-    // Eventos para actualizar gráficas
-    actualizarBtn.addEventListener('click', actualizarGraficas);
     
-    // Carga inicial de métricas y gráficas
-    cargarMetricasVentas();
-    actualizarGraficas();
-    
-    // Actualizar métricas cada minuto (opcional)
-    setInterval(cargarMetricasVentas, 60000);
-
     // --- LÓGICA DE FORMULARIO ---
     crmForm.addEventListener("submit", function (e) {
       e.preventDefault();
