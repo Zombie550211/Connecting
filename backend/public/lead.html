@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title> Connecting </title>
+  <title>Connecting</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -20,6 +22,7 @@
       --radius: 15px;
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
+      --form-width: 380px;
     }
     * { box-sizing: border-box; }
     body {
@@ -110,32 +113,29 @@
     /* MAIN CONTENT */
     .main-content {
       flex: 1;
-      padding: 40px 50px;
-      background: var(--gris-bg);
-      min-height: 100vh;
+      padding: 20px;
+      overflow-y: auto;
       display: flex;
-      flex-direction: column;
-      gap: 24px;
+      gap: 20px;
+      max-width: 100%;
     }
     /* LEAD FORM */
     .lead-content-row {
       display: flex;
-      gap: 30px;
+      flex-direction: row;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
       width: 100%;
       align-items: flex-start;
     }
     .form-section {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px #0001;
-      padding: 42px 38px 36px 38px;
-      max-width: 480px;
-      width: 100%;
-      margin: 44px auto;
-      flex: 1;
-      align-self: flex-start;
-      display: flex;
-      flex-direction: column;
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--sombra);
+      width: var(--form-width);
+      flex-shrink: 0;
     }
     .form-section h2 {
       font-weight: 700;
@@ -190,9 +190,20 @@
       .sidebar-nav { flex-direction: row; gap: 0; }
       .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
       .sidebar-lema { display: none;}
-      .main-content { padding: 12px 2px; }
-      .lead-content-row { flex-direction: column; gap: 7px;}
-      .form-section { padding: 13px 7px;}
+      .main-content { 
+        padding: 12px 2px; 
+        flex-direction: column;
+      }
+      .lead-content-row { 
+        flex-direction: column; 
+        gap: 7px;
+        max-width: 100%;
+      }
+      .form-section, .graphs-section { 
+        width: 100%;
+        max-width: 100%;
+        padding: 13px 7px;
+      }
     }
   </style>
 </head>
@@ -286,10 +297,229 @@
           <button type="submit">Guardar Lead</button>
         </form>
       </section>
+
+      <!-- SECCIÓN DE GRÁFICAS -->
+      <section class="graphs-section">
+        <!-- Gráfica de Ventas por Equipo -->
+        <div class="graph-container">
+          <h3>Ventas por Equipo</h3>
+          <canvas id="ventasEquipoChart" class="graph-canvas"></canvas>
+        </div>
+        
+        <!-- Gráfica de Ventas por Producto -->
+        <div class="graph-container">
+          <h3>Ventas por Producto</h3>
+          <canvas id="ventasProductoChart" class="graph-canvas"></canvas>
+        </div>
+        
+        <!-- Gráfica de Puntos por Equipo -->
+        <div class="graph-container">
+          <h3>Puntos por Equipo</h3>
+          <canvas id="puntosEquipoChart" class="graph-canvas"></canvas>
+        </div>
+      </section>
     </div>
   </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  // Variables globales para las gráficas
+  let ventasEquipoChart, ventasProductoChart, puntosEquipoChart;
+
+  // Función para inicializar las gráficas
+  function inicializarGraficas() {
+    // Datos de ejemplo - Estos serán reemplazados por datos reales del servidor
+    const datosEjemplo = {
+      ventasEquipo: {
+        labels: ['Team Irania', 'Team Pleitez', 'Team Roberto', 'Team Lineas', 'Team Randal', 'Team Marisol'],
+        datos: [12, 19, 3, 5, 2, 3]
+      },
+      ventasProducto: {
+        labels: ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
+        datos: [15, 10, 7, 12, 5]
+      },
+      puntosEquipo: {
+        labels: ['Team Irania', 'Team Pleitez', 'Team Roberto', 'Team Lineas', 'Team Randal', 'Team Marisol'],
+        datos: [8.5, 12.25, 5.5, 7.0, 3.75, 9.0]
+      }
+    };
+
+    // Configuración común para las gráficas
+    const configComun = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            stepSize: 1
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    };
+
+    // Gráfica de Ventas por Equipo
+    const ctxVentasEquipo = document.getElementById('ventasEquipoChart').getContext('2d');
+    ventasEquipoChart = new Chart(ctxVentasEquipo, {
+      type: 'bar',
+      data: {
+        labels: datosEjemplo.ventasEquipo.labels,
+        datasets: [{
+          data: datosEjemplo.ventasEquipo.datos,
+          backgroundColor: 'rgba(34, 179, 236, 0.7)',
+          borderColor: 'rgba(34, 179, 236, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        ...configComun,
+        plugins: {
+          ...configComun.plugins,
+          title: {
+            display: true,
+            text: 'Ventas por Equipo',
+            font: {
+              size: 14
+            }
+          }
+        }
+      }
+    });
+
+    // Gráfica de Ventas por Producto
+    const ctxVentasProducto = document.getElementById('ventasProductoChart').getContext('2d');
+    ventasProductoChart = new Chart(ctxVentasProducto, {
+      type: 'bar',
+      data: {
+        labels: datosEjemplo.ventasProducto.labels,
+        datasets: [{
+          data: datosEjemplo.ventasProducto.datos,
+          backgroundColor: 'rgba(75, 192, 192, 0.7)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        ...configComun,
+        indexAxis: 'y',
+        plugins: {
+          ...configComun.plugins,
+          title: {
+            display: true,
+            text: 'Ventas por Producto',
+            font: {
+              size: 14
+            }
+          }
+        },
+        scales: {
+          ...configComun.scales,
+          x: {
+            ...configComun.scales.x,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          y: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+
+    // Gráfica de Puntos por Equipo
+    const ctxPuntosEquipo = document.getElementById('puntosEquipoChart').getContext('2d');
+    puntosEquipoChart = new Chart(ctxPuntosEquipo, {
+      type: 'line',
+      data: {
+        labels: datosEjemplo.puntosEquipo.labels,
+        datasets: [{
+          label: 'Puntos',
+          data: datosEjemplo.puntosEquipo.datos,
+          fill: false,
+          borderColor: 'rgba(153, 102, 255, 1)',
+          tension: 0.3,
+          pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+          pointBorderColor: '#fff',
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: 'rgba(153, 102, 255, 1)',
+          pointHoverBorderColor: '#fff',
+          pointHitRadius: 10,
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        ...configComun,
+        plugins: {
+          ...configComun.plugins,
+          title: {
+            display: true,
+            text: 'Puntos por Equipo',
+            font: {
+              size: 14
+            }
+          },
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          ...configComun.scales,
+          y: {
+            ...configComun.scales.y,
+            ticks: {
+              callback: function(value) {
+                return value.toFixed(2);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Función para actualizar las gráficas con datos reales del servidor
+  async function actualizarGraficas() {
+    try {
+      // Aquí iría la llamada al servidor para obtener los datos reales
+      // Por ahora usamos datos de ejemplo
+      console.log('Actualizando gráficas...');
+      
+      // Ejemplo de cómo se actualizarían los datos
+      // const response = await fetch('/api/estadisticas');
+      // const datos = await response.json();
+      
+      // Actualizar gráficas con datos reales
+      // ventasEquipoChart.data.datasets[0].data = datos.ventasEquipo;
+      // ventasProductoChart.data.datasets[0].data = datos.ventasProducto;
+      // puntosEquipoChart.data.datasets[0].data = datos.puntosEquipo;
+      
+      // ventasEquipoChart.update();
+      // ventasProductoChart.update();
+      // puntosEquipoChart.update();
+      
+    } catch (error) {
+      console.error('Error al actualizar las gráficas:', error);
+    }
+  }
+
   // SIDEBAR logout
   function logout() {
     fetch('/logout', { credentials: 'include' })
@@ -298,6 +528,11 @@
 
   // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
   document.addEventListener("DOMContentLoaded", () => {
+    // Inicializar las gráficas cuando el DOM esté listo
+    inicializarGraficas();
+    
+    // Actualizar gráficas cada 5 minutos (300000 ms)
+    setInterval(actualizarGraficas, 300000);
     // --- INICIALIZACIÓN DE ELEMENTOS ---
     const selects = {
       team: document.getElementById("team"),
