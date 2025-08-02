@@ -308,6 +308,60 @@
         grid-template-columns: 1fr !important;
       }
     }
+    /* Estilos para el filtro de fecha */
+    .date-filter-container {
+      width: 100%;
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .date-filter {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .date-filter label {
+      color: #15344a;
+      font-weight: 600;
+      margin-right: 5px;
+    }
+    
+    .date-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-color: #f9fafb;
+      font-size: 14px;
+      min-width: 120px;
+    }
+    
+    .filter-button {
+      padding: 8px 16px;
+      background-color: #15344a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    
+    .filter-button:hover {
+      background-color: #1e4b6e;
+    }
+    
+    #reset-filter {
+      background-color: #6b7280;
+    }
+    
+    #reset-filter:hover {
+      background-color: #4b5563;
+    }
   </style>
 </head>
 <body>
@@ -403,6 +457,42 @@
 
       <!-- SECCIÓN DE GRÁFICAS -->
       <section class="graphs-section">
+        <!-- Filtro de Fecha -->
+        <div class="date-filter-container">
+          <div class="date-filter">
+            <label for="month-select">Mes:</label>
+            <select id="month-select" class="date-select">
+              <option value="0">Enero</option>
+              <option value="1">Febrero</option>
+              <option value="2">Marzo</option>
+              <option value="3">Abril</option>
+              <option value="4">Mayo</option>
+              <option value="5">Junio</option>
+              <option value="6">Julio</option>
+              <option value="7">Agosto</option>
+              <option value="8">Septiembre</option>
+              <option value="9">Octubre</option>
+              <option value="10">Noviembre</option>
+              <option value="11">Diciembre</option>
+            </select>
+            
+            <label for="day-select">Día:</label>
+            <select id="day-select" class="date-select">
+              <!-- Los días se llenarán dinámicamente -->
+            </select>
+            
+            <label for="year-select">Año:</label>
+            <select id="year-select" class="date-select">
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025" selected>2025</option>
+              <option value="2026">2026</option>
+            </select>
+            
+            <button id="apply-filter" class="filter-button">Aplicar Filtro</button>
+            <button id="reset-filter" class="filter-button">Hoy</button>
+          </div>
+        </div>
         <!-- Gráfica combinada de Ventas y Puntaje -->
         <div class="graph-container">
           <h3>Ventas y Puntaje por Equipo</h3>
@@ -703,25 +793,54 @@
   }
 
   // Función para actualizar las gráficas con datos reales del servidor
-  async function actualizarGraficas() {
+  async function actualizarGraficas(fecha = null) {
     try {
-      // Aquí iría la llamada al servidor para obtener los datos reales
-      console.log('Actualizando gráficas...');
+      console.log("Actualizando gráficas..." + (fecha ? ` Filtro: ${fecha}` : ''));
       
-      // Ejemplo de cómo se actualizarían los datos
-      // const response = await fetch('/api/estadisticas');
-      // const datos = await response.json();
+      // Obtener datos del servidor con el filtro de fecha si se proporciona
+      let url = '/api/productos';
+      if (fecha) {
+        url += `?fecha=${fecha}`;
+      }
       
-      // Actualizar gráficas con datos reales
-      // ventasPuntajeChart.data.datasets[0].data = datos.ventas;
-      // ventasPuntajeChart.data.datasets[1].data = datos.puntajes;
-      // ventasProductoChart.data.datasets[0].data = datos.ventasProducto;
+      // Hacer la petición al servidor
+      const [responseVentas, responseProductos] = await Promise.all([
+        fetch('/api/ventas' + (fecha ? `?fecha=${fecha}` : '')),
+        fetch(url)
+      ]);
       
-      // ventasPuntajeChart.update();
-      // ventasProductoChart.update();
+      if (!responseVentas.ok || !responseProductos.ok) {
+        throw new Error('Error al obtener los datos del servidor');
+      }
+      
+      const ventasData = await responseVentas.json();
+      const productosData = await responseProductos.json();
+      
+      // Procesar datos para las gráficas
+      const datosReales = {
+        ventasEquipo: {
+          labels: ventasData.map(item => item.equipo || item.team || `Equipo ${item._id}`),
+          ventas: ventasData.map(item => item.ventas || item.count || 0),
+          puntajes: ventasData.map(item => item.puntaje || item.score || 0)
+        },
+        ventasProducto: {
+          labels: productosData.map(item => item.producto || item._id || 'Sin nombre'),
+          datos: productosData.map(item => item.ventas || item.count || 0)
+        }
+      };
+      
+      // Actualizar las gráficas con los datos reales
+      actualizarGraficaVentasPuntaje(datosReales.ventasEquipo);
+      actualizarGraficaVentasProducto(datosReales.ventasProducto);
+      
+      // Mostrar la fecha actual en el título de la página
+      const tituloFecha = fecha ? new Date(fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) : 'hoy';
+      document.title = `Connecting - ${tituloFecha}`;
       
     } catch (error) {
-      console.error('Error al actualizar las gráficas:', error);
+      console.error("Error al actualizar las gráficas:", error);
+      // Mostrar mensaje de error al usuario
+      alert("Error al cargar los datos. Por favor, intente de nuevo más tarde.");
     }
   }
 
@@ -731,8 +850,93 @@
       .then(() => window.location.href = '/login.html');
   }
 
+  // Función para obtener los días en un mes específico
+  function getDaysInMonth(month, year) {
+    // Nota: En JavaScript, los meses van de 0 a 11
+    return new Date(year, month + 1, 0).getDate();
+  }
+
+  // Función para actualizar los días disponibles según el mes y año seleccionados
+  function updateDaysDropdown() {
+    const daySelect = document.getElementById('day-select');
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+    
+    const selectedMonth = parseInt(monthSelect.value);
+    const selectedYear = parseInt(yearSelect.value);
+    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+    
+    // Guardar el día seleccionado actualmente
+    const selectedDay = parseInt(daySelect.value) || 1;
+    
+    // Limpiar opciones actuales
+    daySelect.innerHTML = '';
+    
+    // Agregar opciones de días
+    for (let day = 1; day <= daysInMonth; day++) {
+      const option = document.createElement('option');
+      option.value = day;
+      option.textContent = day;
+      daySelect.appendChild(option);
+    }
+    
+    // Establecer el día seleccionado (si es válido para el nuevo mes)
+    if (selectedDay <= daysInMonth) {
+      daySelect.value = selectedDay;
+    } else {
+      daySelect.value = daysInMonth; // Último día del mes si el día seleccionado es inválido
+    }
+  }
+  
+  // Función para establecer la fecha actual en los selectores
+  function setCurrentDate() {
+    const now = new Date();
+    document.getElementById('month-select').value = now.getMonth();
+    document.getElementById('year-select').value = now.getFullYear();
+    updateDaysDropdown();
+    document.getElementById('day-select').value = now.getDate();
+  }
+  
+  // Función para obtener la fecha seleccionada en formato YYYY-MM-DD
+  function getSelectedDate() {
+    const day = document.getElementById('day-select').value.padStart(2, '0');
+    const month = (parseInt(document.getElementById('month-select').value) + 1).toString().padStart(2, '0');
+    const year = document.getElementById('year-select').value;
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Función para cargar datos con filtro de fecha
+  async function cargarDatosConFiltro() {
+    const fechaSeleccionada = getSelectedDate();
+    try {
+      // Aquí iría la llamada a tu API para obtener los datos filtrados por fecha
+      // Por ahora, usamos la función actualizarGraficas existente
+      // En una implementación real, deberías modificar actualizarGraficas para aceptar una fecha
+      console.log('Cargando datos para la fecha:', fechaSeleccionada);
+      await actualizarGraficas(fechaSeleccionada);
+    } catch (error) {
+      console.error('Error al cargar datos con filtro:', error);
+    }
+  }
+
   // LÓGICA PRINCIPAL - Se ejecuta cuando el DOM está completamente cargado
   document.addEventListener("DOMContentLoaded", () => {
+    // Inicializar los selectores de fecha
+    setCurrentDate();
+    
+    // Agregar event listeners para actualizar los días cuando cambie el mes o el año
+    document.getElementById('month-select').addEventListener('change', updateDaysDropdown);
+    document.getElementById('year-select').addEventListener('change', updateDaysDropdown);
+    
+    // Event listener para el botón de aplicar filtro
+    document.getElementById('apply-filter').addEventListener('click', cargarDatosConFiltro);
+    
+    // Event listener para el botón de restablecer a la fecha actual
+    document.getElementById('reset-filter').addEventListener('click', () => {
+      setCurrentDate();
+      cargarDatosConFiltro();
+    });
+    
     // Inicializar las gráficas cuando el DOM esté listo
     inicializarGraficas();
     
