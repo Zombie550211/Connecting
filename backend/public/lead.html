@@ -424,6 +424,19 @@
 
   // Función para inicializar las gráficas
   function inicializarGraficas() {
+    // Lista de productos proporcionada
+    const listaProductos = [
+      '225 AT&T AIR', '100 MBPS AT&T', '18 MBPS AT&T', '1G AT&T', '25 MBPS AT&T',
+      '300 MBPS AT&T', '50 MBPS AT&T', '500 MBPS AT&T', '5G AT&T', '75 MBPS AT&T',
+      'ALTAFIBER', 'FRONTIER', 'HUGHESNET', 'MAS LATINO', 'MAS ULTRA',
+      'OPTIMO MAS', 'OPTIMUM', 'SPECTRUM', 'VIASAT', 'WINDSTREAM',
+      'WOW', 'LINEA + CELULAR', 'VIVINT', 'KINETIC', 'SPECTRUM BUSINESS',
+      'AT&T BUSINESS', 'DIRECTV BUSINESS', 'CONSOLIDATE COMMUNICATION', 'ZYPYLFIBER', 'SPECTRUM 500',
+      'SPECTRUM 50', 'FRONTIER 200', 'FRONTIER 500', 'SPECTRUM 100', 'FRONTIER 100',
+      'FRONTIER 1G', 'SPECTRUM 1G', 'FRONTIER 2G', 'SPECTRUM DOUBLE PLAY PREMIER', 'SPECTRUM DOUBLE PLAY ADVANTAGE',
+      'FRONTIER 5G', 'EARTHLINK', 'BRIGHTSPEED', '2G AT&T', '2G SPECTRUM'
+    ];
+
     // Datos de ejemplo - Estos serán reemplazados por datos reales del servidor
     const datosEjemplo = {
       ventasPuntaje: {
@@ -432,8 +445,9 @@
         puntajes: [8.5, 12.25, 5.5, 7.0, 3.75, 9.0]
       },
       ventasProducto: {
-        labels: ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5'],
-        datos: [15, 10, 7, 12, 5]
+        labels: listaProductos,
+        // Generar datos aleatorios para cada producto (serán reemplazados por datos reales)
+        datos: listaProductos.map(() => Math.floor(Math.random() * 50) + 1)
       }
     };
 
