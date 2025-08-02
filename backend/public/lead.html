@@ -155,48 +155,44 @@
     }
     /* LEAD FORM */
     .lead-content-row {
-      display: flex ;
-      flex-direction: 10px;
-      gap: -50000px;
-      width: 200%;
-      height: -200%;
-      max-width: 5000000px;
-      margin: 100000;
-      padding: 25 100px;
+      display: flex;
+      flex-direction: row;
+      gap: 25px;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 20px;
       align-items: stretch;
       box-sizing: border-box;
+      min-height: 100vh;  /* Asegura que ocupe al menos toda la altura de la pantalla */
     }
     .graphs-section {
       flex: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;  /* Centrar horizontalmente */
-      justify-content: center;  /* Centrar verticalmente */
-      gap: 60px;  /* Aumentar espacio entre gráficas */
+      gap: 30px;
       min-width: 0;
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      min-height: 1800px;  /* Aumentado a 1800px */
-      padding: 50px 20px 150px;  /* Más padding vertical */
+      max-width: 100%;
+      height: 100%;
+      min-height: 100%;
       box-sizing: border-box;
+      padding: 20px 10px;
       overflow-y: auto;
     }
     
     .graph-container {
-      min-height: 800px;  /* Aumentado a 800px */
-      height: auto;
-      max-height: 1100px;  /* Aumentado a 1100px */
+      flex: 1;
       display: flex;
       flex-direction: column;
       background: white;
-      border-radius: 12px;  /* Bordes más redondeados */
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);  /* Sombra más pronunciada */
-      padding: 35px;  /* Más espacio interno */
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
       overflow: hidden;
       box-sizing: border-box;
-      width: 95%;  /* Un poco menos ancho para mejor centrado */
-      margin: 0 auto;  /* Centrado horizontal */
+      width: 100%;
+      min-height: 0;  /* Permite que se encoja si es necesario */
     }
     .form-section {
       background: white;
