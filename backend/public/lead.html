@@ -170,32 +170,33 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      align-items: center;  /* Centrar horizontalmente */
+      justify-content: center;  /* Centrar verticalmente */
+      gap: 60px;  /* Aumentar espacio entre gráficas */
       min-width: 0;
       width: 100%;
       max-width: 1200px;
       margin: 0 auto;
-      height: 100%;
-      min-height: 1500px;  /* Aumentado para dar más espacio vertical */
-      max-height: none;
-      overflow-y: auto;
+      min-height: 1800px;  /* Aumentado a 1800px */
+      padding: 50px 20px 150px;  /* Más padding vertical */
       box-sizing: border-box;
-      padding: 30px 20px 100px;
+      overflow-y: auto;
     }
     
     .graph-container {
-      min-height: 700px;  /* Aumentado de 500px */
-      height: 100%;
-      max-height: 1000px;  /* Aumentado el máximo */
+      min-height: 800px;  /* Aumentado a 800px */
+      height: auto;
+      max-height: 1100px;  /* Aumentado a 1100px */
       display: flex;
       flex-direction: column;
       background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--sombra);
-      padding: 25px;
+      border-radius: 12px;  /* Bordes más redondeados */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);  /* Sombra más pronunciada */
+      padding: 35px;  /* Más espacio interno */
       overflow: hidden;
       box-sizing: border-box;
-      width: 100%;
+      width: 95%;  /* Un poco menos ancho para mejor centrado */
+      margin: 0 auto;  /* Centrado horizontal */
     }
     .form-section {
       background: white;
