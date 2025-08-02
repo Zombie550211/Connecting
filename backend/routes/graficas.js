@@ -89,17 +89,34 @@ router.get('/productos', async (req, res) => {
         { 
           $match: {
             ...filtro,
-            // Asegurarse de que el servicio no esté vacío
-            servicios: { $exists: true, $ne: '' }
+            // Asegurarse de que el campo producto no esté vacío
+            producto: { $exists: true, $ne: '' }
           } 
         },
         { 
           $group: {
-            _id: "$servicios",
+            _id: { $toUpper: "$producto" }, // Convertir a mayúsculas para coincidir con la lista
             ventas: { $sum: 1 }  // Contar documentos como ventas
           }
-        }
+        },
+        { $sort: { ventas: -1 } } // Ordenar por cantidad de ventas descendente
       ]);
+      
+      console.log('Datos de productos encontrados:', ventasPorProducto);
+      
+      // Mapear los resultados a la estructura esperada
+      const productosConVentas = {};
+      ventasPorProducto.forEach(item => {
+        productosConVentas[item._id] = item.ventas;
+      });
+      
+      // Crear un array con todos los productos, incluyendo los que tienen 0 ventas
+      ventasPorProducto = listaProductos.map(producto => ({
+        _id: producto,
+        ventas: productosConVentas[producto] || 0
+      }));
+      
+      console.log('Datos de productos procesados:', ventasPorProducto);
     } catch (error) {
       console.error('Error en la consulta de productos:', error);
       // Continuar con un array vacío si hay un error
