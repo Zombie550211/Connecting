@@ -19,11 +19,28 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Configuración de CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://crm-connecting.onrender.com',
+  'https://connecting-klf7.onrender.com'
+];
+
 const corsOptions = {
-  origin: isProduction ? 'https://crm-connecting.onrender.com' : true,
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin 'origin' (como aplicaciones móviles o curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'El origen de esta petición no está permitido';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Tiempo que el navegador puede cachear la respuesta preflight (en segundos)
 };
 
 // Middlewares

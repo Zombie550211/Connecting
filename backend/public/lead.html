@@ -797,19 +797,41 @@
     try {
       console.log("Actualizando gráficas..." + (fecha ? ` Filtro: ${fecha}` : ''));
       
-      // Obtener datos del servidor con el filtro de fecha si se proporciona
-      let url = '/api/productos';
-      if (fecha) {
-        url += `?fecha=${fecha}`;
+      // Obtener token del localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No se encontró el token de autenticación');
+        window.location.href = '/login.html';
+        return;
       }
       
-      // Hacer la petición al servidor
+      // Configuración común para las peticiones
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Importante para incluir cookies de autenticación
+      };
+      
+      // Construir URLs con parámetros de fecha si es necesario
+      const urlVentas = '/api/ventas' + (fecha ? `?fecha=${fecha}` : '');
+      const urlProductos = '/api/productos' + (fecha ? `?fecha=${fecha}` : '');
+      
+      // Hacer las peticiones al servidor con las credenciales
       const [responseVentas, responseProductos] = await Promise.all([
-        fetch('/api/ventas' + (fecha ? `?fecha=${fecha}` : '')),
-        fetch(url)
+        fetch(urlVentas, config),
+        fetch(urlProductos, config)
       ]);
       
+      // Verificar si las respuestas son exitosas
       if (!responseVentas.ok || !responseProductos.ok) {
+        // Si hay un error de autenticación, redirigir al login
+        if (responseVentas.status === 401 || responseProductos.status === 401) {
+          console.error('Error de autenticación. Redirigiendo al login...');
+          window.location.href = '/login.html';
+          return;
+        }
         throw new Error('Error al obtener los datos del servidor');
       }
       
