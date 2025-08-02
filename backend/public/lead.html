@@ -493,46 +493,61 @@
     let teamChartInstance = null;
     let productChartInstance = null;
 
+    // Función para limpiar un gráfico existente
+    function limpiarGrafico(chartInstance) {
+      if (chartInstance) {
+        try {
+          chartInstance.destroy();
+        } catch (e) {
+          console.warn('Error al destruir gráfico:', e);
+        }
+      }
+      return null;
+    }
+
+    // Función para limpiar un contenedor de gráfico
+    function limpiarContenedor(elementId) {
+      const container = document.getElementById(elementId);
+      if (!container) return null;
+      
+      // Limpiar el contenedor
+      container.innerHTML = '';
+      
+      // Crear un nuevo canvas
+      const newCanvas = document.createElement('canvas');
+      newCanvas.id = elementId + '-canvas';
+      container.appendChild(newCanvas);
+      
+      return newCanvas;
+    }
+
     async function crearGraficas(mes, anio, dia) {
+      // Limpiar instancias anteriores
+      teamChartInstance = limpiarGrafico(teamChartInstance);
+      productChartInstance = limpiarGrafico(productChartInstance);
+      
       try {
         // Verificar que los elementos del DOM existan
-        const teamChartEl = document.getElementById('team-chart');
-        const productChartEl = document.getElementById('product-chart');
+        const teamChartContainer = document.getElementById('team-chart');
+        const productChartContainer = document.getElementById('product-chart');
         
-        if (!teamChartEl || !productChartEl) {
-          console.error('No se encontraron los elementos de las gráficas');
+        if (!teamChartContainer || !productChartContainer) {
+          console.error('No se encontraron los contenedores de las gráficas');
           return;
         }
         
-        // Limpiar completamente los contenedores de gráficos
-        const limpiarCanvas = (elementId) => {
-          const container = document.getElementById(elementId);
-          if (!container) return;
-          
-          // Destruir instancia existente si existe
-          const chartInstance = elementId === 'team-chart' ? window.teamChartInstance : window.productChartInstance;
-          if (chartInstance) {
-            try {
-              chartInstance.destroy();
-            } catch (e) {
-              console.warn('Error al destruir gráfico:', e);
-            }
-          }
-          
-          // Limpiar el contenedor y crear un nuevo canvas
-          container.innerHTML = '';
-          const newCanvas = document.createElement('canvas');
-          newCanvas.id = elementId;
-          container.appendChild(newCanvas);
-        };
+        // Limpiar contenedores y obtener referencias a los canvas
+        const teamCanvas = limpiarContenedor('team-chart');
+        const productCanvas = limpiarContenedor('product-chart');
         
-        // Limpiar ambos gráficos
-        limpiarCanvas('team-chart');
-        limpiarCanvas('product-chart');
-
+        if (!teamCanvas || !productCanvas) {
+          console.error('No se pudieron crear los elementos canvas');
+          return;
+        }
+        
         // Mostrar mensaje de carga
-        teamChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
-        productChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
+        teamChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
+        productChartContainer.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
         
         // Validar fechas
         const hoy = new Date();
@@ -627,105 +642,115 @@
         const productosVentasMap = {};
         productosData.data.forEach(p => { 
           if (p.producto) {
-            productosVentasMap[p.producto] = p.ventas || 0; 
+            productosVentasMap[p.producto] = p.ventas || 0;
           }
         });
         
         const productosDataFinal = productosLabels.map(p => productosVentasMap[p] || 0);
 
-        // Gráfica de equipos (ventas y puntaje)
-        const teamCtx = teamChartEl.getContext('2d');
-        if (teamCtx) {
-          teamChartInstance = new Chart(teamCtx, {
-            type: 'bar',
-            data: {
-              labels: equiposData.data.map(e => e.team || 'Sin equipo').filter(Boolean),
-              datasets: [{
-                label: 'Ventas',
-                data: equiposData.data.map(e => e.ventas || 0),
-                backgroundColor: '#22b3ec',
-              }, {
-                label: 'Puntaje',
-                data: equiposData.data.map(e => e.puntaje || 0),
-                backgroundColor: '#ef4444',
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              aspectRatio: 2,
-              plugins: { 
-                legend: { position: 'top' }, 
-                datalabels: { 
-                  anchor: 'end', 
-                  align: 'end', 
-                  formatter: v => Math.round(v*100)/100, 
-                  color: '#333', 
-                  font: { weight: 'bold' } 
-                } 
+        // Obtener referencias a los canvas
+        const teamChartCanvas = document.getElementById('team-chart-canvas');
+        const productChartCanvas = document.getElementById('product-chart-canvas');
+
+        // Crear gráfica de equipos
+        if (teamChartCanvas) {
+          const teamCtx = teamChartCanvas.getContext('2d');
+          if (teamCtx) {
+            teamChartInstance = new Chart(teamCtx, {
+              type: 'bar',
+              data: {
+                labels: equiposData.data.map(e => e.team || 'Sin equipo').filter(Boolean),
+                datasets: [{
+                  label: 'Ventas',
+                  data: equiposData.data.map(e => e.ventas || 0),
+                  backgroundColor: '#22b3ec',
+                }, {
+                  label: 'Puntaje',
+                  data: equiposData.data.map(e => e.puntaje || 0),
+                  backgroundColor: '#ef4444',
+                }]
               },
-              scales: { y: { beginAtZero: true } }
-            },
-            plugins: [ChartDataLabels]
-          });
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: { 
+                  legend: { position: 'top' }, 
+                  datalabels: { 
+                    anchor: 'end', 
+                    align: 'end', 
+                    formatter: v => Math.round(v*100)/100, 
+                    color: '#333', 
+                    font: { weight: 'bold' } 
+                  }
+                },
+                scales: { 
+                  y: { 
+                    beginAtZero: true,
+                    ticks: {
+                      precision: 0
+                    }
+                  }
+                }
+              },
+              plugins: [ChartDataLabels]
+            });
+          }
         }
 
-        // Gráfica de productos (ventas)
-        const productCtx = productChartEl.getContext('2d');
-        if (productCtx) {
-          productChartInstance = new Chart(productCtx, {
-            type: 'bar',
-            data: {
-              labels: productosLabels,
-              datasets: [{ 
-                label: 'Ventas por Producto', 
-                data: productosDataFinal, 
-                backgroundColor: '#2ba6cb', 
-                borderColor: '#1e293b', 
-                borderWidth: 2, 
-                borderRadius: 8, 
-                datalabels: { 
-                  anchor: 'end', 
-                  align: 'end', 
-                  color: '#333', 
-                font: { weight: 'bold' } 
+        // Crear gráfica de productos
+        if (productChartCanvas) {
+          const productCtx = productChartCanvas.getContext('2d');
+          if (productCtx) {
+            productChartInstance = new Chart(productCtx, {
+              type: 'bar',
+              data: {
+                labels: productosLabels,
+                datasets: [{
+                  label: 'Ventas por Producto',
+                  data: productosDataFinal,
+                  backgroundColor: '#2ba6cb',
+                  borderColor: '#1e293b',
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  barThickness: 'flex',
+                  maxBarThickness: 30,
+                  minBarLength: 0
+                }]
               },
-              barThickness: 'flex',
-              maxBarThickness: 30,
-              minBarLength: 0
-            }]
-          },
-          options: {
-            maintainAspectRatio: true,
-            aspectRatio: 2,
-            plugins: { 
-              legend: { display: false }, 
-              datalabels: { 
-                anchor: 'end', 
-                align: 'end', 
-                color: '#333', 
-                font: { weight: 'bold' } 
-              } 
-            },
-            scales: { 
-              y: { 
-                beginAtZero: true,
-                ticks: {
-                  precision: 0
+              options: {
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: { 
+                  legend: { display: false }, 
+                  datalabels: { 
+                    anchor: 'end', 
+                    align: 'end', 
+                    color: '#333',
+                    font: { weight: 'bold' },
+                    formatter: v => Math.round(v*100)/100
+                  } 
+                },
+                scales: { 
+                  y: { 
+                    beginAtZero: true,
+                    ticks: {
+                      precision: 0
+                    }
+                  },
+                  x: { 
+                    ticks: { 
+                      autoSkip: false, 
+                      maxRotation: 90, 
+                      minRotation: 45 
+                    } 
+                  } 
                 }
-              }, 
-              x: { 
-                ticks: { 
-                  autoSkip: false, 
-                  maxRotation: 90, 
-                  minRotation: 45 
-                } 
-              } 
-            }
-          },
-          plugins: [ChartDataLabels]
-        });
-      }
+              },
+              plugins: [ChartDataLabels]
+            });
+          }
+        }
       } catch (error) {
         console.error("Error al crear gráficas:", error);
         alert("Error al cargar las gráficas. Revisa la consola para más detalles.");
