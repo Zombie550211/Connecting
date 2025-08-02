@@ -143,50 +143,71 @@
     /* MAIN CONTENT */
     .main-content {
       flex: 1;
-      padding: 20px;
+      padding: 20px 30px;
       overflow-y: auto;
       display: flex;
-      gap: 20px;
+      gap: 25px;
+      width: 100%;
       max-width: 100%;
+      height: calc(100vh - 40px);
+      box-sizing: border-box;
     }
     /* LEAD FORM */
     .lead-content-row {
       display: flex;
       flex-direction: row;
-      gap: 20px;
-      max-width: 1200px;
-      margin: 15px auto;
+      gap: 25px;
       width: 100%;
-      height: auto;
-      min-height: 500px;
-      max-height: 90vh;
-      padding: 0 15px;
-      align-items: flex-start;
+      height: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 5px;
+      align-items: stretch;
       box-sizing: border-box;
     }
     .graphs-section {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 25px;
       min-width: 0;
       width: 100%;
       height: 100%;
       max-height: 100%;
       overflow-y: auto;
       box-sizing: border-box;
-      padding-right: 5px;
+      padding: 5px 10px 20px 5px;
+    }
+    
+    .graph-container {
+      min-height: 300px;
+      height: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      padding: 20px;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100%;
     }
     .form-section {
       background: white;
       border-radius: var(--radius);
-      padding: 25px;
+      padding: 25px 30px;
       box-shadow: var(--sombra);
-      width: var(--form-width);
+      width: 420px;
+      min-width: 380px;
       flex-shrink: 0;
       overflow-y: auto;
+      height: 100%;
       max-height: 100%;
       border: 1px solid var(--gris-borde);
+      position: sticky;
+      top: 0;
     }
     .form-section h2 {
       font-weight: 700;
@@ -229,9 +250,31 @@
     .form-section button[type="submit"]:hover {
       background: #183153;
     }
+    @media (max-width: 1200px) {
+      .graphs-section {
+        grid-template-columns: 1fr;
+      }
+      .graph-container {
+        min-height: 250px;
+      }
+    }
+    
     @media (max-width: 1100px) {
-      .lead-content-row { flex-direction: column; gap: 13px; }
-      .main-content { padding: 14px 2vw; }
+      .lead-content-row { 
+        flex-direction: column; 
+        gap: 20px; 
+        max-height: none;
+      }
+      .main-content { 
+        padding: 15px; 
+        height: auto;
+      }
+      .form-section {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        position: static;
+      }
     }
     @media (max-width: 700px) {
       .layout { flex-direction: column;}
