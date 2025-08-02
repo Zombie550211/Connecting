@@ -504,14 +504,32 @@
           return;
         }
         
-        // Destruir instancias anteriores si existen
-        if (window.teamChartInstance) {
-          window.teamChartInstance.destroy();
-        }
-        if (window.productChartInstance) {
-          window.productChartInstance.destroy();
-        }
+        // Limpiar completamente los contenedores de gráficos
+        const limpiarCanvas = (elementId) => {
+          const container = document.getElementById(elementId);
+          if (!container) return;
+          
+          // Destruir instancia existente si existe
+          const chartInstance = elementId === 'team-chart' ? window.teamChartInstance : window.productChartInstance;
+          if (chartInstance) {
+            try {
+              chartInstance.destroy();
+            } catch (e) {
+              console.warn('Error al destruir gráfico:', e);
+            }
+          }
+          
+          // Limpiar el contenedor y crear un nuevo canvas
+          container.innerHTML = '';
+          const newCanvas = document.createElement('canvas');
+          newCanvas.id = elementId;
+          container.appendChild(newCanvas);
+        };
         
+        // Limpiar ambos gráficos
+        limpiarCanvas('team-chart');
+        limpiarCanvas('product-chart');
+
         // Mostrar mensaje de carga
         teamChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
         productChartEl.innerHTML = '<div class="chart-loading">Cargando datos...</div>';
