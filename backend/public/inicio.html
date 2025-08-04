@@ -133,18 +133,13 @@
       align-items: center;
       gap: 18px;
     }
-    .panel-bienvenida-admin {
+    .panel-bienvenida {
       background: var(--panel-bg);
-      border-radius: var(--panel-radius);
-      box-shadow: var(--panel-shadow);
-      padding: 0 0 38px 0;
-      text-align: center;
-      position: relative;
-      margin-bottom: 0;
-      width: 100%;
-      max-width: 990px;
       backdrop-filter: var(--glass-blur);
-      border: 1.5px solid #e2eaf4;
+      border-radius: var(--panel-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--panel-shadow);
       transition: box-shadow 0.17s;
     }
     .panel-bienvenida-admin:hover {
@@ -381,27 +376,45 @@
           <ol id="modal-list"></ol>
         </div>
       </div>
-    </main>
-        <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
-        <ol class="ranking-list" id="ranking-puntos-list"><div class="loader">Cargando...</div></ol>
+        <!-- Sección de ranking -->
+        <div class="ranking-section">
+          <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
+          <ol class="ranking-list" id="ranking-puntos-list">
+            <div class="loader">Cargando...</div>
+          </ol>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
 
-  <div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div id="modal-content" style="background:white; padding:2rem; border-radius:1rem; width:90%; max-width:500px;">
-      <h2 id="modal-title" style="margin-bottom:1.5rem;"></h2>
-      <ol id="modal-list" class="ranking-list"></ol>
-      <button onclick="cerrarModal()" style="margin-top:1.5rem; padding:0.5rem 1rem; border-radius:0.5rem; border:none; background-color:var(--primary-color); color:white; cursor:pointer;">Cerrar</button>
+  <!-- Modal para ranking -->
+  <div id="ranking-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal()" title="Cerrar">×</button>
+      <h3 id="modal-title">Ranking Completo</h3>
+      <ol id="modal-ranking-list" class="ranking-list"></ol>
+      <button onclick="cerrarModal()" class="btn-cerrar">Cerrar</button>
+    </div>
   </div>
 
   <script>
-    // Función para cerrar el modal si existe
-    function cerrarModal() {
-      const modal = document.getElementById('modal-overlay');
-      if (modal) {
-        modal.style.display = 'none';
+    // Función para abrir el modal de ranking
+    function abrirModal(tipo) {
+      const modal = document.getElementById('ranking-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalList = document.getElementById('modal-ranking-list');
+      
+      if (tipo === 'puntos') {
+        modalTitle.textContent = 'Ranking por Puntos';
+        // Aquí iría la lógica para cargar el ranking completo
       }
+      
+      modal.style.display = 'flex';
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+      document.getElementById('ranking-modal').style.display = 'none';
     }
 
     // Función para inicializar la fecha actual
