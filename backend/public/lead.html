@@ -6,6 +6,8 @@
   <title>Connecting</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js DataLabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -612,7 +614,7 @@
       }
     };
 
-    // Gráfica combinada de Ventas y Puntaje
+    // Gráfica de Ventas y Puntaje por Equipo con barras agrupadas
     const ctxVentasPuntaje = document.getElementById('ventasPuntajeChart').getContext('2d');
     ventasPuntajeChart = new Chart(ctxVentasPuntaje, {
       type: 'bar',
@@ -621,29 +623,25 @@
         datasets: [
           {
             label: 'Ventas',
-            type: 'bar',
             data: datosEjemplo.ventasPuntaje.ventas,
-            backgroundColor: 'rgba(34, 179, 236, 0.7)',
+            backgroundColor: 'rgba(34, 179, 236, 0.9)', // Azul más oscuro
             borderColor: 'rgba(34, 179, 236, 1)',
             borderWidth: 1,
             borderRadius: 4,
-            yAxisID: 'y'
+            yAxisID: 'y',
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
           },
           {
             label: 'Puntaje',
-            type: 'line',
             data: datosEjemplo.ventasPuntaje.puntajes,
+            backgroundColor: 'rgba(255, 99, 132, 0.9)', // Rojo más oscuro
             borderColor: 'rgba(255, 99, 132, 1)',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-            pointBorderColor: '#fff',
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: 'rgba(255, 99, 132, 1)',
-            pointHoverBorderColor: '#fff',
-            pointHitRadius: 10,
-            pointBorderWidth: 2,
-            yAxisID: 'y1'
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y',
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
           }
         ]
       },
@@ -658,37 +656,94 @@
           ...configComun.plugins,
           title: {
             display: true,
-            text: 'Ventas y Puntaje por Equipo'
+            text: 'Ventas y Puntaje por Equipo',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              top: 10,
+              bottom: 20
+            }
           },
           tooltip: {
             mode: 'index',
-            intersect: false
+            intersect: false,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += context.parsed.y;
+                }
+                return label;
+              }
+            }
+          },
+          // Plugin para mostrar los valores encima de las barras
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            formatter: Math.round,
+            font: {
+              weight: 'bold',
+              size: 10
+            }
           }
         },
         scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: 'Equipos',
+              font: {
+                weight: 'bold'
+              },
+              padding: { top: 15 }
+            }
+          },
           y: {
             type: 'linear',
             display: true,
-            position: 'left',
             title: {
               display: true,
-              text: 'Ventas'
-            }
-          },
-          y1: {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            title: {
-              display: true,
-              text: 'Puntaje'
+              text: 'Cantidad',
+              font: {
+                weight: 'bold'
+              }
             },
+            beginAtZero: true,
             grid: {
-              drawOnChartArea: false
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              stepSize: 1,
+              precision: 0
             }
           }
+        },
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 30,
+            bottom: 20
+          }
+        },
+        // Asegurar que las barras estén agrupadas
+        bar: {
+          datasets: {
+            barPercentage: 0.8,
+            categoryPercentage: 0.9
+          }
         }
-      }
+      },
+      plugins: [ChartDataLabels] // Agregar el plugin de etiquetas
     });
 
     // Gráfica de Ventas por Producto
@@ -802,18 +857,21 @@
     // Actualizar los datos de la gráfica
     ventasPuntajeChart.data.labels = datos.labels;
     
-    // Actualizar datos de ventas
+    // Actualizar datos de ventas (barras azules)
     if (ventasPuntajeChart.data.datasets[0]) {
-      ventasPuntajeChart.data.datasets[0].data = datos.ventas;
+      ventasPuntajeChart.data.datasets[0].data = datos.ventas || [];
     }
     
-    // Actualizar datos de puntajes
+    // Actualizar datos de puntajes (barras rojas)
     if (ventasPuntajeChart.data.datasets[1]) {
-      ventasPuntajeChart.data.datasets[1].data = datos.puntajes;
+      ventasPuntajeChart.data.datasets[1].data = datos.puntajes || [];
     }
     
-    // Actualizar la gráfica
-    ventasPuntajeChart.update();
+    // Actualizar la gráfica con una animación suave
+    ventasPuntajeChart.update({
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    });
   }
 
   // Función para actualizar la gráfica de ventas por producto
