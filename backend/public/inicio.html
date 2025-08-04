@@ -2,22 +2,151 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Inicio</title>
+  <title>Inicio - Connecting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      --sidebar-bg: #15344a;
-      --sidebar-accent: #22b3ec;
-      --sidebar-hover: #1ea1d8;
-      --sidebar-text: #222;
-      --sidebar-radius: 14px;
-      --azul-oscuro: #1e293b;
-      --azul-acento: #22b3ec;
-      --gris-bg: #f5f7fa;
-      --gris-borde: #e3e8ee;
-      --gris-titulo: #edf3fa;
-      --azul-celda: #f1f5fa;
-      --radius: 15px;
+</head>
+<body>
+  <div class="layout">
+    <!-- Barra lateral -->
+    <nav>
+      <div class="sidebar-logo">
+        <img src="logo connecting.png" alt="Logo Connecting" width="48">
+      </div>
+      <div>Connecting</div>
+      <div class="sidebar-nav">
+        <button class="active" onclick="location.href='inicio.html'">Inicio</button>
+        <button onclick="location.href='lead.html'">Lead</button>
+        <button onclick="location.href='costumer.html'">Costumer</button>
+        <button onclick="location.href='Facturacion.html'">Facturación</button>
+        <button onclick="logout()">Cerrar sesión</button>
+      </div>
+      <div>"Conectando tu éxito, un cliente a la vez"</div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main>
+      <div class="dashboard-container">
+        <!-- Panel de bienvenida -->
+        <div class="panel-bienvenida">
+          <h2>¡Bienvenido al Panel de Control!</h2>
+          <p class="fecha-actual"><span id="fecha-hoy"></span></p>
+          <p class="frase-inspiradora">"El éxito es la suma de pequeños esfuerzos repetidos día tras día."</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-dashboard">
+          <label>Mes:</label>
+          <select id="mes-select">
+            <option value="0">Enero</option>
+            <option value="1">Febrero</option>
+            <option value="2">Marzo</option>
+            <option value="3">Abril</option>
+            <option value="4">Mayo</option>
+            <option value="5">Junio</option>
+            <option value="6">Julio</option>
+            <option value="7">Agosto</option>
+            <option value="8">Septiembre</option>
+            <option value="9">Octubre</option>
+            <option value="10">Noviembre</option>
+            <option value="11">Diciembre</option>
+          </select>
+          <label>Año:</label>
+          <select id="anio-select"></select>
+        </div>
+
+        <!-- Sección de ranking -->
+        <div class="ranking-section">
+          <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
+          <ol class="ranking-list" id="ranking-puntos-list">
+            <div class="loader">Cargando...</div>
+          </ol>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal para ranking -->
+  <div id="ranking-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">
+    <div style="background:white; padding:2rem; border-radius:1rem; max-width:500px; width:90%; position:relative;">
+      <button onclick="cerrarModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+      <h3 id="modal-title">Ranking Completo</h3>
+      <ol id="modal-ranking-list" style="list-style:none; padding:0;"></ol>
+      <button onclick="cerrarModal()" style="margin-top:1.5rem; padding:0.5rem 1.5rem; border-radius:0.5rem; border:none; background-color:#22b3ec; color:white; cursor:pointer;">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    // Función para abrir el modal de ranking
+    function abrirModal(tipo) {
+      const modal = document.getElementById('ranking-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalList = document.getElementById('modal-ranking-list');
+      
+      if (tipo === 'puntos') {
+        modalTitle.textContent = 'Ranking por Puntos';
+        // Aquí iría la lógica para cargar el ranking completo
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+      document.getElementById('ranking-modal').style.display = 'none';
+    }
+
+    // Función para inicializar la fecha actual
+    function inicializarFechaActual() {
+      const fechaHoy = new Date();
+      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaFormateada = fechaHoy.toLocaleDateString('es-ES', opciones);
+      const elementoFecha = document.getElementById('fecha-hoy');
+      if (elementoFecha) {
+        elementoFecha.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      }
+    }
+
+    function setupFilters() {
+      // Inicializar la fecha actual
+      inicializarFechaActual();
+      
+      // Configurar el año actual en el selector
+      const hoy = new Date();
+      const anioSelect = document.getElementById('anio-select');
+      if (anioSelect) {
+        // Asegurarse de que el año actual esté seleccionado
+        const anioActual = hoy.getFullYear();
+        for (let i = anioActual - 5; i <= anioActual + 1; i++) {
+          const option = document.createElement('option');
+          option.value = i;
+          option.textContent = i;
+          if (i === anioActual) {
+            option.selected = true;
+          }
+          anioSelect.appendChild(option);
+        }
+      }
+    }
+
+    function logout() {
+      // Lógica para cerrar sesión
+      window.location.href = 'login.html';
+    }
+
+    // INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', () => {
+      setupFilters();
+      
+      // Configurar el mes actual en el selector
+      const hoy = new Date();
+      const mesSelect = document.getElementById('mes-select');
+      if (mesSelect) {
+        mesSelect.value = hoy.getMonth();
+      }
+    });
+  </script>
+</body>
+</html>
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
       --panel-bg: rgba(255,255,255,0.82);
