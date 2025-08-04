@@ -1,308 +1,1227 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>CRM Agente - Inicio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inicio - Connecting</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Estilos generales */
     :root {
-      --primary: #1976d2;
-      --primary-dark: #1565c0;
-      --accent: #ff9800;
-      --text: #333;
-      --text-light: #666;
-      --border: #e0e0e0;
-      --background: #f5f7fa;
-      --card-bg: #ffffff;
+      --sidebar-bg: #15344a;
+      --sidebar-accent: #22b3ec;
+      --sidebar-hover: #1ea1d8;
+      --sidebar-text: #222;
+      --sidebar-radius: 14px;
+      --azul-oscuro: #1e293b;
+      --azul-acento: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+      --panel-bg: rgba(255,255,255,0.82);
+      --panel-radius: 22px;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Roboto', sans-serif;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      background-color: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
     }
-
-    .container {
+    .layout {
       display: flex;
       min-height: 100vh;
     }
-
-    /* Sidebar */
+    /* SIDEBAR - NEGRITA */
     .sidebar {
-      width: 220px;
-      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-      color: white;
-      padding: 20px 0;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-      position: fixed;
-      height: 100%;
-      z-index: 1000;
-    }
-
-    .sidebar h3 {
-      padding: 20px 20px 10px;
-      font-size: 1.1rem;
-      font-weight: 500;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 20px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-    }
-
-    .sidebar a {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
       display: flex;
+      flex-direction: column;
       align-items: center;
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      font-size: 0.95rem;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
     }
-
-    .sidebar a i {
-      margin-right: 10px;
-      width: 20px;
-      text-align: center;
+    
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
     }
-
-    .sidebar a:hover, .sidebar a.active {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border-left: 4px solid var(--accent);
-    }
-
-    .sidebar a.active {
-      background: rgba(255,255,255,0.15);
-      font-weight: 500;
-    }
-
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      margin-left: 220px;
-      padding: 20px;
-      background-color: var(--background);
-      min-height: 100vh;
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
     }
-
-    /* Contenido de Inicio */
-    .inicio-container {
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
       text-align: center;
-      max-width: 600px;
-      padding: 40px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      animation: fadeIn 0.5s ease-out;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
     }
-
-    .inicio-icon {
-      font-size: 4.5em;
-      color: var(--primary);
-      margin-bottom: 20px;
-      animation: bounce 2s infinite;
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
     }
-
-    .inicio-title {
-      font-size: 2.2em;
-      color: var(--primary);
-      margin-bottom: 15px;
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: white;
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
       font-weight: 600;
     }
-
-    .inicio-subtitle {
-      font-size: 1.3em;
-      color: var(--text-light);
-      margin-bottom: 30px;
+    /* MAIN CONTENT */
+    /* Contenido principal */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 2rem;
+      transition: margin 0.3s ease;
+      max-width: calc(100% - var(--sidebar-width));
+      width: 100%;
     }
-
-    .inicio-features {
-      margin-top: 40px;
-      text-align: left;
+    
+    @media (max-width: 1024px) {
+      .main-content {
+        margin-left: 0;
+        max-width: 100%;
+        padding: 1rem;
+      }
     }
-
-    .feature-item {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-item:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-
-    .feature-icon {
-      font-size: 1.5em;
-      color: var(--primary);
-      margin-right: 15px;
-      min-width: 30px;
+    /* Tarjeta de bienvenida */
+    .panel-bienvenida {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow);
       text-align: center;
+      margin-bottom: 2rem;
+      border: 1px solid var(--border-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
-
-    .feature-text h3 {
-      color: var(--primary);
-      margin-bottom: 5px;
+    
+    .panel-bienvenida::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    
+    .panel-bienvenida:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .panel-bienvenida h2 {
+      margin: 0 0 10px 0;
+      color: var(--azul-oscuro);
+      font-size: 1.8em;
+    }
+    .fecha-actual {
+      color: var(--gray-500);
       font-size: 1.1em;
+      margin: 0.5rem 0 1.5rem;
+      font-weight: 500;
+      display: inline-block;
+      background: var(--gray-100);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-sm);
     }
-
-    .feature-text p {
-      color: var(--text-light);
-      font-size: 0.95em;
-      line-height: 1.5;
+    .frase-inspiradora {
+      font-style: italic;
+      color: var(--primary);
+      margin: 1.5rem 0 0;
+      font-size: 1.2em;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+      position: relative;
+      padding: 0 2rem;
     }
-
+    
+    .frase-inspiradora::before,
+    .frase-inspiradora::after {
+      content: '"';
+      font-size: 3em;
+      color: var(--primary-light);
+      opacity: 0.3;
+      position: absolute;
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+    
+    .frase-inspiradora::before {
+      top: -10px;
+      left: 0;
+    }
+    
+    .frase-inspiradora::after {
+      bottom: -30px;
+      right: 0;
+    }
+    /* Sección de filtros */
+    .filtros-dashboard {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      border: 1px solid var(--border-color);
+    }
+    
+    @media (max-width: 768px) {
+      .filtros-dashboard {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+    .filtros-dashboard label {
+      font-weight: 500;
+      color: var(--gray-700);
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .filtros-dashboard select,
+    .filtros-dashboard input {
+      width: 100%;
+      padding: 0.625rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      background: var(--surface);
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    
+    .filtros-dashboard select:focus,
+    .filtros-dashboard input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    .filtros-dashboard .filter-group {
+      flex: 1;
+      min-width: 180px;
+    }
+    /* Sección de ranking */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .card-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+    }
+    
+    .card-icon.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    }
+    
+    .card-icon.success {
+      background: linear-gradient(135deg, var(--success), #34d399);
+    }
+    
+    .card-icon.warning {
+      background: linear-gradient(135deg, var(--warning), #f59e0b);
+    }
+    
+    .card-icon.danger {
+      background: linear-gradient(135deg, var(--danger), #f87171);
+    }
+    
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0.5rem 0;
+      line-height: 1.2;
+    }
+    
+    .card-description {
+      color: var(--gray-500);
+      font-size: 0.875rem;
+      margin: 0.25rem 0 0;
+    }
+    
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      margin-top: 0.5rem;
+    }
+    
+    .trend.up {
+      color: #10b981;
+      background-color: #d1fae5;
+    }
+    
+    .trend.down {
+      color: #ef4444;
+      background-color: #fee2e2;
+    }
+    
+    .trend-icon {
+      margin-right: 0.25rem;
+      display: inline-flex;
+    }
+    
+    /* Sección de ranking */
+    .ranking-section {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+    .ranking-section h3 {
+      margin: 0 0 1.25rem 0;
+      color: var(--text-primary);
+      font-size: 1.375rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .ranking-section h3 a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .ranking-section h3 a:hover {
+      color: var(--azul-acento);
+    }
+    .ranking-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      background-color: var(--gray-50);
+      transition: background-color 0.2s ease;
+    }
+    
+    .ranking-item:hover {
+      background-color: var(--gray-100);
+    }
+    
+    .ranking-position {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .ranking-item:nth-child(1) .ranking-position {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+    
+    .ranking-item:nth-child(2) .ranking-position {
+      background: linear-gradient(135deg, #94a3b8, #cbd5e1);
+    }
+    
+    .ranking-item:nth-child(3) .ranking-position {
+      background: linear-gradient(135deg, #b45309, #d97706);
+    }
+    
+    .ranking-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .ranking-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .ranking-metric {
+      display: flex;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: var(--gray-600);
+    }
+    
+    .ranking-value {
+      font-weight: 600;
+      color: var(--primary);
+      margin-left: 0.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .panel-bienvenida {
+        padding: 1.5rem 1.25rem;
+      }
+      
+      .card {
+        padding: 1.25rem;
+      }
+      
+      .card-value {
+        font-size: 1.75rem;
+      }
+    }
+    
     /* Animaciones */
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-20px); }
-      60% { transform: translateY(-10px); }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
     }
-
+    
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .ranking-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gris-borde);
+    }
+    .ranking-list li:last-child {
+      border-bottom: none;
+    }
+    /* MODAL */
+    #ranking-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #ranking-modal > div {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:first-child {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:first-child:hover {
+      color: var(--azul-oscuro);
+    }
+    #ranking-modal h3 {
+      margin: 0 0 1.5rem 0;
+      color: var(--azul-oscuro);
+      font-size: 1.5em;
+    }
+    #ranking-modal ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    #ranking-modal li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--gris-borde);
+      display: flex;
+      justify-content: space-between;
+    }
+    #ranking-modal li:last-child {
+      border-bottom: none;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:last-child {
+      margin-top: 1.5rem;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--azul-acento);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:last-child:hover {
+      background-color: #1e90ff;
+    }
     /* Responsive */
     @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
       .sidebar {
-        width: 70px;
-        overflow: hidden;
-      }
-      
-      .sidebar h3, .sidebar span {
-        display: none;
-      }
-      
-      .sidebar a {
-        justify-content: center;
-        padding: 15px 0;
-      }
-      
-      .sidebar a i {
-        margin-right: 0;
-        font-size: 1.2rem;
-      }
-      
-      .main-content {
-        margin-left: 70px;
+        width: 100%;
+        height: auto;
         padding: 15px;
       }
-      
-      .inicio-container {
-        padding: 30px 20px;
+      .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
       }
-      
-      .inicio-title {
-        font-size: 1.8em;
+      .sidebar-nav button {
+        width: auto;
+        padding: 8px 15px;
+        font-size: 0.9em;
       }
-      
-      .inicio-subtitle {
-        font-size: 1.1em;
+      .main-content {
+        padding: 15px;
+        height: auto;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h3>Menú</h3>
-      <ul>
-        <li><a href="inicio.html" class="active"><i class="fas fa-home"></i> <span>Inicio</span></a></li>
-        <li><a href="dashboard.html"><i class="fas fa-user-plus"></i> <span>Lead</span></a></li>
-        <li><a href="Costumer.html"><i class="fas fa-users"></i> <span>Costumer</span></a></li>
-      </ul>
-    </div>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <img src="logo connecting.png" alt="Logo Connecting"/>
+      </div>
+      <div class="sidebar-title">Connecting</div>
+      <div class="sidebar-nav">
+        <button onclick="location.href='inicio.html'">Inicio</button>
+        <button class="active" onclick="location.href='lead.html'">Lead</button>
+        <button onclick="location.href='costumer.html'">Costumer</button>
+        <button onclick="location.href='Facturacion.html'">Facturacion</button>
+        <button onclick="logout()">Cerrar sesión</button>
+      </div>
+      <div class="sidebar-lema">
+        "Conectando tu éxito, un cliente a la vez"
+      </div>
+    </nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <div class="inicio-container">
-        <div class="inicio-icon">
-          <i class="fas fa-tools"></i>
+    <!-- Contenido principal -->
+    <main>
+      <div class="dashboard-container">
+        <!-- Panel de bienvenida -->
+        <div class="panel-bienvenida">
+          <h2>¡Bienvenido al Panel de Control!</h2>
+          <p class="fecha-actual"><span id="fecha-hoy"></span></p>
+          <p class="frase-inspiradora">"El éxito es la suma de pequeños esfuerzos repetidos día tras día."</p>
         </div>
-        <h1 class="inicio-title">En construcción</h1>
-        <div class="inicio-subtitle">Sistema de Gestión de Clientes</div>
-        <p style="color: var(--text-light); margin-bottom: 30px;">
-          Estamos trabajando para ofrecerte la mejor experiencia de gestión de clientes.
-        </p>
-        
-        <div class="inicio-features">
-          <div class="feature-item">
-            <div class="feature-icon">
-              <i class="fas fa-user-plus"></i>
-            </div>
-            <div class="feature-text">
-              <h3>Registro de Leads</h3>
-              <p>Gestiona y da seguimiento a tus nuevos clientes potenciales de manera eficiente.</p>
-            </div>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">
-              <i class="fas fa-users"></i>
-            </div>
-            <div class="feature-text">
-              <h3>Gestión de Clientes</h3>
-              <p>Mantén un registro completo de todos tus clientes en un solo lugar.</p>
-            </div>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="feature-text">
-              <h3>Reportes y Análisis</h3>
-              <p>Obtén información valiosa sobre el rendimiento de tus ventas.</p>
-            </div>
-          </div>
+
+        <!-- Filtros -->
+        <div class="filtros-dashboard">
+          <label>Mes:</label>
+          <select id="mes-select">
+            <option value="0">Enero</option>
+            <option value="1">Febrero</option>
+            <option value="2">Marzo</option>
+            <option value="3">Abril</option>
+            <option value="4">Mayo</option>
+            <option value="5">Junio</option>
+            <option value="6">Julio</option>
+            <option value="7">Agosto</option>
+            <option value="8">Septiembre</option>
+            <option value="9">Octubre</option>
+            <option value="10">Noviembre</option>
+            <option value="11">Diciembre</option>
+          </select>
+          <label>Año:</label>
+          <select id="anio-select"></select>
         </div>
-        
-        <div style="margin-top: 40px; color: var(--text-light); font-size: 0.9em;">
-          <i class="fas fa-code"></i> By Zombie
+
+        <!-- Sección de ranking -->
+        <div class="ranking-section">
+          <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
+          <ol class="ranking-list" id="ranking-puntos-list">
+            <div class="loader">Cargando...</div>
+          </ol>
         </div>
       </div>
+    </main>
+  </div>
+
+  <!-- Modal para ranking -->
+  <div id="ranking-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">
+    <div style="background:white; padding:2rem; border-radius:1rem; max-width:500px; width:90%; position:relative;">
+      <button onclick="cerrarModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+      <h3 id="modal-title">Ranking Completo</h3>
+      <ol id="modal-ranking-list" style="list-style:none; padding:0;"></ol>
+      <button onclick="cerrarModal()" style="margin-top:1.5rem; padding:0.5rem 1.5rem; border-radius:0.5rem; border:none; background-color:#22b3ec; color:white; cursor:pointer;">Cerrar</button>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script>
-    // Asegurar que el enlace activo en el menú se actualice correctamente
-    document.addEventListener('DOMContentLoaded', function() {
-      const currentPage = window.location.pathname.split('/').pop() || 'inicio.html';
-      const menuLinks = document.querySelectorAll('.sidebar a');
+    // Función para abrir el modal de ranking
+    function abrirModal(tipo) {
+      const modal = document.getElementById('ranking-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalList = document.getElementById('modal-ranking-list');
       
-      menuLinks.forEach(link => {
-        const linkHref = link.getAttribute('href');
-        if (linkHref === currentPage) {
-          link.classList.add('active');
-        } else {
-          link.classList.remove('active');
+      if (tipo === 'puntos') {
+        modalTitle.textContent = 'Ranking por Puntos';
+        // Aquí iría la lógica para cargar el ranking completo
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+      document.getElementById('ranking-modal').style.display = 'none';
+    }
+
+    // Función para inicializar la fecha actual
+    function inicializarFechaActual() {
+      const fechaHoy = new Date();
+      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaFormateada = fechaHoy.toLocaleDateString('es-ES', opciones);
+      const elementoFecha = document.getElementById('fecha-hoy');
+      if (elementoFecha) {
+        elementoFecha.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      }
+    }
+
+    function setupFilters() {
+      // Inicializar la fecha actual
+      inicializarFechaActual();
+      
+      // Configurar el año actual en el selector
+      const hoy = new Date();
+      const anioSelect = document.getElementById('anio-select');
+      if (anioSelect) {
+        // Asegurarse de que el año actual esté seleccionado
+        const anioActual = hoy.getFullYear();
+        for (let i = anioActual - 5; i <= anioActual + 1; i++) {
+          const option = document.createElement('option');
+          option.value = i;
+          option.textContent = i;
+          if (i === anioActual) {
+            option.selected = true;
+          }
+          anioSelect.appendChild(option);
         }
-      });
+      }
+    }
+
+    function logout() {
+      // Lógica para cerrar sesión
+      window.location.href = 'login.html';
+    }
+
+    // INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', () => {
+      setupFilters();
+      
+      // Configurar el mes actual en el selector
+      const hoy = new Date();
+      const mesSelect = document.getElementById('mes-select');
+      if (mesSelect) {
+        mesSelect.value = hoy.getMonth();
+      }
+    });
+  </script>
+</body>
+</html>
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+      --panel-bg: rgba(255,255,255,0.82);
+      --panel-radius: 22px;
+      --panel-shadow: 0 8px 32px rgba(30,41,59,0.15);
+      --ver-todo: #22b3ec;
+      --ver-todo-hover: #1ea1d8;
+      --glass-blur: blur(6px);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s, box-shadow 0.18s;
+      letter-spacing: 0.02em;
+      box-shadow: none;
+    }
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: var(--sidebar-text);
+      box-shadow: 0 2px 10px 0 #22b3ec55;
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 42px 0 36px 0;
+      background: var(--gris-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .dashboard-container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 18px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    .panel-bienvenida {
+      background: var(--panel-bg);
+      backdrop-filter: var(--glass-blur);
+      border-radius: var(--panel-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--panel-shadow);
+      transition: box-shadow 0.17s;
+    }
+    .panel-bienvenida-admin:hover {
+      box-shadow: 0 12px 48px #22b3ec1c;
+    }
+    .panel-bienvenida-admin .panel-header-img {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 22px 22px 0 0;
+      background: linear-gradient(90deg,#22b3ec77 65%,#b7d7ef22 100%);
+      position: relative;
+    }
+    .panel-bienvenida-admin h2 {
+      margin-top: 32px;
+      color: #22b3ec;
+      font-weight: 900;
+      font-size: 1.53em;
+      letter-spacing: -1px;
+      text-shadow: 0 1px 0 #fff, 0 2px 8px #22b3ec18;
+    }
+    .panel-bienvenida-admin .valores-cultura {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      margin: 18px 0 10px 0;
+      flex-wrap: wrap;
+    }
+    .valor-card {
+      background: rgba(32,179,236,0.13);
+      border-radius: 13px;
+      padding: 17px 24px 16px 24px;
+      box-shadow: 0 4px 18px #22b3ec18;
+      min-width: 105px;
+      text-align: center;
+      border: 1.5px solid #d0eafd;
+      transition: box-shadow 0.15s, border 0.13s;
+      font-size: 1.08em;
+    }
+    .valor-card:hover {
+      box-shadow: 0 6px 28px #22b3ec22;
+      border: 1.5px solid #22b3ec;
+    }
+    .panel-bienvenida-admin .frase-inspiradora {
+      font-size:1.17em;
+      color:#1e293b;
+      font-style:italic;
+      margin-bottom:18px;
+      margin-top: 8px;
+      opacity: 0.95;
+      text-shadow: 0 1px 0 #fff;
+    }
+    .panel-bienvenida-admin .panel-bajada {
+      margin-top:18px;
+      color:#b6c8d8;
+      font-size:1em;
+      font-style:italic;
+      letter-spacing: 0.015em;
+    }
+    /* Filtros */
+    .filtros-dashboard {
+      width:100%;
+      max-width:990px;
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      margin-bottom:8px;
+      gap: 8px;
+      font-size: 1.07em;
+      font-weight: 600;
+    }
+    .filtros-dashboard label {
+      font-weight:600;
+      margin-right:4px;
+    }
+    .filtros-dashboard select {
+      margin-right:12px;
+      padding:4px 8px;
+      border-radius:6px;
+      border:1.2px solid #d0eafd;
+      font-size: 1em;
+      background: #fff;
+      font-weight: 500;
+      outline: none;
+      transition: border 0.15s;
+    }
+    .filtros-dashboard select:focus {
+      border: 1.2px solid var(--sidebar-accent);
+    }
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(30,41,59,0.18);
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: modal-fade-in 0.18s;
+      backdrop-filter: blur(2.5px);
+    }
+    @keyframes modal-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-content {
+      background: rgba(255,255,255,0.98);
+      border-radius: 18px;
+      box-shadow: 0 8px 52px #22b3ec19;
+      padding: 40px 28px 28px 28px;
+      max-width: 430px;
+      width: 94vw;
+      max-height: 82vh;
+      overflow-y: auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      border: 2px solid #e2eaf4;
+      backdrop-filter: blur(6px);
+      transition: box-shadow 0.15s;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      font-size: 1.25em;
+      color: #22b3ec;
+      margin-bottom: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .modal-content ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 0;
+      width: 100%;
+    }
+    .modal-content li {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.04em;
+    }
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.7em;
+      color: #15344a;
+      cursor: pointer;
+      font-weight: bold;
+      opacity: 0.7;
+      transition: opacity 0.13s;
+    }
+    .modal-close:hover {
+      opacity: 1;
+    }
+    @media (max-width: 1100px) {
+      .dashboard-container, .panel-bienvenida { max-width: 99vw; }
+    }
+    @media (max-width: 700px) {
+      .layout { flex-direction: column;}
+      .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
+      .sidebar-logo { margin: 0 12px 0 0; }
+      .sidebar-title { font-size: 1em; margin-bottom: 0;}
+      .sidebar-nav { flex-direction: row; gap: 0; }
+      .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
+      .sidebar-lema { display: none;}
+      .main-content { padding: 12px 2px; }
+      .dashboard-container { padding: 0 2vw;}
+      .panel-bienvenida { padding-bottom: 18px; }
+      .panel-bienvenida .valores-cultura { flex-direction: column; gap: 7px; }
+      .modal-content { padding: 16px 4vw 12px 4vw; max-width: 98vw;}
+      .filtros-dashboard { flex-direction: column; align-items: flex-start; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo connecting.png" alt="Logo Connecting"/>
+    </div>
+    <div class="sidebar-title">Connecting</div>
+    <div class="sidebar-nav">
+      <button class="active" onclick="location.href='inicio.html'">Inicio</button>
+      <button onclick="location.href='lead.html'">Lead</button>
+      <button onclick="location.href='costumer.html'">Costumer</button>
+      <button onclick="location.href='Facturacion.html'">Facturacion</button>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+    <div class="sidebar-lema">
+      "Conectando tu éxito, un cliente a la vez"
+    </div>
+  </nav>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <div class="dashboard-container">
+        <!-- Panel de bienvenida -->
+        <div class="panel-bienvenida">
+          <h2>¡Bienvenido al Panel de Control!</h2>
+          <p class="fecha-actual"><span id="fecha-hoy"></span></p>
+          <p class="frase-inspiradora">"El éxito es la suma de pequeños esfuerzos repetidos día tras día."</p>
+        </div>
+        <!-- Filtro de mes/año -->
+        <div class="filtros-dashboard">
+          <label>Mes:</label>
+          <select id="mes-select">
+            <option value="0">Enero</option>
+            <option value="1">Febrero</option>
+            <option value="2">Marzo</option>
+            <option value="3">Abril</option>
+            <option value="4">Mayo</option>
+            <option value="5">Junio</option>
+            <option value="6">Julio</option>
+            <option value="7">Agosto</option>
+            <option value="8">Septiembre</option>
+            <option value="9">Octubre</option>
+            <option value="10">Noviembre</option>
+            <option value="11">Diciembre</option>
+          </select>
+          <label>Año:</label>
+          <select id="anio-select"></select>
+        </div>
+      </div>
+      <!-- MODAL -->
+      <div id="modal-overlay" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+          <button class="modal-close" onclick="cerrarModal()" title="Cerrar">×</button>
+          <h3 id="modal-title"></h3>
+          <ol id="modal-list"></ol>
+        </div>
+      </div>
+        <!-- Sección de ranking -->
+        <div class="ranking-section">
+          <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
+          <ol class="ranking-list" id="ranking-puntos-list">
+            <div class="loader">Cargando...</div>
+          </ol>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal para ranking -->
+  <div id="ranking-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModal()" title="Cerrar">×</button>
+      <h3 id="modal-title">Ranking Completo</h3>
+      <ol id="modal-ranking-list" class="ranking-list"></ol>
+      <button onclick="cerrarModal()" class="btn-cerrar">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    // Función para abrir el modal de ranking
+    function abrirModal(tipo) {
+      const modal = document.getElementById('ranking-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalList = document.getElementById('modal-ranking-list');
+      
+      if (tipo === 'puntos') {
+        modalTitle.textContent = 'Ranking por Puntos';
+        // Aquí iría la lógica para cargar el ranking completo
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+      document.getElementById('ranking-modal').style.display = 'none';
+    }
+
+    // Función para inicializar la fecha actual
+    function inicializarFechaActual() {
+      const fechaHoy = new Date();
+      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaFormateada = fechaHoy.toLocaleDateString('es-ES', opciones);
+      const elementoFecha = document.getElementById('fecha-hoy');
+      if (elementoFecha) {
+        elementoFecha.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      }
+    }
+
+    function setupFilters() {
+        // Inicializar la fecha actual
+        inicializarFechaActual();
+        
+        // Configurar el año actual en el selector
+        const hoy = new Date();
+        const anioSelect = document.getElementById('anio-select');
+        if (anioSelect) {
+            anioSelect.innerHTML = ''; // Limpiar opciones existentes
+            for(let y = hoy.getFullYear() - 2; y <= hoy.getFullYear() + 1; y++) {
+                let opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                anioSelect.appendChild(opt);
+            }
+            anioSelect.value = hoy.getFullYear();
+        }
+        
+        // Configurar el mes actual en el selector
+        const mesSelect = document.getElementById('mes-select');
+        if (mesSelect) {
+            mesSelect.value = hoy.getMonth();
+        }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+
+    // INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', () => {
+        setupFilters();
+        
+        // Configurar el cierre del modal al presionar Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") cerrarModal();
+        });
+        
+        // Configurar el cierre del modal al hacer clic fuera del contenido
+        const modalOverlay = document.getElementById('modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) cerrarModal();
+            });
+        }
     });
   </script>
 </body>
