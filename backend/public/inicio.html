@@ -2,25 +2,326 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Inicio - Connecting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio - Connecting</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --sidebar-bg: #15344a;
+      --sidebar-accent: #22b3ec;
+      --sidebar-hover: #1ea1d8;
+      --sidebar-text: #222;
+      --sidebar-radius: 14px;
+      --azul-oscuro: #1e293b;
+      --azul-acento: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+      --panel-bg: rgba(255,255,255,0.82);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* SIDEBAR */
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: white;
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 20px 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      width: 100%;
+      max-width: 100%;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    /* PANEL DE BIENVENIDA */
+    .panel-bienvenida {
+      background: white;
+      border-radius: var(--radius);
+      padding: 25px 30px;
+      box-shadow: var(--sombra);
+      text-align: center;
+    }
+    .panel-bienvenida h2 {
+      margin: 0 0 10px 0;
+      color: var(--azul-oscuro);
+      font-size: 1.8em;
+    }
+    .fecha-actual {
+      color: #64748b;
+      font-size: 1.1em;
+      margin: 0 0 15px 0;
+    }
+    .frase-inspiradora {
+      font-style: italic;
+      color: var(--azul-acento);
+      margin: 15px 0 0 0;
+      font-size: 1.1em;
+    }
+    /* FILTROS */
+    .filtros-dashboard {
+      background: white;
+      border-radius: var(--radius);
+      padding: 15px 25px;
+      box-shadow: var(--sombra);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .filtros-dashboard label {
+      font-weight: 600;
+      color: var(--azul-oscuro);
+    }
+    .filtros-dashboard select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--gris-borde);
+      background: white;
+      font-size: 0.95em;
+      cursor: pointer;
+    }
+    /* RANKING SECTION */
+    .ranking-section {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--sombra);
+      flex: 1;
+    }
+    .ranking-section h3 {
+      margin: 0 0 15px 0;
+      color: var(--azul-oscuro);
+      font-size: 1.3em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ranking-section h3 a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .ranking-section h3 a:hover {
+      color: var(--azul-acento);
+    }
+    .ranking-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .ranking-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gris-borde);
+    }
+    .ranking-list li:last-child {
+      border-bottom: none;
+    }
+    /* MODAL */
+    #ranking-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #ranking-modal > div {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:first-child {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:first-child:hover {
+      color: var(--azul-oscuro);
+    }
+    #ranking-modal h3 {
+      margin: 0 0 1.5rem 0;
+      color: var(--azul-oscuro);
+      font-size: 1.5em;
+    }
+    #ranking-modal ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    #ranking-modal li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--gris-borde);
+      display: flex;
+      justify-content: space-between;
+    }
+    #ranking-modal li:last-child {
+      border-bottom: none;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:last-child {
+      margin-top: 1.5rem;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--azul-acento);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #ranking-modal button[onclick="cerrarModal()"]:last-child:hover {
+      background-color: #1e90ff;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 15px;
+      }
+      .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .sidebar-nav button {
+        width: auto;
+        padding: 8px 15px;
+        font-size: 0.9em;
+      }
+      .main-content {
+        padding: 15px;
+        height: auto;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="layout">
-    <!-- Barra lateral -->
-    <nav>
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
       <div class="sidebar-logo">
-        <img src="logo connecting.png" alt="Logo Connecting" width="48">
+        <img src="logo connecting.png" alt="Logo Connecting"/>
       </div>
-      <div>Connecting</div>
+      <div class="sidebar-title">Connecting</div>
       <div class="sidebar-nav">
-        <button class="active" onclick="location.href='inicio.html'">Inicio</button>
-        <button onclick="location.href='lead.html'">Lead</button>
+        <button onclick="location.href='inicio.html'">Inicio</button>
+        <button class="active" onclick="location.href='lead.html'">Lead</button>
         <button onclick="location.href='costumer.html'">Costumer</button>
-        <button onclick="location.href='Facturacion.html'">Facturación</button>
+        <button onclick="location.href='Facturacion.html'">Facturacion</button>
         <button onclick="logout()">Cerrar sesión</button>
       </div>
-      <div>"Conectando tu éxito, un cliente a la vez"</div>
+      <div class="sidebar-lema">
+        "Conectando tu éxito, un cliente a la vez"
+      </div>
     </nav>
 
     <!-- Contenido principal -->
