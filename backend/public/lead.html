@@ -515,6 +515,16 @@
   // Variables globales para las gráficas
   let ventasPuntajeChart, ventasProductoChart;
 
+  // Función para formatear los valores en las etiquetas
+  function formatearValor(value, context) {
+    // Para la segunda barra (índice 1) que es la de puntajes, mostramos 2 decimales
+    if (context.datasetIndex === 1) {
+      return parseFloat(value).toFixed(2);
+    }
+    // Para la primera barra (índice 0) que es la de ventas, mostramos sin decimales
+    return Math.round(value);
+  }
+
   // Función para inicializar las gráficas
   function inicializarGraficas() {
     // Lista de productos proporcionada
@@ -686,17 +696,17 @@
           datalabels: {
             anchor: 'end',
             align: 'top',
-            formatter: function(value, context) {
-              // Para la segunda barra (índice 1) que es la de puntajes, mostramos 2 decimales
-              if (context.datasetIndex === 1) {
-                return value.toFixed(2);
-              }
-              // Para la primera barra (índice 0) que es la de ventas, mostramos sin decimales
-              return Math.round(value);
-            },
+            formatter: formatearValor,
             font: {
               weight: 'bold',
               size: 10
+            },
+            // Asegurar que los valores se muestren como números
+            formatter: function(value, context) {
+              if (context.datasetIndex === 1) { // Para puntajes
+                return parseFloat(value).toFixed(2);
+              }
+              return Math.round(value); // Para ventas
             }
           }
         },
@@ -861,6 +871,15 @@
       return;
     }
 
+    console.log('Datos recibidos para actualizar gráfica:', datos);
+    
+    // Asegurarse de que los puntajes tengan decimales
+    const puntajesConDecimales = (datos.puntajes || []).map(puntaje => 
+      typeof puntaje === 'number' ? puntaje : parseFloat(puntaje)
+    );
+    
+    console.log('Puntajes con decimales:', puntajesConDecimales);
+
     // Actualizar los datos de la gráfica
     ventasPuntajeChart.data.labels = datos.labels;
     
@@ -869,15 +888,22 @@
       ventasPuntajeChart.data.datasets[0].data = datos.ventas || [];
     }
     
-    // Actualizar datos de puntajes (barras rojas)
+    // Actualizar datos de puntajes (barras rojas) con valores numéricos
     if (ventasPuntajeChart.data.datasets[1]) {
-      ventasPuntajeChart.data.datasets[1].data = datos.puntajes || [];
+      ventasPuntajeChart.data.datasets[1].data = puntajesConDecimales;
     }
     
-    // Actualizar la gráfica con una animación suave
+    // Forzar la actualización de la gráfica
     ventasPuntajeChart.update({
       duration: 1000,
-      easing: 'easeInOutQuart'
+      easing: 'easeInOutQuart',
+      lazy: false
+    });
+    
+    console.log('Gráfica actualizada con los siguientes datos:', {
+      labels: ventasPuntajeChart.data.labels,
+      ventas: ventasPuntajeChart.data.datasets[0]?.data,
+      puntajes: ventasPuntajeChart.data.datasets[1]?.data
     });
   }
 
