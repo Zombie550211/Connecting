@@ -686,7 +686,14 @@
           datalabels: {
             anchor: 'end',
             align: 'top',
-            formatter: Math.round,
+            formatter: function(value, context) {
+              // Para la segunda barra (índice 1) que es la de puntajes, mostramos 2 decimales
+              if (context.datasetIndex === 1) {
+                return value.toFixed(2);
+              }
+              // Para la primera barra (índice 0) que es la de ventas, mostramos sin decimales
+              return Math.round(value);
+            },
             font: {
               weight: 'bold',
               size: 10
