@@ -1,13 +1,11 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('./models/user');
-const CrmAgente = require('./models/crm_agente');
-const Costumer = require('./models/costumer');
+
+// Import routes (you may need to update these to work without MongoDB)
 const summaryRoutes = require('./routes/summary');
 const crmAgenteRoutes = require('./routes/crm_agente');
 const costumerRoutes = require('./routes/costumer');
@@ -47,13 +45,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Conexión a MongoDB
-const MONGO_URL = process.env.MONGO_URL;
-if (!MONGO_URL) {
-  console.error('❌ Error: La variable de entorno MONGO_URL no está definida');
-  process.exit(1);
-}
 
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))

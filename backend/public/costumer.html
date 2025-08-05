@@ -628,8 +628,19 @@ async function cargarCostumers() {
     
     console.log('🔍 [FRONTEND] Filtros actuales:', { desde, hasta, mes, anio });
     
-    let url = '/api/crm-agente/clientes'; // NUEVO ENDPOINT
-    // El endpoint de crm-agente/clientes no requiere filtros por ahora
+    // Construir la URL con los parámetros de filtro
+    let url = '/api/costumer/clientes';
+    const params = new URLSearchParams();
+    
+    if (desde) params.append('desde', desde);
+    if (hasta) params.append('hasta', hasta);
+    if (mes) params.append('mes', mes);
+    if (anio) params.append('anio', anio);
+    
+    const queryString = params.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
     
     console.log('🔍 [FRONTEND] URL de la petición:', url);
     console.log('🔍 [FRONTEND] Realizando fetch...');
@@ -637,7 +648,8 @@ async function cargarCostumers() {
     const token = localStorage.getItem("token");
     const res = await fetch(url, {
       headers: {
-        "Authorization": `Bearer ${token}`
+        "Authorization": `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
     });
     console.log('🔍 [FRONTEND] Respuesta recibida - Status:', res.status);
@@ -678,19 +690,20 @@ function procesarDatosClientes(data) {
     data.clientes = [];
   }
   
+  // Mapear los campos de la colección 'costumers' a los campos esperados por la tabla
   datosCostumers = data.clientes.map(item => ({
     "_id": item._id,
-    "FECHA": item.FECHA_VENTA || "",
-    "TEAM": item.TEAM || "",
-    "AGENTE": item.AGENTE || "",
-    "PRODUCTO": item.PRODUCTO || "",
-    "FECHA_INSTALACION": item.FECHA_DE_INSTALACION || "",
-    "ESTADO": item.ESTADO || "Pending",
-    "PUNTAJE": item.PUNTAJE || 0,
-    "CUENTA": item.CUENTA || 'Elige',
-    "TELÉFONO": item.TELEFONO || "",
-    "DIRECCIÓN": item.DIRECCION || "",
-    "ZIP": item.ZIP || ""
+    "FECHA": item.fecha || "",
+    "TEAM": item.team || "",
+    "AGENTE": item.agente || "",
+    "PRODUCTO": item.servicio || "", // Asumiendo que 'servicio' es el campo en costumers
+    "FECHA_INSTALACION": item.fechaInstalacion || "",
+    "ESTADO": item.estado || "Pending",
+    "PUNTAJE": item.puntaje || 0,
+    "CUENTA": item.cuenta || 'Elige',
+    "TELÉFONO": item.telefono || "",
+    "DIRECCIÓN": item.direccion || "",
+    "ZIP": item.codigoPostal || ""  // Asumiendo que 'codigoPostal' es el campo en costumers
   }));
   
   console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);

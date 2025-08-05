@@ -1,21 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const Costumer = require('../models/costumer');
 
 // Ventas Hoy
-router.get('/ventas/hoy', async (req, res) => {
-  try {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0); // 00:00:00 de hoy
-    const mañana = new Date(hoy);
-    mañana.setDate(hoy.getDate() + 1);
-    const total = await Costumer.countDocuments({
-      fecha: { $gte: hoy.toISOString().slice(0, 10), $lt: mañana.toISOString().slice(0, 10) }
-    });
-    res.json({ total });
-  } catch (error) {
-    res.status(500).json({ total: 0, error: error.message });
-  }
+router.get('/ventas/hoy', (req, res) => {
+  // Placeholder response since MongoDB was removed
+  res.json({ total: 0 });
 });
 
 // Leads Pendientes (requiere campo estado en el modelo)
@@ -52,6 +41,32 @@ router.get('/ventas/mes', async (req, res) => {
     res.json({ total });
   } catch (error) {
     res.status(500).json({ total: 0, error: error.message });
+  }
+});
+
+// Obtener lista de clientes con filtros
+router.get('/clientes/lista', async (req, res) => {
+  try {
+    const { desde, hasta, mes, anio } = req.query;
+    let query = {};
+
+    // Construir el query según los filtros proporcionados
+    if (desde && hasta) {
+      query.fecha = { $gte: new Date(desde), $lte: new Date(hasta) };
+    } else if (mes && anio) {
+      const primerDia = new Date(anio, mes - 1, 1);
+      const ultimoDia = new Date(anio, mes, 0);
+      query.fecha = { $gte: primerDia, $lte: ultimoDia };
+    }
+
+    const clientes = await Costumer.find(query)
+      .sort({ fecha: -1 }) // Ordenar por fecha descendente
+      .lean();
+
+    res.json({ clientes });
+  } catch (error) {
+    console.error('Error al obtener clientes:', error);
+    res.status(500).json({ error: 'Error al obtener la lista de clientes' });
   }
 });
 
