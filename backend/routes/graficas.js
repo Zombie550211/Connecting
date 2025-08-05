@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CrmAgente = require('../models/crmAgente');
+const CrmAgente = require('./crm_agente');
 
 // Obtener ventas por equipo
 router.get('/ventas', async (req, res) => {
