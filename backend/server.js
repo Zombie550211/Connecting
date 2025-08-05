@@ -4,6 +4,10 @@ const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+
+// Configuración de la conexión a MongoDB
+const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/crm';
 
 // Import routes (you may need to update these to work without MongoDB)
 const summaryRoutes = require('./routes/summary');
