@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 // Importar el modelo CrmAgente
-const CrmAgente = require('../models/CrmAgente');
+const CrmAgente = require('./crm_agente');
 
 // Ventas Hoy
 router.get('/ventas/hoy', async (req, res) => {
