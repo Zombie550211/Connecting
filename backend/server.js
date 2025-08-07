@@ -9,17 +9,14 @@ const mongoose = require('mongoose');
 // Configuración de la conexión a MongoDB
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/crm';
 
+// Inicialización de la aplicación
+const app = express();
+
 // Import routes
 const summaryRoutes = require('./routes/summary');
 const crmAgenteRoutes = require('./routes/crm_agente');
 const costumerRoutes = require('./routes/costumer');
 const graficasRoutes = require('./routes/graficas');
-
-// Montar rutas de la API con autenticación
-app.use('/api/crm', protect, crmAgenteRoutes);
-
-// Inicialización de la aplicación
-const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -51,6 +48,9 @@ const corsOptions = {
 // Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Montar rutas de la API con autenticación
+app.use('/api/crm', protect, crmAgenteRoutes);
 app.use(express.urlencoded({ extended: true }));
 
 mongoose.connect(MONGO_URL)
