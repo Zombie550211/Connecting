@@ -6,132 +6,140 @@
   <title>En construcción - Sistema de Gestión de Clientes</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * { 
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    :root {
+      --sidebar-bg: #15344a;
+      --sidebar-accent: #22b3ec;
+      --sidebar-hover: #1ea1d8;
+      --sidebar-text: #222;
+      --sidebar-radius: 14px;
+      --azul-oscuro: #1e293b;
+      --azul-acento: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+      --trans: 0.18s;
+      --form-width: 420px;
     }
-    
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f2f5;
-      color: #333;
-      line-height: 1.6;
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
     }
-    
-    .container {
+    .layout {
       display: flex;
-      justify-content: center;
-      align-items: center;
       min-height: 100vh;
-      padding: 20px;
     }
-    
-    .card {
+    /* SIDEBAR - ESTILO REPORTS, NEGRITA */
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .graph-canvas {
+      width: 100% !important;
+      height: calc(100% - 35px) !important; /* Restar espacio del título */
+      min-height: 220px;
+      max-height: 100%;
+    }
+    .graph-container {
+      min-height: 350px;
+      height: 100%;
+      max-height: 650px;
+      display: flex;
+      flex-direction: column;
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      padding: 40px;
-      text-align: center;
-      max-width: 800px;
-      width: 100%;
-    }
-    
-    .icon-container {
-      margin-bottom: 20px;
-    }
-    
-    .icon-container i {
-      font-size: 48px;
-      color: #22b3ec;
-    }
-    
-    h1 {
-      color: #1e293b;
-      margin-bottom: 10px;
-      font-size: 2.5em;
-    }
-    
-    h2 {
-      color: #22b3ec;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-    
-    p {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 1.1em;
-    }
-    
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-      margin-top: 40px;
-      text-align: left;
-    }
-    
-    .feature {
-      padding: 20px;
       border-radius: 12px;
-      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0 auto;
     }
-    
-    .feature:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    .graph-container h3 {
+      font-size: 0.95em;
+      margin: 0 0 15px 0;
+      padding-bottom: 8px;
+      color: var(--azul-oscuro);
+      border-bottom: 1px solid var(--gris-borde);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    
-    .feature i {
-      font-size: 32px;
-      color: #22b3ec;
-      margin-bottom: 15px;
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
       display: block;
     }
-    
-    .feature h3 {
-      color: #1e293b;
-      margin-bottom: 10px;
-      font-size: 1.2em;
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
     }
-    
-    .feature p {
-      font-size: 0.95em;
-      margin-bottom: 0;
-      color: #666;
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
     }
-    
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      color: #999;
-      font-size: 0.9em;
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
     }
-    
-    .by {
-      color: #22b3ec;
+    .sidebar-nav button.active, .sidebar-nav button:hover {
+      background: var(--sidebar-accent);
+      color: var(--sidebar-text);
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
       font-weight: 600;
     }
-    
-    @media (max-width: 768px) {
-      .card {
-        padding: 30px 20px;
-      }
-      
-      .features {
-        grid-template-columns: 1fr;
-      }
-      
-      h1 {
-        font-size: 2em;
-      }
-      
-      h2 {
-        font-size: 1.5em;
-      }
-    }
+
   </style>
 </head>
 <body>
