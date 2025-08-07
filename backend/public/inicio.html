@@ -632,9 +632,9 @@
       }
     }
 
-    // Función para formatear número de miembros
-    function formatearMiembros(cantidad) {
-      return cantidad + (cantidad === 1 ? ' miembro' : ' miembros');
+    // Función para formatear número de ventas
+    function formatearVentas(cantidad) {
+      return cantidad + (cantidad === 1 ? ' venta' : ' ventas');
     }
 
     // Función para cargar equipos
@@ -662,7 +662,7 @@
             <li class="ranking-item">
               <span class="rank-number">${indice + 1}</span>
               <span class="rank-name">${equipo.nombre}</span>
-              <span class="rank-value">${formatearMiembros(equipo.miembros)}</span>
+              <span class="rank-value">${formatearVentas(equipo.ventas)}</span>
             </li>
           `).join('');
         } else {
