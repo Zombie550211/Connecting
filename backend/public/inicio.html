@@ -312,11 +312,21 @@
       color: var(--azul-oscuro);
     }
 
-    .loading {
+    .cargando, .error, .sin-datos {
       text-align: center;
-      padding: 1rem;
+      padding: 1.5rem 1rem;
       color: #a0aec0;
       font-style: italic;
+      list-style: none;
+      margin: 0;
+    }
+    
+    .error {
+      color: #e53e3e;
+    }
+    
+    .sin-datos {
+      color: #718096;
     }
 
     /* Estilos responsivos */
@@ -526,7 +536,6 @@
       </div>
     <!-- Sección de Bienvenida -->
     <section class="welcome-section">
-      <h1 class="welcome-title">¡Bienvenido al Panel de Control!</h1>
       <p class="welcome-subtitle">Monitorea el rendimiento de tu equipo y mantente al día con las estadísticas más importantes.</p>
       <div id="fecha-actual" class="fecha-actual"></div>
     </section>
@@ -582,6 +591,11 @@
   </div>
 
   <script>
+    // Función para obtener el token de autenticación
+    function obtenerToken() {
+      return localStorage.getItem('token');
+    }
+
     // Función para formatear la fecha en español
     function formatearFecha(fecha) {
       const opciones = { 
@@ -602,19 +616,72 @@
       }
     }
 
+    // Función para mostrar mensaje de carga
+    function mostrarCargando(idElemento) {
+      const elemento = document.getElementById(idElemento);
+      if (elemento) {
+        elemento.innerHTML = '<li class="cargando">Cargando equipos...</li>';
+      }
+    }
+
+    // Función para mostrar error
+    function mostrarError(idElemento, mensaje) {
+      const elemento = document.getElementById(idElemento);
+      if (elemento) {
+        elemento.innerHTML = `<li class="error">${mensaje}</li>`;
+      }
+    }
+
+    // Función para formatear número de miembros
+    function formatearMiembros(cantidad) {
+      return cantidad + (cantidad === 1 ? ' miembro' : ' miembros');
+    }
+
+    // Función para cargar equipos
+    async function cargarEquipos() {
+      const listaEquipos = document.getElementById('ranking-team');
+      if (!listaEquipos) return;
+
+      mostrarCargando('ranking-team');
+      
+      try {
+        const respuesta = await fetch('/api/crm/equipos', {
+          headers: {
+            'Authorization': `Bearer ${obtenerToken()}`
+          }
+        });
+
+        if (!respuesta.ok) {
+          throw new Error('Error al cargar los equipos');
+        }
+
+        const datos = await respuesta.json();
+        
+        if (datos.equipos && datos.equipos.length > 0) {
+          listaEquipos.innerHTML = datos.equipos.map((equipo, indice) => `
+            <li class="ranking-item">
+              <span class="rank-number">${indice + 1}</span>
+              <span class="rank-name">${equipo.nombre}</span>
+              <span class="rank-value">${formatearMiembros(equipo.miembros)}</span>
+            </li>
+          `).join('');
+        } else {
+          listaEquipos.innerHTML = '<li class="sin-datos">No hay equipos disponibles</li>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarError('ranking-team', 'Error al cargar los equipos. Intente recargar la página.');
+      }
+    }
+
     // Función para cargar datos de los rankings
     function cargarRankings() {
-      // Aquí iría la lógica para cargar los datos reales
       console.log('Cargando datos de rankings...');
-      
-      // Simulación de carga de datos
-      setTimeout(() => {
-        console.log('Datos de rankings cargados');
-      }, 1000);
+      cargarEquipos(); // Cargar equipos al iniciar
     }
 
     // Función para cerrar sesión
-    function logout() {
+    function cerrarSesion() {
       localStorage.removeItem('token');
       window.location.href = 'login.html';
     }
@@ -628,8 +695,8 @@
       cargarRankings();
       
       // Configurar el cierre del modal al presionar Escape
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+      document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape') {
           const modal = document.getElementById('modal-overlay');
           if (modal) modal.style.display = 'none';
         }

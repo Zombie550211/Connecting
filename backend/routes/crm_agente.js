@@ -1,7 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
-// Obtener clientes - Respuesta vacía ya que se eliminó MongoDB
+// Obtener equipos únicos
+router.get('/equipos', async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const equipos = await db.collection('crm_agente').distinct('team');
+    
+    // Contar miembros por equipo
+    const equiposConMiembros = await Promise.all(
+      equipos.map(async (equipo) => {
+        const count = await db.collection('crm_agente').countDocuments({ team: equipo });
+        return {
+          nombre: equipo,
+          miembros: count
+        };
+      })
+    );
+    
+    // Ordenar por cantidad de miembros (de mayor a menor)
+    equiposConMiembros.sort((a, b) => b.miembros - a.miembros);
+    
+    res.json({ equipos: equiposConMiembros });
+  } catch (error) {
+    console.error('Error al obtener equipos:', error);
+    res.status(500).json({ error: 'Error al obtener los equipos' });
+  }
+});
+
+// Obtener clientes
 router.get('/clientes', (req, res) => {
   // Respuesta de ejemplo con array vacío
   res.json({ clientes: [] });

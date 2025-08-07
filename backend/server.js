@@ -9,11 +9,14 @@ const mongoose = require('mongoose');
 // Configuración de la conexión a MongoDB
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/crm';
 
-// Import routes (you may need to update these to work without MongoDB)
+// Import routes
 const summaryRoutes = require('./routes/summary');
 const crmAgenteRoutes = require('./routes/crm_agente');
 const costumerRoutes = require('./routes/costumer');
 const graficasRoutes = require('./routes/graficas');
+
+// Montar rutas de la API con autenticación
+app.use('/api/crm', protect, crmAgenteRoutes);
 
 // Inicialización de la aplicación
 const app = express();
