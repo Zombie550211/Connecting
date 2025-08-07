@@ -1,109 +1,112 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 
-// Importar el modelo CrmAgente
-const CrmAgente = require('./crm_agente');
-
-// Ventas Hoy
-router.get('/ventas/hoy', async (req, res) => {
-  try {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const manana = new Date(hoy);
-    manana.setDate(hoy.getDate() + 1);
-    
-    const total = await CrmAgente.countDocuments({
-      dia_venta: { $gte: hoy, $lt: manana }
-    });
-    
-    res.json({ total });
-  } catch (error) {
-    console.error('Error al contar ventas de hoy:', error);
-    res.status(500).json({ total: 0, error: 'Error al obtener ventas de hoy' });
+// Datos de prueba
+const datosPrueba = [
+  {
+    fecha: new Date('2023-08-01T10:00:00'),
+    equipo: 'Equipo A',
+    agente: 'Juan Pérez',
+    producto: 'Internet Básico',
+    fecha_instalacion: new Date('2023-08-05T14:30:00'),
+    estado: 'Completado',
+    puntaje: 85,
+    cuenta: 'CLI-001',
+    telefono: '555-123-4567',
+    direccion: 'Calle Falsa 123',
+    zip: '01010'
+  },
+  {
+    fecha: new Date('2023-08-02T11:30:00'),
+    equipo: 'Equipo B',
+    agente: 'María García',
+    producto: 'Internet Premium',
+    fecha_instalacion: new Date('2023-08-06T10:00:00'),
+    estado: 'Pendiente',
+    puntaje: 92,
+    cuenta: 'CLI-002',
+    telefono: '555-987-6543',
+    direccion: 'Avenida Siempre Viva 742',
+    zip: '02020'
+  },
+  {
+    fecha: new Date('2023-08-03T09:15:00'),
+    equipo: 'Equipo A',
+    agente: 'Carlos López',
+    producto: 'TV + Internet',
+    fecha_instalacion: new Date('2023-08-07T16:45:00'),
+    estado: 'Cancelado',
+    puntaje: 78,
+    cuenta: 'CLI-003',
+    telefono: '555-456-7890',
+    direccion: 'Boulevard de los Sueños 456',
+    zip: '03030'
   }
+];
+
+// Ventas Hoy - Datos de prueba
+router.get('/ventas/hoy', (req, res) => {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const manana = new Date(hoy);
+  manana.setDate(hoy.getDate() + 1);
+  
+  const ventasHoy = datosPrueba.filter(cliente => {
+    return cliente.fecha >= hoy && cliente.fecha < manana;
+  });
+  
+  res.json({ total: ventasHoy.length });
 });
 
-// Leads Pendientes
-router.get('/leads/pendientes', async (req, res) => {
-  try {
-    const total = await CrmAgente.countDocuments({ status: 'Pendiente' });
-    res.json({ total });
-  } catch (error) {
-    console.error('Error al contar leads pendientes:', error);
-    res.status(500).json({ total: 0, error: 'Error al obtener leads pendientes' });
-  }
+// Leads Pendientes - Datos de prueba
+router.get('/leads/pendientes', (req, res) => {
+  const pendientes = datosPrueba.filter(cliente => cliente.estado === 'Pendiente');
+  res.json({ total: pendientes.length });
 });
 
-// Total Clientes
-router.get('/clientes', async (req, res) => {
-  try {
-    const total = await CrmAgente.countDocuments();
-    res.json({ total });
-  } catch (error) {
-    console.error('Error al contar clientes:', error);
-    res.status(500).json({ total: 0, error: 'Error al obtener el total de clientes' });
-  }
+// Total Clientes - Datos de prueba
+router.get('/clientes', (req, res) => {
+  res.json({ total: datosPrueba.length });
 });
 
-// Ventas este mes
-router.get('/ventas/mes', async (req, res) => {
-  try {
-    const hoy = new Date();
-    const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+// Ventas este mes - Datos de prueba
+router.get('/ventas/mes', (req, res) => {
+  const hoy = new Date();
+  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  
+  const ventasMes = datosPrueba.filter(cliente => {
+    return cliente.fecha >= primerDiaMes && cliente.fecha <= hoy;
+  });
+  
+  res.json({ total: ventasMes.length });
+});
+
+// Obtener lista de clientes con filtros - Datos de prueba
+router.get('/clientes/lista', (req, res) => {
+  const { desde, hasta, mes, anio } = req.query;
+  let clientesFiltrados = [...datosPrueba];
+
+  // Aplicar filtros si existen
+  if (desde && hasta) {
+    const fechaDesde = new Date(desde);
+    const fechaHasta = new Date(hasta);
+    clientesFiltrados = clientesFiltrados.filter(cliente => 
+      cliente.fecha >= fechaDesde && cliente.fecha <= fechaHasta
+    );
+  } else if (mes && anio) {
+    const primerDia = new Date(anio, mes - 1, 1);
+    const ultimoDia = new Date(anio, mes, 0);
+    ultimoDia.setHours(23, 59, 59, 999);
     
-    const total = await CrmAgente.countDocuments({
-      dia_venta: { $gte: primerDiaMes, $lte: hoy }
-    });
-    
-    res.json({ total });
-  } catch (error) {
-    console.error('Error al contar ventas del mes:', error);
-    res.status(500).json({ total: 0, error: 'Error al obtener ventas del mes' });
+    clientesFiltrados = clientesFiltrados.filter(cliente => 
+      cliente.fecha >= primerDia && cliente.fecha <= ultimoDia
+    );
   }
-});
 
-// Obtener lista de clientes con filtros
-router.get('/clientes/lista', async (req, res) => {
-  try {
-    const { desde, hasta, mes, anio } = req.query;
-    let query = {};
+  // Ordenar por fecha descendente
+  clientesFiltrados.sort((a, b) => b.fecha - a.fecha);
 
-    // Construir el query según los filtros proporcionados
-    if (desde && hasta) {
-      query.dia_venta = { $gte: new Date(desde), $lte: new Date(hasta) };
-    } else if (mes && anio) {
-      const primerDia = new Date(anio, mes - 1, 1);
-      const ultimoDia = new Date(anio, mes, 0);
-      ultimoDia.setHours(23, 59, 59, 999); // Para incluir todo el último día
-      query.dia_venta = { $gte: primerDia, $lte: ultimoDia };
-    }
-
-    const clientes = await CrmAgente.find(query)
-      .select('dia_venta team agent tipo_servicio dia_instalacion status puntaje telefono_principal direccion zip')
-      .sort({ dia_venta: -1 })
-      .lean();
-
-    // Mapear los campos al formato esperado por el frontend
-    const clientesMapeados = clientes.map(cliente => ({
-      fecha: cliente.dia_venta,
-      equipo: cliente.team,
-      agente: cliente.agent,
-      producto: cliente.tipo_servicio,
-      fecha_instalacion: cliente.dia_instalacion,
-      estado: cliente.status,
-      puntaje: cliente.puntaje,
-      cuenta: cliente.cuenta || '',
-      telefono: cliente.telefono_principal,
-      direccion: cliente.direccion,
-      zip: cliente.zip
-    }));
-
-    res.json({ clientes: clientesMapeados });
-  } catch (error) {
-    console.error('Error al obtener clientes:', error);
-    res.status(500).json({ error: 'Error al obtener la lista de clientes' });
-  }
+  res.json({ clientes: clientesFiltrados });
 });
 
 module.exports = router;
