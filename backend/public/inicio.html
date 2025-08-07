@@ -3,10 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Control</title>
+  <title>Panel de Control - Connecting</title>
+  <style>
+    :root {
+      --sidebar-bg: #15344a;
+      --sidebar-accent: #22b3ec;
+      --sidebar-hover: #1ea1d8;
+      --sidebar-text: #222;
+      --sidebar-radius: 14px;
+      --azul-oscuro: #1e293b;
+      --azul-acento: #22b3ec;
+      --gris-bg: #f5f7fa;
+      --gris-borde: #e3e8ee;
+      --gris-titulo: #edf3fa;
+      --azul-celda: #f1f5fa;
+      --radius: 15px;
+      --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* SIDEBAR */
+    .sidebar {
+      background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
+      min-width: 180px;
+      width: 180px;
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
+      height: 100vh;
+      box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
+      font-weight: 700;
+    }
+    .sidebar-logo {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sidebar-logo img {
+      width: 48px;
+      height: 48px;
+      display: block;
+    }
+    .sidebar-title {
+      color: var(--sidebar-accent);
+      font-size: 1.15em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: .5px;
+    }
+    .sidebar-nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+    .sidebar-nav button {
+      width: 95%;
+      margin: 0 auto;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      color: var(--sidebar-text);
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 16px;
+      text-align: left;
+      padding-left: 18px;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+    .sidebar-nav button:hover, .sidebar-nav button.active {
+      background: var(--sidebar-accent);
+      color: var(--sidebar-text);
+    }
+    .sidebar-lema {
+      color: var(--sidebar-accent);
+      font-style: italic;
+      font-size: 0.99em;
+      opacity: 0.6;
+      margin-top: auto;
+      padding: 12px 10px 18px 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+    /* Contenido principal */
+    .main-content {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        min-width: 80px;
+        width: 80px;
+      }
+      .sidebar-title, .sidebar-lema, .sidebar-nav button span {
+        display: none;
+      }
+      .sidebar-nav button {
+        padding: 12px 0;
+        text-align: center;
+      }
+      .main-content {
+        padding: 15px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- Contenido del panel de control -->
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <img src="logo connecting.png" alt="Logo Connecting"/>
+      </div>
+      <div class="sidebar-title">Connecting</div>
+      <div class="sidebar-nav">
+        <a href="inicio.html" class="active"><i class="fas fa-home"></i> <span>Inicio</span></a>
+        <a href="lead.html"><i class="fas fa-user-plus"></i> <span>Lead</span></a>
+        <a href="costumer.html"><i class="fas fa-users"></i> <span>Costumer</span></a>
+        <a href="Facturacion.html"><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Cerrar sesión</span></a>
+      </div>
+      <div class="sidebar-lema">Conectando tu éxito, un cliente a la vez</div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <h1>Bienvenido al Panel de Control</h1>
+      <!-- Aquí irá el contenido principal de la página de inicio -->
+    </main>
+  </div>
+
+  <!-- Font Awesome para los iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   
   <script>
     // Función para cerrar sesión
