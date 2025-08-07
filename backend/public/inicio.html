@@ -674,10 +674,86 @@
       }
     }
 
+    // Función para cargar ranking de agentes por ventas
+    async function cargarRankingVentas() {
+      const listaVentas = document.getElementById('ranking-ventas');
+      if (!listaVentas) return;
+
+      mostrarCargando('ranking-ventas');
+      
+      try {
+        const respuesta = await fetch('/api/crm/ranking/ventas', {
+          headers: {
+            'Authorization': `Bearer ${obtenerToken()}`
+          }
+        });
+
+        if (!respuesta.ok) {
+          throw new Error('Error al cargar el ranking de ventas');
+        }
+
+        const datos = await respuesta.json();
+        
+        if (datos.ranking && datos.ranking.length > 0) {
+          listaVentas.innerHTML = datos.ranking.map((agente, indice) => `
+            <li class="ranking-item">
+              <span class="rank-number">${indice + 1}</span>
+              <span class="rank-name">${agente.nombre}</span>
+              <span class="rank-value">${formatearVentas(agente.ventas)}</span>
+            </li>
+          `).join('');
+        } else {
+          listaVentas.innerHTML = '<li class="sin-datos">No hay datos de ventas disponibles</li>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarError('ranking-ventas', 'Error al cargar el ranking de ventas. Intente recargar la página.');
+      }
+    }
+
+    // Función para cargar ranking de agentes por puntos
+    async function cargarRankingPuntos() {
+      const listaPuntos = document.getElementById('ranking-puntos');
+      if (!listaPuntos) return;
+
+      mostrarCargando('ranking-puntos');
+      
+      try {
+        const respuesta = await fetch('/api/crm/ranking/puntos', {
+          headers: {
+            'Authorization': `Bearer ${obtenerToken()}`
+          }
+        });
+
+        if (!respuesta.ok) {
+          throw new Error('Error al cargar el ranking de puntos');
+        }
+
+        const datos = await respuesta.json();
+        
+        if (datos.ranking && datos.ranking.length > 0) {
+          listaPuntos.innerHTML = datos.ranking.map((agente, indice) => `
+            <li class="ranking-item">
+              <span class="rank-number">${indice + 1}</span>
+              <span class="rank-name">${agente.nombre}</span>
+              <span class="rank-value">${agente.puntos} pts</span>
+            </li>
+          `).join('');
+        } else {
+          listaPuntos.innerHTML = '<li class="sin-datos">No hay datos de puntos disponibles</li>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarError('ranking-puntos', 'Error al cargar el ranking de puntos. Intente recargar la página.');
+      }
+    }
+
     // Función para cargar datos de los rankings
     function cargarRankings() {
       console.log('Cargando datos de rankings...');
       cargarEquipos(); // Cargar equipos al iniciar
+      cargarRankingVentas(); // Cargar ranking de ventas
+      cargarRankingPuntos(); // Cargar ranking de puntos
     }
 
     // Función para cerrar sesión
