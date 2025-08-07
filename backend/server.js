@@ -45,21 +45,6 @@ const corsOptions = {
   maxAge: 600 // Tiempo que el navegador puede cachear la respuesta preflight (en segundos)
 };
 
-// Middlewares
-app.use(cors(corsOptions));
-app.use(express.json());
-
-// Montar rutas de la API con autenticación
-app.use('/api/crm', protect, crmAgenteRoutes);
-app.use(express.urlencoded({ extended: true }));
-
-mongoose.connect(MONGO_URL)
-  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
-  .catch(err => {
-    console.error('❌ Error al conectar a MongoDB:', err);
-    process.exit(1);
-  });
-
 // Middleware de autenticación JWT
 const protect = (req, res, next) => {
   let token;
@@ -70,13 +55,30 @@ const protect = (req, res, next) => {
       req.user = decoded; // Agrega el payload del token a la request
       next();
     } catch (error) {
-      console.error('Error de autenticación:', error.message);
-      res.status(401).json({ success: false, mensaje: 'Token no válido' });
+      console.error('Error en la autenticación:', error);
+      return res.status(401).json({ message: 'Token no válido' });
     }
-  } else {
-    res.status(401).json({ success: false, mensaje: 'No autorizado, no hay token' });
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: 'No autorizado, no se proporcionó token' });
   }
 };
+
+// Middlewares
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Montar rutas de la API con autenticación
+app.use('/api/crm', protect, crmAgenteRoutes);
+
+mongoose.connect(MONGO_URL)
+  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
+  .catch(err => {
+    console.error('❌ Error al conectar a MongoDB:', err);
+    process.exit(1);
+  });
 
 // Rutas de autenticación
 app.post('/api/register', async (req, res) => {
