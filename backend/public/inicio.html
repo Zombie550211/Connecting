@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Inicio</title>
+  <title>Inicio - Connecting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --sidebar-bg: #15344a;
@@ -197,6 +198,148 @@
       opacity: 0.95;
       text-shadow: 0 1px 0 #fff;
     }
+    /* Estilos para la sección de bienvenida */
+    .welcome-section {
+      background: var(--panel-bg);
+      border-radius: var(--panel-radius);
+      box-shadow: var(--panel-shadow);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto 2rem;
+      text-align: center;
+      border: 1.5px solid #e2eaf4;
+    }
+
+    .welcome-title {
+      color: var(--azul-oscuro);
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .welcome-subtitle {
+      color: #4a5568;
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.6;
+    }
+
+    /* Estilos para los contenedores de ranking */
+    .rankings-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .ranking-card {
+      background: var(--panel-bg);
+      border-radius: var(--panel-radius);
+      box-shadow: var(--panel-shadow);
+      padding: 1.5rem;
+      border: 1.5px solid #e2eaf4;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .ranking-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(34, 179, 236, 0.1);
+    }
+
+    .ranking-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .ranking-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .ranking-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--azul-oscuro);
+      margin: 0;
+    }
+
+    .ranking-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .ranking-item:last-child {
+      border-bottom: none;
+    }
+
+    .rank-number {
+      font-weight: 700;
+      color: var(--azul-acento);
+      min-width: 24px;
+      margin-right: 12px;
+    }
+
+    .rank-name {
+      flex-grow: 1;
+      color: #4a5568;
+    }
+
+    .rank-value {
+      font-weight: 600;
+      color: var(--azul-oscuro);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 1rem;
+      color: #a0aec0;
+      font-style: italic;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+      .welcome-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .welcome-title {
+        font-size: 1.8rem;
+      }
+      
+      .rankings-container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+      }
+      
+      .ranking-card {
+        margin-bottom: 1rem;
+      }
+    }
+
     .panel-bienvenida-admin .panel-bajada {
       margin-top:18px;
       color:#b6c8d8;
@@ -381,9 +524,94 @@
           <ol id="modal-list"></ol>
         </div>
       </div>
-    </main>
-        <h3><a href="#" onclick="abrirModal('puntos')">🚀 Ranking por Puntos</a></h3>
-        <ol class="ranking-list" id="ranking-puntos-list"><div class="loader">Cargando...</div></ol>
+    <!-- Sección de Bienvenida -->
+    <section class="welcome-section">
+      <h1 class="welcome-title">¡Bienvenido al Panel de Control!</h1>
+      <p class="welcome-subtitle">Monitorea el rendimiento de tu equipo y mantente al día con las estadísticas más importantes.</p>
+      <div id="fecha-actual" class="fecha-actual"></div>
+    </section>
+
+    <!-- Contenedor de Rankings -->
+    <div class="rankings-container">
+      <!-- Ranking por Team -->
+      <div class="ranking-card">
+        <div class="ranking-header">
+          <div class="ranking-icon" style="background-color: #4F46E5;">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3 class="ranking-title">Ranking por Team</h3>
+        </div>
+        <ol class="ranking-list" id="ranking-team">
+          <li class="ranking-item">
+            <span class="rank-number">1</span>
+            <span class="rank-name">Team A</span>
+            <span class="rank-value">95%</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">2</span>
+            <span class="rank-name">Team B</span>
+            <span class="rank-value">87%</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">3</span>
+            <span class="rank-name">Team C</span>
+            <span class="rank-value">79%</span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Ranking por Ventas -->
+      <div class="ranking-card">
+        <div class="ranking-header">
+          <div class="ranking-icon" style="background-color: #10B981;">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="ranking-title">Ranking por Ventas</h3>
+        </div>
+        <ol class="ranking-list" id="ranking-ventas">
+          <li class="ranking-item">
+            <span class="rank-number">1</span>
+            <span class="rank-name">Juan Pérez</span>
+            <span class="rank-value">$12,450</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">2</span>
+            <span class="rank-name">María Gómez</span>
+            <span class="rank-value">$10,200</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">3</span>
+            <span class="rank-name">Carlos López</span>
+            <span class="rank-value">$9,750</span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Ranking por Puntos -->
+      <div class="ranking-card">
+        <div class="ranking-header">
+          <div class="ranking-icon" style="background-color: #F59E0B;">
+            <i class="fas fa-trophy"></i>
+          </div>
+          <h3 class="ranking-title">Ranking por Puntos</h3>
+        </div>
+        <ol class="ranking-list" id="ranking-puntos">
+          <li class="ranking-item">
+            <span class="rank-number">1</span>
+            <span class="rank-name">Ana Martínez</span>
+            <span class="rank-value">1,250 pts</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">2</span>
+            <span class="rank-name">Luis Ramírez</span>
+            <span class="rank-value">1,180 pts</span>
+          </li>
+          <li class="ranking-item">
+            <span class="rank-number">3</span>
+            <span class="rank-name">Sofía Ruiz</span>
+            <span class="rank-value">1,120 pts</span>
+          </li>
+        </ol>
       </div>
     </div>
   </main>
@@ -396,71 +624,58 @@
   </div>
 
   <script>
-    // Función para cerrar el modal si existe
-    function cerrarModal() {
-      const modal = document.getElementById('modal-overlay');
-      if (modal) {
-        modal.style.display = 'none';
-      }
+    // Función para formatear la fecha en español
+    function formatearFecha(fecha) {
+      const opciones = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      return fecha.toLocaleDateString('es-ES', opciones);
     }
 
     // Función para inicializar la fecha actual
     function inicializarFechaActual() {
       const fechaHoy = new Date();
-      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const fechaFormateada = fechaHoy.toLocaleDateString('es-ES', opciones);
-      const elementoFecha = document.getElementById('fecha-hoy');
+      const elementoFecha = document.getElementById('fecha-actual');
       if (elementoFecha) {
-        elementoFecha.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+        elementoFecha.textContent = formatearFecha(fechaHoy);
       }
     }
 
-    function setupFilters() {
-        // Inicializar la fecha actual
-        inicializarFechaActual();
-        
-        // Configurar el año actual en el selector
-        const hoy = new Date();
-        const anioSelect = document.getElementById('anio-select');
-        if (anioSelect) {
-            anioSelect.innerHTML = ''; // Limpiar opciones existentes
-            for(let y = hoy.getFullYear() - 2; y <= hoy.getFullYear() + 1; y++) {
-                let opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                anioSelect.appendChild(opt);
-            }
-            anioSelect.value = hoy.getFullYear();
-        }
-        
-        // Configurar el mes actual en el selector
-        const mesSelect = document.getElementById('mes-select');
-        if (mesSelect) {
-            mesSelect.value = hoy.getMonth();
-        }
+    // Función para cargar datos de los rankings
+    function cargarRankings() {
+      // Aquí iría la lógica para cargar los datos reales
+      console.log('Cargando datos de rankings...');
+      
+      // Simulación de carga de datos
+      setTimeout(() => {
+        console.log('Datos de rankings cargados');
+      }, 1000);
     }
 
+    // Función para cerrar sesión
     function logout() {
       localStorage.removeItem('token');
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
     }
 
     // INICIALIZACIÓN
     document.addEventListener('DOMContentLoaded', () => {
-        setupFilters();
-        
-        // Configurar el cierre del modal al presionar Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") cerrarModal();
-        });
-        
-        // Configurar el cierre del modal al hacer clic fuera del contenido
-        const modalOverlay = document.getElementById('modal-overlay');
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', function(e) {
-                if (e.target === this) cerrarModal();
-            });
+      // Inicializar la fecha actual
+      inicializarFechaActual();
+      
+      // Cargar datos de los rankings
+      cargarRankings();
+      
+      // Configurar el cierre del modal al presionar Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('modal-overlay');
+          if (modal) modal.style.display = 'none';
         }
+      });
     });
   </script>
 </body>
