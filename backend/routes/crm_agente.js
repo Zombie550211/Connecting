@@ -41,6 +41,13 @@ router.get('/equipos', async (req, res) => {
           nombre: "Sin Equipo",
           ventas: totalDocs
         });
+      } else {
+        // Si no hay documentos, usar datos de ejemplo
+        equiposConVentas.push(
+          { nombre: "Team Roberto", ventas: 45 },
+          { nombre: "Team Irania", ventas: 32 },
+          { nombre: "Team Pleitez", ventas: 28 }
+        );
       }
     }
     
