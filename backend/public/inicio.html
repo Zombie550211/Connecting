@@ -6,6 +6,132 @@
   <title>En construcción - Sistema de Gestión de Clientes</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      text-align: center;
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .icon-container {
+      margin-bottom: 20px;
+    }
+    
+    .icon-container i {
+      font-size: 48px;
+      color: #22b3ec;
+    }
+    
+    h1 {
+      color: #1e293b;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+    
+    h2 {
+      color: #22b3ec;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    
+    p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+      text-align: left;
+    }
+    
+    .feature {
+      padding: 20px;
+      border-radius: 12px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature i {
+      font-size: 32px;
+      color: #22b3ec;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    .feature h3 {
+      color: #1e293b;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    
+    .feature p {
+      font-size: 0.95em;
+      margin-bottom: 0;
+      color: #666;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 0.9em;
+    }
+    
+    .by {
+      color: #22b3ec;
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .card {
+        padding: 30px 20px;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      h2 {
+        font-size: 1.5em;
+      }
+    }
     :root {
       --sidebar-bg: #15344a;
       --sidebar-accent: #22b3ec;
