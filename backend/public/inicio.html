@@ -1,18 +1,180 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Control</title>
+  <title>En construcción - Sistema de Gestión de Clientes</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      text-align: center;
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .icon-container {
+      margin-bottom: 20px;
+    }
+    
+    .icon-container i {
+      font-size: 48px;
+      color: #22b3ec;
+    }
+    
+    h1 {
+      color: #1e293b;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+    
+    h2 {
+      color: #22b3ec;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    
+    p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+      text-align: left;
+    }
+    
+    .feature {
+      padding: 20px;
+      border-radius: 12px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature i {
+      font-size: 32px;
+      color: #22b3ec;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    .feature h3 {
+      color: #1e293b;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+    
+    .feature p {
+      font-size: 0.95em;
+      margin-bottom: 0;
+      color: #666;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 0.9em;
+    }
+    
+    .by {
+      color: #22b3ec;
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .card {
+        padding: 30px 20px;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      h2 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- Contenido del panel de control -->
-  
+  <div class="container">
+    <div class="card">
+      <div class="icon-container">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h1>En construcción</h1>
+      <h2>Sistema de Gestión de Clientes</h2>
+      <p>Estamos trabajando para ofrecerte la mejor experiencia de gestión de clientes</p>
+      
+      <div class="features">
+        <div class="feature">
+          <i class="fas fa-user-plus"></i>
+          <h3>Registro de Leads</h3>
+          <p>Gestiona y da seguimiento a tus nuevos clientes potenciales de manera eficiente.</p>
+        </div>
+        
+        <div class="feature">
+          <i class="fas fa-users"></i>
+          <h3>Gestión de Clientes</h3>
+          <p>Mantén un registro completo de todos tus clientes en un solo lugar.</p>
+        </div>
+        
+        <div class="feature">
+          <i class="fas fa-chart-pie"></i>
+          <h3>Reportes y Análisis</h3>
+          <p>Obtén información valiosa sobre el rendimiento de tus ventas.</p>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>&copy; 2024 <span class="by">By Zombie</span></p>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Función para cerrar sesión
     function logout() {
       localStorage.removeItem('token');
-      window.location.href = 'login.html';
+      window.location.href = '/login.html';
     }
   </script>
 </body>
