@@ -162,9 +162,9 @@ router.get('/ranking/puntos', async (req, res) => {
     // Si no hay resultados, devolver datos de ejemplo
     if (rankingPuntos.length === 0) {
       rankingPuntos.push(
-        { nombre: "Daniela Bonilla", puntos: 1250 },
-        { nombre: "Josue Renderos", puntos: 980 },
-        { nombre: "Luis Chavarría", puntos: 850 }
+        { nombre: "Daniela Bonilla", puntos: 21.35 },
+        { nombre: "Josue Renderos", puntos: 18.90 },
+        { nombre: "Luis Chavarría", puntos: 15.50 }
       );
     }
     
