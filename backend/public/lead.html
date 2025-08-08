@@ -37,7 +37,7 @@
       display: flex;
       min-height: 100vh;
     }
-    /* SIDEBAR - ESTILO REPORTS, NEGRITA */
+    /* SIDEBAR */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       min-width: 180px;
@@ -50,6 +50,10 @@
       height: 100vh;
       box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
       font-weight: 700;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
     }
     .graph-canvas {
       width: 100% !important;
@@ -127,6 +131,8 @@
       padding-left: 18px;
       transition: background 0.15s, color 0.15s;
       letter-spacing: 0.02em;
+      cursor: pointer;
+      outline: none;
     }
     .sidebar-nav button.active, .sidebar-nav button:hover {
       background: var(--sidebar-accent);
@@ -147,6 +153,7 @@
     .main-content {
       flex: 1;
       padding: 20px 30px;
+      margin-left: 180px; /* Same as sidebar width */
       overflow-y: auto;
       display: flex;
       gap: 25px;
