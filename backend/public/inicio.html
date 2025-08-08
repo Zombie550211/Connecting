@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      /* Color palette */
+      :root {
       --sidebar-bg: #15344a;
       --sidebar-accent: #22b3ec;
       --sidebar-hover: #1ea1d8;
@@ -23,67 +22,19 @@
       --sombra: 0 4px 24px 0 rgba(30,41,59,0.09);
       --trans: 0.18s;
       --form-width: 420px;
-      
-      /* Spacing */
-      --spacing-xs: 0.5rem;
-      --spacing-sm: 0.75rem;
-      --spacing: 1rem;
-      --spacing-lg: 1.5rem;
-      --spacing-xl: 2rem;
-      
-      /* Typography */
-      --font-base: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-      --font-heading: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-      
-      /* Effects */
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      --transition: all 0.2s ease-in-out;
-      --radius: 0.5rem;
-      --radius-lg: 1rem;
-      --radius-xl: 1.5rem;
-      
-      /* Card styles */
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --card-shadow: var(--shadow);
-      --card-padding: 1.5rem;
-      
-      /* Sidebar */
-      --sidebar-width: 240px;
-      --sidebar-bg: #1e293b;
-      --sidebar-text: #e2e8f0;
-      --sidebar-hover: #334155;
-      --sidebar-active: #3b82f6;
     }
-    /* Base styles */
-    * { 
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
+    * { box-sizing: border-box; }
     body {
-      font-family: var(--font-base);
+      font-family: 'Segoe UI', 'Roboto', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background: var(--light-bg);
-      color: var(--dark);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-      font-family: var(--font-heading);
-      font-weight: 600;
-      color: var(--dark);
-      line-height: 1.25;
+      background: var(--gris-bg);
+      color: var(--azul-oscuro);
     }
     .layout {
       display: flex;
       min-height: 100vh;
     }
+    /* SIDEBAR */
     .sidebar {
       background: linear-gradient(180deg, #f7fafd 0%, #f4f7fb 100%);
       min-width: 180px;
@@ -96,6 +47,41 @@
       height: 100vh;
       box-shadow: 0 6px 24px 0 rgba(30,41,59,0.10);
       font-weight: 700;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+    }
+    .graph-canvas {
+      width: 100% !important;
+      height: calc(100% - 35px) !important; /* Restar espacio del título */
+      min-height: 220px;
+      max-height: 100%;
+    }
+    .graph-container {
+      min-height: 350px;
+      height: 100%;
+      max-height: 650px;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .graph-container h3 {
+      font-size: 0.95em;
+      margin: 0 0 15px 0;
+      padding-bottom: 8px;
+      color: var(--azul-oscuro);
+      border-bottom: 1px solid var(--gris-borde);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .sidebar-logo {
       width: 58px;
@@ -142,6 +128,8 @@
       padding-left: 18px;
       transition: background 0.15s, color 0.15s;
       letter-spacing: 0.02em;
+      cursor: pointer;
+      outline: none;
     }
     .sidebar-nav button.active, .sidebar-nav button:hover {
       background: var(--sidebar-accent);
@@ -158,6 +146,174 @@
       font-weight: 600;
     }
 
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 20px 30px;
+      margin-left: 180px; /* Same as sidebar width */
+      overflow-y: auto;
+      display: flex;
+      gap: 25px;
+      width: 100%;
+      max-width: 100%;
+      height: calc(100vh - 40px);
+      box-sizing: border-box;
+    }
+    /* LEAD FORM */
+    .lead-content-row {
+      display: flex;
+      flex-direction: row;
+      gap: 25px;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 20px 20px; /* Añadido padding inferior */
+      align-items: flex-start; /* Alinea los elementos al inicio */
+      box-sizing: border-box;
+      min-height: auto; /* Eliminada la altura mínima fija */
+    }
+    .graphs-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+      padding: 20px 10px;
+      overflow-y: auto;
+    }
+    
+    .graph-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 0;  /* Permite que se encoja si es necesario */
+    }
+    .form-section {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px 30px 20px; /* Reducido el padding inferior */
+      box-shadow: var(--sombra);
+      width: 410px;
+      min-width: 400px;
+      flex-shrink: 0; /* Evita que se encoja */
+      overflow-y: visible; /* Permite que el contenido se muestre sin scroll */
+      height: auto; /* Altura automática según el contenido */
+      border: 1px solid var(--gris-borde);
+      position: sticky;
+      top: 20px; /* Pequeño margen superior */
+      margin-bottom: 20px; /* Espacio debajo del formulario */
+    }
+    .form-section h2 {
+      font-weight: 700;
+      font-size: 2em;
+      color: #183153;
+      margin-bottom: 28px;
+      margin-top: 0;
+    }
+    .form-group { margin-bottom: 18px;}
+    .form-section label {
+      color: #25a9dd;
+      font-weight: 700;
+      margin-bottom: 7px;
+      display: block;
+    }
+    .form-section label[for="fecha-lead"] {
+      color: #183153;
+    }
+    .form-section input, .form-section select {
+      background: #f8fcff;
+      border-radius: 7px;
+      border: 1.5px solid #e4e6f1;
+      padding: 13px 15px;
+      font-size: 1.12em;
+      width: 100%;
+      margin-top: 2px;
+    }
+    .form-section button[type="submit"] {
+      background: #25a9dd;
+      color: #fff;
+      border-radius: 9px;
+      border: none;
+      font-weight: 700;
+      font-size: 1.18em;
+      padding: 16px 0;
+      width: 100%;
+      margin-top: 9px;
+      transition: background 0.2s;
+    }
+    .form-section button[type="submit"]:hover {
+      background: #183153;
+    }
+    .graph-container {
+      min-height: 300px;
+      height: 100%;
+      max-height: 400px;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      padding: 20px;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    
+    @media (max-width: 1100px) {
+      .lead-content-row { 
+        flex-direction: column; 
+        gap: 20px; 
+        max-height: none;
+      }
+      .main-content { 
+        padding: 15px; 
+        height: auto;
+      }
+      .form-section {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        position: static;
+      }
+    }
+    @media (max-width: 700px) {
+      .layout { flex-direction: column;}
+      .sidebar { flex-direction: row; width: 100vw; min-height: 0; height: 70px; align-items: center; padding: 7px 0; }
+      .sidebar-logo { margin: 0 12px 0 0; }
+      .sidebar-title { font-size: 1em; margin-bottom: 0;}
+      .sidebar-nav { flex-direction: row; gap: 0; }
+      .sidebar-nav button { font-size: 1em; padding: 11px 6px; width: auto; border-radius: 7px; margin:0 3px; }
+      .sidebar-lema { display: none;}
+      .main-content { 
+        padding: 12px 2px; 
+        flex-direction: column;
+      }
+      .lead-content-row { 
+        flex-direction: column; 
+        gap: 12px;
+        max-width: 100%;
+      }
+      .form-section, .graphs-section { 
+        width: 100%;
+        max-width: 100%;
+        padding: 13px 7px;
+      }
+      .graphs-section {
+        grid-template-columns: 1fr !important;
+      }
+    }
     .main-content {
       flex: 1;
       padding: 42px 0 36px 0;
