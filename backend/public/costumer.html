@@ -830,7 +830,7 @@ async function cargarCostumers() {
     console.log('🔍 [FRONTEND] Filtros actuales:', { desde, hasta, mes, anio });
     
     // Construir la URL con los parámetros de filtro
-    let url = '/api/costumer/clientes';
+    let url = '/api/costumer/clientes/lista';
     const params = new URLSearchParams();
     
     if (desde) params.append('desde', desde);
@@ -890,17 +890,17 @@ function procesarDatosClientes(data) {
   // Mapear los campos de la colección 'costumers' a los campos esperados por la tabla
   datosCostumers = data.clientes.map(item => ({
     "_id": item._id,
-    "FECHA": item.fecha || "",
-    "TEAM": item.team || "",
-    "AGENTE": item.agente || "",
-    "PRODUCTO": item.servicio || "", // Asumiendo que 'servicio' es el campo en costumers
-    "FECHA_INSTALACION": item.fechaInstalacion || "",
-    "ESTADO": item.estado || "Pending",
-    "PUNTAJE": item.puntaje || 0,
-    "CUENTA": item.cuenta || 'Elige',
-    "TELÉFONO": item.telefono || "",
-    "DIRECCIÓN": item.direccion || "",
-    "ZIP": item.codigoPostal || ""  // Asumiendo que 'codigoPostal' es el campo en costumers
+    "FECHA": item.dia_venta || "", // Mapeado desde 'dia_venta' de la colección
+    "TEAM": item.equipo || "",      // Mapeado desde 'equipo' de la colección
+    "AGENTE": item.agente || "",    // Mantenido igual
+    "PRODUCTO": item.producto_contratado || "", // Mapeado desde 'producto_contratado'
+    "FECHA_INSTALACION": item.fecha_instalacion || "", // Mantenido similar
+    "ESTADO": item.status || "Pending", // Mapeado desde 'status'
+    "PUNTAJE": item.puntaje || 0,    // Mantenido igual
+    "CUENTA": item.cuenta || 'Elige', // Mantenido igual
+    "TELÉFONO": item.telefono || "", // Mantenido igual
+    "DIRECCIÓN": item.direccion || "", // Mantenido igual
+    "ZIP": item.zip || ""            // Mapeado desde 'zip'
   }));
   
   console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
@@ -1091,20 +1091,30 @@ async function actualizarEstadoCostumer(id, estado, selectEl) {
 
 function llenarFiltroTeamYAgente() {
   const teamSelect = document.getElementById("filtro-team");
-  teamSelect.innerHTML = `<option value="">Todos</option>` +
-    Object.keys(TEAMS).map(t => `<option value="${t}">${t}</option>`).join('');
+  
+  // Obtener equipos únicos de los datos cargados
+  const equiposUnicos = [...new Set(datosCostumers.map(item => item.TEAM).filter(Boolean))];
+  
+  // Ordenar alfabéticamente los equipos
+  equiposUnicos.sort();
+  
+  // Limpiar y llenar el select de equipos
+  teamSelect.innerHTML = '<option value="">Todos los equipos</option>' +
+    equiposUnicos.map(equipo => `<option value="${equipo}">${equipo}</option>`).join('');
   
   // Remover event listeners previos para evitar duplicados
   teamSelect.onchange = null;
   
+  // Agregar event listener para el cambio de equipo
   teamSelect.addEventListener('change', function() {
     llenarFiltroAgente(this.value);
     aplicarFiltros();
   });
   
+  // Llenar inicialmente el filtro de agentes
   llenarFiltroAgente(teamSelect.value);
   
-  // Agregar event listener al filtro de agente después de llenarlo
+  // Configurar event listener para el filtro de agente
   const agenteSelect = document.getElementById("filtro-agente");
   agenteSelect.onchange = null; // Remover listener previo
   agenteSelect.addEventListener('change', aplicarFiltros);
@@ -1112,36 +1122,88 @@ function llenarFiltroTeamYAgente() {
 
 function llenarFiltroAgente(team) {
   const agenteSelect = document.getElementById("filtro-agente");
-  let agentes = [];
-  if (!team) {
-    agentes = Object.values(TEAMS).flat();
-  } else {
-    agentes = TEAMS[team] || [];
+  
+  // Obtener agentes únicos de los datos cargados
+  let agentesFiltrados = [...datosCostumers];
+  
+  // Filtrar por equipo si se especificó
+  if (team) {
+    agentesFiltrados = agentesFiltrados.filter(item => item.TEAM === team);
   }
-  agenteSelect.innerHTML = `<option value="">Todos</option>` +
-    agentes.map(a => `<option value="${a}">${a}</option>`).join('');
+  
+  // Obtener agentes únicos y ordenarlos alfabéticamente
+  const agentesUnicos = [...new Set(agentesFiltrados.map(item => item.AGENTE).filter(Boolean))];
+  agentesUnicos.sort();
+  
+  // Limpiar y llenar el select de agentes
+  agenteSelect.innerHTML = '<option value="">Todos los agentes</option>' +
+    agentesUnicos.map(agente => `<option value="${agente}">${agente}</option>`).join('');
 }
 
 function aplicarFiltros() {
-  let filtrados = [...datosCostumers];
-  const desde = document.getElementById("filtro-fecha-desde").value;
-  const hasta = document.getElementById("filtro-fecha-hasta").value;
-  const team = document.getElementById("filtro-team").value;
-  const agente = document.getElementById("filtro-agente").value;
-  const telefono = document.getElementById("filtro-telefono").value.trim();
-  const direccion = document.getElementById("filtro-direccion").value.trim();
-  const zip = document.getElementById("filtro-zip").value.trim();
-
-  if (desde) filtrados = filtrados.filter(f => f.FECHA >= desde);
-  if (hasta) filtrados = filtrados.filter(f => f.FECHA <= hasta);
-  if (team) filtrados = filtrados.filter(f => f.TEAM === team);
-  if (agente) filtrados = filtrados.filter(f => f.AGENTE === agente);
-  if (telefono) filtrados = filtrados.filter(f => f["TELÉFONO"].includes(telefono));
-  if (direccion) filtrados = filtrados.filter(f => f["DIRECCIÓN"].toLowerCase().includes(direccion.toLowerCase()));
-  if (zip) filtrados = filtrados.filter(f => f.ZIP.includes(zip));
-
-  renderizarTablaCostumers(filtrados);
-  recalcularKPIsCostumer();
+  try {
+    console.log('🔍 [FRONTEND] Aplicando filtros...');
+    
+    // Obtener valores de los filtros
+    const desde = document.getElementById("filtro-fecha-desde").value;
+    const hasta = document.getElementById("filtro-fecha-hasta").value;
+    const team = document.getElementById("filtro-team").value;
+    const agente = document.getElementById("filtro-agente").value;
+    const telefono = document.getElementById("filtro-telefono").value.trim();
+    const direccion = document.getElementById("filtro-direccion").value.trim();
+    const zip = document.getElementById("filtro-zip").value.trim();
+    const estado = document.getElementById("filtro-estado").value;
+    
+    console.log('🔍 [FRONTEND] Valores de filtros:', { desde, hasta, team, agente, telefono, direccion, zip, estado });
+    
+    // Filtrar los datos
+    let filtrados = [...datosCostumers].filter(item => {
+      // Filtro por fecha desde
+      if (desde && item.FECHA < desde) return false;
+      
+      // Filtro por fecha hasta
+      if (hasta && item.FECHA > hasta) return false;
+      
+      // Filtro por equipo
+      if (team && item.TEAM !== team) return false;
+      
+      // Filtro por agente
+      if (agente && item.AGENTE !== agente) return false;
+      
+      // Filtro por teléfono (búsqueda parcial insensible a mayúsculas)
+      if (telefono && !item["TELÉFONO"].toString().toLowerCase().includes(telefono.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por dirección (búsqueda parcial insensible a mayúsculas)
+      if (direccion && !item["DIRECCIÓN"].toLowerCase().includes(direccion.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por código postal (búsqueda parcial)
+      if (zip && !item.ZIP.toString().includes(zip)) {
+        return false;
+      }
+      
+      // Filtro por estado
+      if (estado && item.ESTADO !== estado) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`🔍 [FRONTEND] Filtros aplicados. Mostrando ${filtrados.length} de ${datosCostumers.length} registros.`);
+    
+    // Renderizar la tabla con los datos filtrados
+    renderizarTablaCostumers(filtrados);
+    
+    // Recalcular KPIs con los datos filtrados
+    recalcularKPIsCostumer();
+    
+  } catch (error) {
+    console.error('❌ [FRONTEND] Error al aplicar filtros:', error);
+  }
 }
 
 async function eliminarCostumer(id) {

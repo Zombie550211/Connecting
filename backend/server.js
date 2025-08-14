@@ -72,6 +72,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Montar rutas de la API con autenticación
 app.use('/api/crm', protect, crmAgenteRoutes);
+app.use('/api/costumer', protect, costumerRoutes);
 
 mongoose.connect(MONGO_URL)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))
