@@ -1196,5 +1196,33 @@
       });
     });
   </script>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="inicio.js"></script>
+
+<script>
+function logout() {
+  fetch('/logout', {
+    method: 'GET',
+    credentials: 'include' // Importante para incluir las cookies en la solicitud
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Redirigir al login después de cerrar sesión
+      window.location.href = 'login.html';
+    } else {
+      alert('Error al cerrar sesión: ' + (data.message || 'Error desconocido'));
+    }
+  })
+  .catch(error => {
+    console.error('Error al cerrar sesión:', error);
+    // Aún así redirigir al login en caso de error
+    window.location.href = 'login.html';
+  });
+}
+</script>
 </body>
 </html>

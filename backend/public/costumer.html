@@ -860,22 +860,18 @@ async function cargarCostumers() {
       const errorText = await res.text();
       console.error('❌ [FRONTEND] Texto del error:', errorText);
       
-      // Si hay un error, cargar datos de prueba
-      console.log('⚠️ [FRONTEND] Cargando datos de prueba debido al error...');
-      const data = { clientes: cargarDatosDePrueba() };
-      
-      // Continuar con el procesamiento normal
-      procesarDatosClientes(data);
+      // Mostrar mensaje de error al usuario
+      alert('No se pudieron cargar los clientes. Por favor, intente nuevamente.');
       return;
     }
     
     const data = await res.json();
     console.log('🔍 [FRONTEND] Datos recibidos del backend:', data);
     
-    // Si no hay datos, cargar datos de prueba
+    // Si no hay datos, inicializar array vacío
     if (!data.clientes || data.clientes.length === 0) {
-      console.log('ℹ️ [FRONTEND] No hay datos de clientes. Cargando datos de prueba...');
-      data.clientes = cargarDatosDePrueba();
+      console.log('ℹ️ [FRONTEND] No hay datos de clientes.');
+      data.clientes = [];
     }
     
     procesarDatosClientes(data);
@@ -1251,7 +1247,24 @@ document.getElementById("filtro-direccion").addEventListener("input", aplicarFil
 document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
 
 function logout() {
-  fetch('/logout').then(() => location.href = 'login.html');
+  fetch('/logout', {
+    method: 'GET',
+    credentials: 'include' // Importante para incluir las cookies en la solicitud
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Redirigir al login después de cerrar sesión
+      window.location.href = 'login.html';
+    } else {
+      alert('Error al cerrar sesión: ' + (data.message || 'Error desconocido'));
+    }
+  })
+  .catch(error => {
+    console.error('Error al cerrar sesión:', error);
+    // Aún así redirigir al login en caso de error
+    window.location.href = 'login.html';
+  });
 }
 window.TEAMS = TEAMS;
 </script>

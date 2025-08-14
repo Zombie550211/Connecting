@@ -424,6 +424,13 @@ app.get('/api/check-auth', protect, (req, res) => {
   res.json({ success: true, message: 'Token válido.' });
 });
 
+// Ruta para cerrar sesión
+app.get('/logout', (req, res) => {
+  // Limpiar la cookie de autenticación
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Sesión cerrada correctamente' });
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);

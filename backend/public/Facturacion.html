@@ -222,7 +222,24 @@ if (window.ChartjsPluginDatalabels) {
 }
 
 function logout() {
-  fetch('/logout').then(() => location.href = 'login.html');
+  fetch('/logout', {
+    method: 'GET',
+    credentials: 'include' // Importante para incluir las cookies en la solicitud
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Redirigir al login después de cerrar sesión
+      window.location.href = 'login.html';
+    } else {
+      alert('Error al cerrar sesión: ' + (data.message || 'Error desconocido'));
+    }
+  })
+  .catch(error => {
+    console.error('Error al cerrar sesión:', error);
+    // Aún así redirigir al login en caso de error
+    window.location.href = 'login.html';
+  });
 }
 const filtroMes = document.getElementById("filtroMes");
 const filtroAno = document.getElementById("filtroAno");
