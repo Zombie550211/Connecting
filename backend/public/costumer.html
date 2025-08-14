@@ -926,32 +926,70 @@ function procesarDatosClientes(data) {
 }
 
 function recalcularKPIsCostumer() {
-  const hoy = new Date();
-  const hoyStr = hoy.toISOString().slice(0, 10);
-
-  const ventasHoy = datosCostumers.filter(c => c.FECHA === hoyStr).length;
-  const pendientes = datosCostumers.filter(c => c.Estado === "Pending").length;
-  const canceladas = datosCostumers.filter(c => c.Estado === "Cancelled").length;
-
-  let mes, anio;
-  if (datosCostumers.length > 0) {
-    [anio, mes] = datosCostumers[0].FECHA.split('-');
-    mes = Number(mes);
-    anio = Number(anio);
-  } else {
-    mes = hoy.getMonth() + 1;
-    anio = hoy.getFullYear();
+  try {
+    console.log('🔍 [FRONTEND] Recalculando KPIs...');
+    
+    // Verificar si hay datos
+    if (!datosCostumers || datosCostumers.length === 0) {
+      console.log('ℹ️ [FRONTEND] No hay datos para calcular KPIs');
+      document.getElementById('kpi-ventas-hoy').textContent = '0';
+      document.getElementById('kpi-leads-pendientes').textContent = '0';
+      document.getElementById('kpi-clientes').textContent = '0';
+      document.getElementById('kpi-ventas-mes').textContent = '0';
+      return;
+    }
+    
+    const hoy = new Date();
+    const hoyStr = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    
+    // Calcular métricas
+    const ventasHoy = datosCostumers.filter(c => {
+      return c.FECHA && c.FECHA.toString() === hoyStr;
+    }).length;
+    
+    const pendientes = datosCostumers.filter(c => {
+      return c.ESTADO && c.ESTADO.toString().toLowerCase() === 'pending';
+    }).length;
+    
+    const canceladas = datosCostumers.filter(c => {
+      return c.ESTADO && c.ESTADO.toString().toLowerCase() === 'cancelled';
+    }).length;
+    
+    // Obtener mes y año actual
+    const mesActual = hoy.getMonth() + 1;
+    const anioActual = hoy.getFullYear();
+    
+    // Calcular ventas del mes actual
+    const ventasMes = datosCostumers.filter(c => {
+      if (!c.FECHA) return false;
+      try {
+        const fecha = new Date(c.FECHA);
+        return fecha.getMonth() + 1 === mesActual && fecha.getFullYear() === anioActual;
+      } catch (e) {
+        console.warn('❌ [FRONTEND] Error al procesar fecha:', c.FECHA, e);
+        return false;
+      }
+    }).length;
+    
+    // Actualizar la UI
+    const safeSetText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = value;
+      } else {
+        console.warn(`❌ [FRONTEND] No se encontró el elemento con ID: ${id}`);
+      }
+    };
+    
+    safeSetText('kpi-ventas-hoy', ventasHoy);
+    safeSetText('kpi-leads-pendientes', pendientes);
+    safeSetText('kpi-clientes', canceladas);
+    safeSetText('kpi-ventas-mes', ventasMes);
+    
+    console.log('✅ [FRONTEND] KPIs recalculados:', { ventasHoy, pendientes, canceladas, ventasMes });
+  } catch (error) {
+    console.error('❌ [FRONTEND] Error en recalcularKPIsCostumer:', error);
   }
-  const ventasMes = datosCostumers.filter(c => {
-    if (!c.FECHA) return false;
-    const [cyear, cmes] = c.FECHA.split('-');
-    return Number(cyear) === anio && Number(cmes) === mes;
-  }).length;
-
-  document.getElementById('kpi-ventas-hoy').textContent = ventasHoy;
-  document.getElementById('kpi-leads-pendientes').textContent = pendientes;
-  document.getElementById('kpi-clientes').textContent = canceladas;
-  document.getElementById('kpi-ventas-mes').textContent = ventasMes;
 }
 
 function agregarEventosFiltrosMesAnio() {

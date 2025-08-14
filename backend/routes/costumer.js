@@ -72,12 +72,13 @@ router.get('/ventas/mes', async (req, res) => {
 // Obtener lista de clientes con filtros
 router.get('/clientes/lista', async (req, res) => {
   try {
+    console.log('🔍 [BACKEND] Solicitando lista de clientes con filtros:', req.query);
     const { desde, hasta, mes, anio } = req.query;
     let query = {};
     
     // Construir el query según los filtros
     if (desde && hasta) {
-      query.fecha = {
+      query.dia_venta = {
         $gte: new Date(desde),
         $lte: new Date(hasta)
       };
@@ -86,14 +87,21 @@ router.get('/clientes/lista', async (req, res) => {
       const fechaInicio = new Date(anio, mesNum, 1);
       const fechaFin = new Date(anio, mesNum + 1, 0);
       
-      query.fecha = {
+      query.dia_venta = {
         $gte: fechaInicio,
         $lte: fechaFin
       };
     }
     
+    console.log('🔍 [BACKEND] Consulta a la base de datos:', JSON.stringify(query));
+    
     // Obtener los clientes con los filtros aplicados
     const clientes = await getCostumersCollection().find(query).toArray();
+    console.log(`🔍 [BACKEND] Número de clientes encontrados: ${clientes.length}`);
+    
+    if (clientes.length > 0) {
+      console.log('🔍 [BACKEND] Primer cliente encontrado:', JSON.stringify(clientes[0]));
+    }
     
     // Mapear los campos al formato esperado por el frontend
     const clientesMapeados = clientes.map(cliente => ({
