@@ -1,128 +1,173 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
+const Costumer = require('../models/Costumer');
 
-// Conexión a la colección costumers en la base de datos crmagente
-const getCostumersCollection = () => {
-  return mongoose.connection.db.collection('costumers');
-};
-
-// Ventas Hoy
-router.get('/ventas/hoy', async (req, res) => {
-  try {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    const manana = new Date(hoy);
-    manana.setDate(hoy.getDate() + 1);
-    
-    const ventasHoy = await getCostumersCollection().countDocuments({
-      fecha: { $gte: hoy, $lt: manana }
-    });
-    
-    res.json({ total: ventasHoy });
-  } catch (error) {
-    console.error('Error al obtener ventas de hoy:', error);
-    res.status(500).json({ error: 'Error al obtener ventas de hoy' });
-  }
-});
-
-// Leads Pendientes
-router.get('/leads/pendientes', async (req, res) => {
-  try {
-    const pendientes = await getCostumersCollection().countDocuments({
-      estado: 'Pending'
-    });
-    
-    res.json({ total: pendientes });
-  } catch (error) {
-    console.error('Error al obtener leads pendientes:', error);
-    res.status(500).json({ error: 'Error al obtener leads pendientes' });
-  }
-});
-
-// Total Clientes
-router.get('/clientes', async (req, res) => {
-  try {
-    const total = await getCostumersCollection().countDocuments({});
-    res.json({ total });
-  } catch (error) {
-    console.error('Error al contar clientes:', error);
-    res.status(500).json({ error: 'Error al contar clientes' });
-  }
-});
-
-// Ventas este mes
-router.get('/ventas/mes', async (req, res) => {
-  try {
-    const ahora = new Date();
-    const primerDiaMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-    
-    const ventasMes = await getCostumersCollection().countDocuments({
-      fecha: { $gte: primerDiaMes }
-    });
-    
-    res.json({ total: ventasMes });
-  } catch (error) {
-    console.error('Error al obtener ventas del mes:', error);
-    res.status(500).json({ error: 'Error al obtener ventas del mes' });
-  }
-});
-
-// Obtener lista de clientes con filtros
+// Obtener todos los clientes con filtros
 router.get('/clientes/lista', async (req, res) => {
   try {
-    console.log('🔍 [BACKEND] Solicitando lista de clientes con filtros:', req.query);
-    const { desde, hasta, mes, anio } = req.query;
-    let query = {};
+    console.log('🔍 [BACKEND] Solicitando lista de clientes');
     
-    // Construir el query según los filtros
+    const { 
+      desde, 
+      hasta, 
+      mes, 
+      anio, 
+      equipo, 
+      agente, 
+      estado,
+      telefono,
+      direccion,
+      zip
+    } = req.query;
+
+    // Construir el filtro con los campos reales de Mongo
+    const filtro = {};
+
+    // Rango de fechas (dia_venta en formato YYYY-MM-DD)
     if (desde && hasta) {
-      query.fecha = {
-        $gte: new Date(desde),
-        $lte: new Date(hasta)
-      };
-    } else if (mes && anio) {
-      const mesNum = parseInt(mes, 10) - 1; // Los meses en JS van de 0 a 11
-      const fechaInicio = new Date(anio, mesNum, 1);
-      const fechaFin = new Date(anio, mesNum + 1, 0);
-      
-      query.fecha = {
-        $gte: fechaInicio,
-        $lte: fechaFin
-      };
+      filtro.dia_venta = { $gte: desde, $lte: hasta };
     }
-    
-    console.log('🔍 [BACKEND] Consulta a la base de datos:', JSON.stringify(query));
-    
+
+    // Filtrar por mes y año (calculamos primer y último día del mes)
+    if (mes && anio) {
+      const m = String(mes).padStart(2, '0');
+      const inicio = `${anio}-${m}-01`;
+      const finDate = new Date(anio, Number(mes), 0); // último día del mes
+      const fin = finDate.toISOString().split('T')[0];
+      filtro.dia_venta = { $gte: inicio, $lte: fin };
+    }
+
+    // Otros filtros
+    if (equipo) filtro.team = equipo;
+    if (agente) filtro.agenteNombre = agente;
+    if (estado) filtro.status = estado;
+    if (telefono) filtro.telefono = { $regex: telefono, $options: 'i' };
+    if (direccion) filtro.direccion = { $regex: direccion, $options: 'i' };
+    if (zip) filtro.$or = [{ ZIP: zip }, { zip }];
+
+    // Proyección de campos necesarios para el frontend
+    const projection = {
+      dia_venta: 1,
+      team: 1,
+      agenteNombre: 1,
+      tipo_servicios: 1,
+      status: 1,
+      puntaje: 1,
+      cuenta: 1,
+      telefono: 1,
+      direccion: 1,
+      ZIP: 1,
+      zip: 1
+    };
+
     // Obtener los clientes con los filtros aplicados
-    const clientes = await getCostumersCollection().find(query).toArray();
-    console.log(`🔍 [BACKEND] Número de clientes encontrados: ${clientes.length}`);
+    const clientes = await Costumer.find(filtro, projection)
+      .sort({ dia_venta: -1 });
     
-    if (clientes.length > 0) {
-      console.log('🔍 [BACKEND] Primer cliente encontrado:', JSON.stringify(clientes[0]));
+    res.json({
+      success: true,
+      count: clientes.length,
+      clientes,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error al obtener clientes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener los clientes',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Actualizar cuenta de un cliente
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { numero_de_cuenta } = req.body;
+    
+    const clienteActualizado = await Costumer.findByIdAndUpdate(
+      id,
+      { 
+        CUENTA: numero_de_cuenta,
+        actualizado_el: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!clienteActualizado) {
+      return res.status(404).json({
+        success: false,
+        error: 'Cliente no encontrado'
+      });
     }
     
-    // Mapear los campos al formato esperado por el frontend
-    const clientesMapeados = clientes.map(cliente => ({
-      _id: cliente._id,
-      fecha: cliente.fecha ? new Date(cliente.fecha).toISOString() : null,
-      team: cliente.team || '',
-      agente: cliente.agente || '',
-      servicio: cliente.servicio || '',
-      fechaInstalacion: cliente.fechaInstalacion ? new Date(cliente.fechaInstalacion).toISOString() : null,
-      estado: cliente.estado || 'Pending',
-      puntaje: cliente.puntaje || 0,
-      cuenta: cliente.cuenta || 'Elige',
-      telefono: cliente.telefono || '',
-      direccion: cliente.direccion || '',
-      codigoPostal: cliente.codigoPostal || ''
-    }));
+    res.json({
+      success: true,
+      cliente: clienteActualizado
+    });
     
-    res.json({ clientes: clientesMapeados });
   } catch (error) {
-    console.error('Error al obtener lista de clientes:', error);
-    res.status(500).json({ error: 'Error al obtener la lista de clientes' });
+    console.error('❌ Error al actualizar cuenta:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar la cuenta',
+      message: error.message
+    });
+  }
+});
+
+// Eliminar un cliente
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clienteEliminado = await Costumer.findByIdAndDelete(id);
+    
+    if (!clienteEliminado) {
+      return res.status(404).json({
+        success: false,
+        error: 'Cliente no encontrado'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Cliente eliminado correctamente'
+    });
+    
+  } catch (error) {
+    console.error('❌ Error al eliminar cliente:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al eliminar el cliente',
+      message: error.message
+    });
+  }
+});
+
+// Ruta de depuración: devuelve un documento de muestra y claves detectadas
+router.get('/debug/sample', async (req, res) => {
+  try {
+    const total = await Costumer.estimatedDocumentCount();
+    const sample = await Costumer.findOne({}, null, { sort: { _id: 1 } });
+    const keys = sample ? Object.keys(sample.toObject()) : [];
+    res.json({
+      success: true,
+      total,
+      keys,
+      sample,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error(' Error en debug/sample:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error en ruta de depuración',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

@@ -215,30 +215,74 @@
         e.preventDefault();
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
+        const rememberMe = document.getElementById("remember").checked;
         const message = document.getElementById("message");
+        const loginBtn = document.querySelector('.login-btn-glass');
+        
         message.textContent = "";
         message.className = "";
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Iniciando sesión...";
+        
         try {
+            console.log('🔑 Iniciando sesión...');
             const response = await fetch("/api/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                credentials: 'include', // Importante para cookies
+                body: JSON.stringify({ 
+                    username: username.trim(),
+                    password: password,
+                    rememberMe: rememberMe
+                }),
             });
-            const result = await response.json();
-            if (response.ok && result.token) {
-                localStorage.setItem('token', result.token);
-                message.textContent = "Login exitoso. Redirigiendo...";
+            
+            const result = await response.json().catch(() => ({}));
+            
+            if (response.ok && (result.token || result.success)) {
+                // Guardar token en localStorage si se recibió
+                if (result.token) {
+                    localStorage.setItem('token', result.token);
+                }
+                
+                // Mostrar mensaje de éxito
+                message.textContent = result.mensaje || "¡Bienvenido! Redirigiendo...";
                 message.className = "success";
+                
+                // Redirigir después de un breve retraso
                 setTimeout(() => {
-                    window.location.href = "/inicio.html";
+                    // Si hay una URL de redirección guardada, úsala; de lo contrario, ve a inicio.html
+                    const redirectTo = localStorage.getItem('redirectAfterLogin') || '/inicio.html';
+                    localStorage.removeItem('redirectAfterLogin'); // Limpiar después de usar
+                    window.location.href = redirectTo;
                 }, 1200);
+                
             } else {
-                message.textContent = result.mensaje || "Token no recibido o error de login.";
+                // Mostrar mensaje de error específico si está disponible
+                const errorMsg = result.mensaje || 
+                               (response.status === 401 ? 'Usuario o contraseña incorrectos' : 
+                               'Error al iniciar sesión. Intente nuevamente.');
+                
+                message.textContent = errorMsg;
                 message.className = "error";
+                
+                // Mostrar error en consola para depuración
+                console.error('Error en login:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    result: result
+                });
             }
         } catch (error) {
-            message.textContent = "Error de conexión";
+            console.error('Error en la solicitud de login:', error);
+            message.textContent = "Error de conexión. Verifique su conexión e intente nuevamente.";
             message.className = "error";
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "LOGIN";
         }
     });
     function forgotPassword() {

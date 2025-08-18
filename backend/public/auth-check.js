@@ -6,10 +6,20 @@
 (function() {
   'use strict';
 
-  // Verificar si estamos en la página de login para evitar redirección infinita
-  if (window.location.pathname.endsWith('login.html') || 
-      window.location.pathname.endsWith('login.html/')) {
-    return;
+  // Lista de rutas públicas que no requieren autenticación
+  const rutasPublicas = [
+    '/login.html',
+    '/index.html',
+    '/'
+  ];
+
+  // Verificar si la ruta actual es pública
+  const esRutaPublica = rutasPublicas.some(ruta => 
+    window.location.pathname.endsWith(ruta)
+  );
+
+  if (esRutaPublica) {
+    return; // No hacer verificación en rutas públicas
   }
 
   // Función para verificar el token
@@ -23,23 +33,47 @@
     }
 
     try {
+      console.log('🔍 Verificando token...');
       const response = await fetch('/api/auth/verificar-token', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        credentials: 'include', // Importante para incluir cookies de sesión
+        cache: 'no-store' // Evitar caché
       });
 
+      console.log('🔍 Respuesta del servidor:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('Token inválido o expirado');
+        // Si el error es 401 (No autorizado), redirigir al login
+        if (response.status === 401) {
+          console.warn('⚠️ Token inválido o expirado');
+          localStorage.removeItem('token'); // Limpiar token inválido
+          document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+          throw new Error('Sesión expirada o inválida');
+        }
+        throw new Error(`Error en la verificación: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Usuario autenticado:', data.usuario);
-      return true;
+      console.log('🔍 Datos de autenticación:', data);
+      
+      if (data.success && data.usuario) {
+        console.log('✅ Usuario autenticado:', data.usuario);
+        // Actualizar el token en localStorage si se envió uno nuevo
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+        return true;
+      } else {
+        throw new Error('Respuesta de autenticación inválida');
+      }
     } catch (error) {
-      console.error('❌ Error al verificar el token:', error);
+      console.error('❌ Error al verificar el token:', error.message);
       redirigirALogin();
       return false;
     }

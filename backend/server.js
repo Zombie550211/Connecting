@@ -4,13 +4,14 @@ const path = require('path');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const mongoose = require('mongoose');
-
-// Configuración de la conexión a MongoDB
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/crm';
+const cookieParser = require('cookie-parser');
+const connectDB = require('./config/db');
 
 // Inicialización de la aplicación
 const app = express();
+
+// Conectar a MongoDB
+connectDB();
 
 // Import routes
 const summaryRoutes = require('./routes/summary');
@@ -23,63 +24,142 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Configuración de CORS
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:5000',
   'https://crm-connecting.onrender.com',
-  'https://connecting-klf7.onrender.com'
+  'https://connecting-klf7.onrender.com',
+  /^https?:\/\/.*\.render\.com$/ // Permitir cualquier subdominio de render.com
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir solicitudes sin 'origin' (como aplicaciones móviles o curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'El origen de esta petición no está permitido';
-      return callback(new Error(msg), false);
+    // En desarrollo o sin origen definido, permitir
+    if (process.env.NODE_ENV !== 'production' || !origin) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    
+    // Verificar contra la lista de orígenes permitidos
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+
+    if (isAllowed) {
+      return callback(null, true);
+    } else {
+      console.warn('Origen no permitido:', origin);
+      return callback(new Error('No permitido por CORS'));
+    }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600 // Tiempo que el navegador puede cachear la respuesta preflight (en segundos)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Content-Length',
+    'X-Requested-With',
+    'Accept',
+    'X-Access-Token',
+    'X-Refresh-Token'
+  ],
+  exposedHeaders: [
+    'Content-Range',
+    'X-Content-Range',
+    'X-Access-Token',
+    'X-Refresh-Token'
+  ],
+  maxAge: 86400, // 24 horas
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// Middleware de autenticación JWT
+// Middleware para verificar el token JWT
 const protect = (req, res, next) => {
+  // 1. Verificar token en el encabezado de autorización (Bearer token)
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } 
+  // 2. Si no hay token en el encabezado, verificar en las cookies
+  else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+  
+  // Si hay un token, intentar verificarlo
+  if (token) {
     try {
-      token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secreto_super_secreto');
-      req.user = decoded; // Agrega el payload del token a la request
-      next();
+      req.user = decoded; // Agregar el payload del token a la solicitud
+      return next();
     } catch (error) {
       console.error('Error en la autenticación:', error);
-      return res.status(401).json({ message: 'Token no válido' });
+      // Limpiar la cookie si el token es inválido
+      res.clearCookie('token');
+      return res.status(401).json({ 
+        success: false,
+        message: 'Sesión expirada o inválida' 
+      });
     }
+  } 
+  // 3. Verificar sesión de express-session (si se está usando)
+  else if (req.session && req.session.user) {
+    req.user = req.session.user;
+    return next();
   }
-
-  if (!token) {
-    return res.status(401).json({ message: 'No autorizado, no se proporcionó token' });
-  }
+  
+  // Si no hay token ni sesión válida
+  return res.status(401).json({ 
+    success: false,
+    message: 'No autorizado. Por favor inicia sesión.' 
+  });
 };
 
+// Ruta para verificar el token
+app.get('/api/auth/verificar-token', protect, async (req, res) => {
+  try {
+    console.log('🔍 Verificación de token solicitada');
+    console.log('🔑 Usuario autenticado:', req.user || req.session.user);
+    
+    // Si llegamos aquí, el token es válido
+    const response = {
+      success: true,
+      usuario: req.user || req.session.user,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('✅ Token verificado correctamente');
+    res.json(response);
+    
+  } catch (error) {
+    console.error('❌ Error al verificar el token:', error);
+    
+    // Limpiar la cookie si hay un error
+    res.clearCookie('token');
+    
+    res.status(401).json({ 
+      success: false, 
+      error: 'Token inválido o expirado',
+      tokenValido: false,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Middlewares
-app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(cors({
+  ...corsOptions,
+  credentials: true // Permitir credenciales (cookies, encabezados de autenticación)
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Montar rutas de la API con autenticación
 app.use('/api/crm', protect, crmAgenteRoutes);
-app.use('/api/costumer', protect, costumerRoutes);
-
-mongoose.connect(MONGO_URL)
-  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
-  .catch(err => {
-    console.error('❌ Error al conectar a MongoDB:', err);
-    process.exit(1);
-  });
+app.use('/api/costumer', protect);
 
 // Rutas de autenticación
 app.post('/api/register', async (req, res) => {
@@ -120,47 +200,117 @@ app.post('/api/register', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, rememberMe } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ success: false, mensaje: 'Usuario y contraseña son requeridos.' });
+    return res.status(400).json({ 
+      success: false, 
+      mensaje: 'Usuario y contraseña son requeridos.' 
+    });
   }
+  
+  console.log(`🔐 Intento de inicio de sesión para usuario: ${username}`);
 
   try {
     // Acceso especial para el administrador por defecto
     if (username === 'admin' && password === '1234') {
-      const payload = { id: 'admin-id', username: 'admin', rol: 'admin' };
+      const payload = { 
+        id: 'admin-id', 
+        username: 'admin', 
+        rol: 'admin',
+        nombre: 'Administrador'
+      };
+      
+      const tokenExpiry = rememberMe ? '7d' : '1d';
       const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto_super_secreto', {
-        expiresIn: '1d',
+        expiresIn: tokenExpiry,
       });
-      return res.json({ success: true, token });
+      
+      // Configurar la cookie HTTP-Only segura
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 7 días o 1 día
+        path: '/',
+      };
+      
+      res.cookie('token', token, cookieOptions);
+      
+      return res.json({ 
+        success: true, 
+        token, // También enviamos el token en la respuesta para el cliente
+        user: payload,
+        mensaje: 'Inicio de sesión exitoso'
+      });
     }
 
     // Buscar usuario en la base de datos para usuarios normales
-    const user = await User.findOne({ usuario: username });
+    const user = await User.findOne({ 
+      $or: [
+        { usuario: username },
+        { email: username } // Permitir login con email también
+      ] 
+    });
+    
     if (!user) {
-      return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
+      console.warn(`❌ Intento de inicio de sesión fallido - Usuario no encontrado: ${username}`);
+      return res.status(401).json({ 
+        success: false, 
+        mensaje: 'Credenciales inválidas.' 
+      });
     }
 
-    // Comparar contraseñas (hasheadas para usuarios registrados)
+    // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, mensaje: 'Credenciales inválidas.' });
+      console.warn(`❌ Intento de inicio de sesión fallido - Contraseña incorrecta para usuario: ${username}`);
+      return res.status(401).json({ 
+        success: false, 
+        mensaje: 'Credenciales inválidas.' 
+      });
     }
 
     // Crear payload para el token
     const payload = {
       id: user._id,
       usuario: user.usuario,
-      rol: user.rol || 'agente' // Asignar un rol por defecto si no existe
+      email: user.email,
+      nombre: user.nombre || user.usuario,
+      rol: user.rol || 'agente', // Asignar un rol por defecto si no existe
+      equipo: user.equipo || ''
     };
 
+    // Configurar tiempo de expiración del token
+    const tokenExpiry = rememberMe ? '7d' : '1d';
+    
     // Firmar el token
     const token = jwt.sign(payload, process.env.JWT_SECRET || 'secreto_super_secreto', {
-      expiresIn: '1d',
+      expiresIn: tokenExpiry,
     });
 
-    res.json({ success: true, token });
+    // Configuración de la cookie
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 7 días o 1 día
+      path: '/',
+    };
+
+    // Establecer la cookie HTTP-Only
+    res.cookie('token', token, cookieOptions);
+    
+    console.log(`✅ Inicio de sesión exitoso para usuario: ${username}`);
+
+    // Devolver respuesta exitosa con el token y datos del usuario
+    res.json({ 
+      success: true, 
+      token: token, // Para compatibilidad con clientes que lo necesitan
+      user: payload,
+      mensaje: 'Inicio de sesión exitoso',
+      expiresIn: rememberMe ? '7d' : '1d'
+    });
 
   } catch (error) {
     console.error('Error en login:', error);
@@ -387,10 +537,11 @@ app.get('/api/productos', protect, (req, res) => {
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta para clientes desde CrmAgente
+// Rutas de la API con prefijo /api
+app.use('/api/summary', summaryRoutes);
 app.use('/api/crm-agente', protect, crmAgenteRoutes);
 app.use('/api/costumer', protect, costumerRoutes);
-app.use('/api/summary', summaryRoutes);
+app.use('/api/graficas', protect, graficasRoutes);
 app.use('/api', graficasRoutes);
 
 // Ruta raíz que redirige al login

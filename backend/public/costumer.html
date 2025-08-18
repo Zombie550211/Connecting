@@ -679,7 +679,6 @@
             <th>TEAM</th>
             <th>AGENTE</th>
             <th>PRODUCTO</th>
-            <th>FECHA INSTALACIÓN</th>
             <th>ESTADO</th>
             <th>PUNTAJE</th>
             <th>CUENTA</th>
@@ -891,20 +890,29 @@ function procesarDatosClientes(data) {
     data.clientes = [];
   }
   
-  // Mapear los campos de la colección 'costumers' a los campos esperados por la tabla
+  // Mapear los campos reales de Mongo a los campos esperados por la tabla
+  // FECHA DE VENTA -> dia_venta
+  // TEAM -> team
+  // AGENTE -> agenteNombre
+  // PRODUCTO -> tipo_servicios
+  // ESTADO -> status
+  // PUNTAJE -> puntaje
+  // CUENTA -> (queda a elección del usuario)
+  // TELÉFONO -> telefono
+  // DIRECCIÓN -> direccion
+  // ZIP -> ZIP
   datosCostumers = data.clientes.map(item => ({
     "_id": item._id,
-    "FECHA": formatDate(item.fecha) || "",
+    "FECHA": formatDate(item.dia_venta) || "",
     "TEAM": item.team || "",
-    "AGENTE": item.agente || "",
-    "PRODUCTO": item.servicio || "",
-    "FECHA_INSTALACION": formatDate(item.fechaInstalacion) || "",
-    "ESTADO": item.estado || "Pending",
-    "PUNTAJE": item.puntaje || 0,
+    "AGENTE": item.agenteNombre || "",
+    "PRODUCTO": item.tipo_servicios || "",
+    "ESTADO": item.status || "Pending",
+    "PUNTAJE": item.puntaje ?? 0,
     "CUENTA": item.cuenta || 'Elige',
     "TELÉFONO": item.telefono || "",
     "DIRECCIÓN": item.direccion || "",
-    "ZIP": item.codigoPostal || ""
+    "ZIP": item.ZIP || item.zip || ""
   }));
   
   console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
@@ -1053,7 +1061,6 @@ function renderizarTablaCostumers(filas) {
       <td>${fila.TEAM || ''}</td>
       <td>${fila.AGENTE || ''}</td>
       <td>${fila.PRODUCTO || ''}</td>
-      <td>${fila.FECHA_INSTALACION || ''}</td>
       <td>${fila.ESTADO || ''}</td>
       <td>${fila.PUNTAJE || 0}</td>
       <td>
