@@ -613,6 +613,14 @@
         <div class="kpi-label">Ventas (mes)</div>
         <div class="kpi-value" id="kpi-ventas-mes">0</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Leads pendientes</div>
+        <div class="kpi-value" id="kpi-leads-pendientes">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Clientes</div>
+        <div class="kpi-value" id="kpi-clientes">0</div>
+      </div>
     </div>
     <div class="filters-row" style="margin-bottom:12px;">
       <label>Mes:
@@ -723,6 +731,13 @@ const TEAMS = {
 };
 
 let datosCostumers = [];
+
+// Helper: parse number safely (handles strings like "85%", "0.35", etc.)
+function parseNumberSafe(value) {
+  if (value === undefined || value === null || value === '') return '';
+  const num = Number(String(value).replace(/[^\d.-]/g, ''));
+  return Number.isFinite(num) ? num : '';
+}
 
 // Función para cargar datos de prueba
 function cargarDatosDePrueba() {
@@ -890,29 +905,19 @@ function procesarDatosClientes(data) {
     data.clientes = [];
   }
   
-  // Mapear los campos reales de Mongo a los campos esperados por la tabla
-  // FECHA DE VENTA -> dia_venta
-  // TEAM -> team
-  // AGENTE -> agenteNombre
-  // PRODUCTO -> tipo_servicios
-  // ESTADO -> status
-  // PUNTAJE -> puntaje
-  // CUENTA -> (queda a elección del usuario)
-  // TELÉFONO -> telefono
-  // DIRECCIÓN -> direccion
-  // ZIP -> ZIP
+  // Mapear usando las claves del esquema actual (mayúsculas)
   datosCostumers = data.clientes.map(item => ({
     "_id": item._id,
-    "FECHA": formatDate(item.dia_venta) || "",
-    "TEAM": item.team || "",
-    "AGENTE": item.agenteNombre || "",
-    "PRODUCTO": item.tipo_servicios || "",
-    "ESTADO": item.status || "Pending",
-    "PUNTAJE": item.puntaje ?? 0,
-    "CUENTA": item.cuenta || 'Elige',
-    "TELÉFONO": item.telefono || "",
-    "DIRECCIÓN": item.direccion || "",
-    "ZIP": item.ZIP || item.zip || ""
+    "FECHA": formatDate(item.FECHA) || "",
+    "TEAM": item.TEAM || "",
+    "AGENTE": item.AGENTE || "",
+    "PRODUCTO": item.PRODUCTO || "",
+    "ESTADO": item.ESTADO || "Pending",
+    "PUNTAJE": parseNumberSafe(item.PUNTAJE ?? item.puntaje),
+    "CUENTA": item.CUENTA || 'Elige',
+    "TELÉFONO": item['TELÉFONO'] || "",
+    "DIRECCIÓN": item['DIRECCIÓN'] || "",
+    "ZIP": item.ZIP || ""
   }));
   
   console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
@@ -953,10 +958,11 @@ function recalcularKPIsCostumer() {
     // Verificar si hay datos
     if (!datosCostumers || datosCostumers.length === 0) {
       console.log('ℹ️ [FRONTEND] No hay datos para calcular KPIs');
-      document.getElementById('kpi-ventas-hoy').textContent = '0';
-      document.getElementById('kpi-leads-pendientes').textContent = '0';
-      document.getElementById('kpi-clientes').textContent = '0';
-      document.getElementById('kpi-ventas-mes').textContent = '0';
+      const set0 = (id) => { const el = document.getElementById(id); if (el) el.textContent = '0'; };
+      set0('kpi-ventas-hoy');
+      set0('kpi-leads-pendientes');
+      set0('kpi-clientes');
+      set0('kpi-ventas-mes');
       return;
     }
     
@@ -1062,7 +1068,7 @@ function renderizarTablaCostumers(filas) {
       <td>${fila.AGENTE || ''}</td>
       <td>${fila.PRODUCTO || ''}</td>
       <td>${fila.ESTADO || ''}</td>
-      <td>${fila.PUNTAJE || 0}</td>
+      <td>${(typeof fila.PUNTAJE === 'number') ? fila.PUNTAJE.toFixed(2) : (fila.PUNTAJE || '')}</td>
       <td>
         <select class="cuenta-select" onchange="actualizarCuentaCostumer('${fila._id}', this.value)">
           <option${!fila.CUENTA || fila.CUENTA === 'Elige' ? ' selected' : ''}>Elige</option>
@@ -1207,10 +1213,14 @@ function aplicarFiltros() {
     const hasta = document.getElementById("filtro-fecha-hasta").value;
     const team = document.getElementById("filtro-team").value;
     const agente = document.getElementById("filtro-agente").value;
-    const telefono = document.getElementById("filtro-telefono").value.trim();
-    const direccion = document.getElementById("filtro-direccion").value.trim();
-    const zip = document.getElementById("filtro-zip").value.trim();
-    const estado = document.getElementById("filtro-estado").value;
+    const telefonoEl = document.getElementById("filtro-telefono");
+    const telefono = telefonoEl ? telefonoEl.value.trim() : '';
+    const direccionEl = document.getElementById("filtro-direccion");
+    const direccion = direccionEl ? direccionEl.value.trim() : '';
+    const zipEl = document.getElementById("filtro-zip");
+    const zip = zipEl ? zipEl.value.trim() : '';
+    const estadoEl = document.getElementById("filtro-estado");
+    const estado = estadoEl ? estadoEl.value : '';
     
     console.log('🔍 [FRONTEND] Valores de filtros:', { desde, hasta, team, agente, telefono, direccion, zip, estado });
     
@@ -1362,9 +1372,12 @@ function cerrarFormEditar() {
 }
 
 // Event listeners para filtros que no se manejan en otras funciones
-document.getElementById("filtro-telefono").addEventListener("input", aplicarFiltros);
-document.getElementById("filtro-direccion").addEventListener("input", aplicarFiltros);
-document.getElementById("filtro-zip").addEventListener("input", aplicarFiltros);
+const filtroTelEl = document.getElementById("filtro-telefono");
+if (filtroTelEl) filtroTelEl.addEventListener("input", aplicarFiltros);
+const filtroDirEl = document.getElementById("filtro-direccion");
+if (filtroDirEl) filtroDirEl.addEventListener("input", aplicarFiltros);
+const filtroZipEl = document.getElementById("filtro-zip");
+if (filtroZipEl) filtroZipEl.addEventListener("input", aplicarFiltros);
 
 function logout() {
   fetch('/logout', {

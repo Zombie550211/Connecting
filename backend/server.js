@@ -27,7 +27,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'https://crm-connecting.onrender.com',
   'https://connecting-klf7.onrender.com',
-  /^https?:\/\/.*\.render\.com$/ // Permitir cualquier subdominio de render.com
+  /^https?:\/\/.*\.render\.com$/, // Permitir cualquier subdominio de render.com
+  /^https?:\/\/.*\.netlify\.app$/ // Permitir sitios de Netlify
 ];
 
 const corsOptions = {
