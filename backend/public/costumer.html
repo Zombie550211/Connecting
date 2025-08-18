@@ -875,7 +875,11 @@ async function cargarCostumers() {
     }
     
     procesarDatosClientes(data);
-    
+  } catch (err) {
+    console.error("❌ [FRONTEND] Error cargando costumers:", err);
+  }
+}
+
 // Función para procesar los datos de clientes
 function procesarDatosClientes(data) {
   console.log('🔍 [FRONTEND] Procesando datos de clientes...');
@@ -890,17 +894,17 @@ function procesarDatosClientes(data) {
   // Mapear los campos de la colección 'costumers' a los campos esperados por la tabla
   datosCostumers = data.clientes.map(item => ({
     "_id": item._id,
-    "FECHA": item.dia_venta || "", // Mapeado desde 'dia_venta' de la colección
-    "TEAM": item.equipo || "",      // Mapeado desde 'equipo' de la colección
-    "AGENTE": item.agente || "",    // Mantenido igual
-    "PRODUCTO": item.producto_contratado || "", // Mapeado desde 'producto_contratado'
-    "FECHA_INSTALACION": item.fecha_instalacion || "", // Mantenido similar
-    "ESTADO": item.status || "Pending", // Mapeado desde 'status'
-    "PUNTAJE": item.puntaje || 0,    // Mantenido igual
-    "CUENTA": item.cuenta || 'Elige', // Mantenido igual
-    "TELÉFONO": item.telefono || "", // Mantenido igual
-    "DIRECCIÓN": item.direccion || "", // Mantenido igual
-    "ZIP": item.zip || ""            // Mapeado desde 'zip'
+    "FECHA": formatDate(item.fecha) || "",
+    "TEAM": item.team || "",
+    "AGENTE": item.agente || "",
+    "PRODUCTO": item.servicio || "",
+    "FECHA_INSTALACION": formatDate(item.fechaInstalacion) || "",
+    "ESTADO": item.estado || "Pending",
+    "PUNTAJE": item.puntaje || 0,
+    "CUENTA": item.cuenta || 'Elige',
+    "TELÉFONO": item.telefono || "",
+    "DIRECCIÓN": item.direccion || "",
+    "ZIP": item.codigoPostal || ""
   }));
   
   console.log('🔍 [FRONTEND] Datos procesados para datosCostumers:', datosCostumers.length);
@@ -920,8 +924,17 @@ function procesarDatosClientes(data) {
   
   console.log('🔍 [FRONTEND] Procesamiento de clientes completado exitosamente');
 }
-  } catch (err) {
-    console.error("❌ [FRONTEND] Error cargando costumers:", err);
+
+// Función auxiliar para formatear fechas
+function formatDate(dateString) {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  } catch (e) {
+    console.error('Error formateando fecha:', e);
+    return '';
   }
 }
 

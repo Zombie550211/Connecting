@@ -78,7 +78,7 @@ router.get('/clientes/lista', async (req, res) => {
     
     // Construir el query según los filtros
     if (desde && hasta) {
-      query.dia_venta = {
+      query.fecha = {
         $gte: new Date(desde),
         $lte: new Date(hasta)
       };
@@ -87,7 +87,7 @@ router.get('/clientes/lista', async (req, res) => {
       const fechaInicio = new Date(anio, mesNum, 1);
       const fechaFin = new Date(anio, mesNum + 1, 0);
       
-      query.dia_venta = {
+      query.fecha = {
         $gte: fechaInicio,
         $lte: fechaFin
       };
@@ -106,11 +106,11 @@ router.get('/clientes/lista', async (req, res) => {
     // Mapear los campos al formato esperado por el frontend
     const clientesMapeados = clientes.map(cliente => ({
       _id: cliente._id,
-      fecha: cliente.fecha || '',
+      fecha: cliente.fecha ? new Date(cliente.fecha).toISOString() : null,
       team: cliente.team || '',
       agente: cliente.agente || '',
       servicio: cliente.servicio || '',
-      fechaInstalacion: cliente.fechaInstalacion || '',
+      fechaInstalacion: cliente.fechaInstalacion ? new Date(cliente.fechaInstalacion).toISOString() : null,
       estado: cliente.estado || 'Pending',
       puntaje: cliente.puntaje || 0,
       cuenta: cliente.cuenta || 'Elige',
