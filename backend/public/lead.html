@@ -522,6 +522,11 @@
   // Variables globales para las gráficas
   let ventasPuntajeChart, ventasProductoChart;
 
+  // Lista fija de equipos para la gráfica de Ventas y Puntaje
+  const EQUIPOS_FIJOS = [
+    'Team Irania', 'Team Pleitez', 'Team Roberto', 'Team Lineas', 'Team Randal', 'Team Marisol'
+  ];
+
   // Función para formatear los valores en las etiquetas
   function formatearValor(value, context) {
     // Para la segunda barra (índice 1) que es la de puntajes, mostramos 2 decimales
@@ -624,7 +629,7 @@
     ventasPuntajeChart = new Chart(ctxVentasPuntaje, {
       type: 'bar',
       data: {
-        labels: [],
+        labels: EQUIPOS_FIJOS,
         datasets: [
           {
             label: 'Ventas',
@@ -1003,17 +1008,22 @@
       }
 
       // Procesar datos para las gráficas
+      // Mapear los datos de la API a la lista fija de equipos
+      const normalizar = (s) => (s || '').toString().trim().toLowerCase();
+      const ventasPorEquipo = EQUIPOS_FIJOS.map(eq => {
+        const item = ventasData.find(d => normalizar(d.team || d.equipo || d._id) === normalizar(eq));
+        return item ? (item.ventas || item.count || 0) : 0;
+      });
+      const puntajesPorEquipo = EQUIPOS_FIJOS.map(eq => {
+        const item = ventasData.find(d => normalizar(d.team || d.equipo || d._id) === normalizar(eq));
+        return item ? (d = (item.puntaje ?? item.score ?? 0), typeof d === 'number' ? d : parseFloat(d) || 0) : 0;
+      });
+
       const datosReales = {
         ventasEquipo: {
-          labels: ventasData.length > 0 ? 
-            ventasData.map(item => item.equipo || item.team || String(item._id || '')) : 
-            [],
-          ventas: ventasData.length > 0 ? 
-            ventasData.map(item => item.ventas || item.count || 0) : 
-            [],
-          puntajes: ventasData.length > 0 ? 
-            ventasData.map(item => item.puntaje || item.score || 0) : 
-            []
+          labels: EQUIPOS_FIJOS,
+          ventas: ventasPorEquipo,
+          puntajes: puntajesPorEquipo
         },
         ventasProducto: {
           labels: todosLosProductos,
