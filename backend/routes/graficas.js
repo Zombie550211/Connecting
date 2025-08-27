@@ -1,25 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const CrmAgente = require('../models/CrmAgente');
-const Costumer = require('../models/Costumer');
 
-// Obtener ventas y puntaje por equipo desde la colección Costumer
-// Soporta filtro opcional ?fecha=YYYY-MM-DD usando rango del día sobre campo FECHA (Date)
+// Obtener ventas y puntaje por equipo desde la colección CrmAgente
+// Soporta filtro opcional ?fecha=YYYY-MM-DD usando igualdad sobre campo dia_venta (String)
 router.get('/ventas', async (req, res) => {
   try {
     const { fecha } = req.query;
     const match = {};
     if (fecha) {
-      // Construye el rango usando HORARIO LOCAL del servidor
-      // Esto evita desfases cuando los documentos fueron guardados con hora local
-      const startLocal = new Date(`${fecha}T00:00:00`); // local time
-      const endLocal = new Date(`${fecha}T23:59:59.999`); // local time
-      match.FECHA = { $gte: startLocal, $lte: endLocal };
+      match.dia_venta = fecha; // formato esperado YYYY-MM-DD
     }
 
-    const ventasPorEquipo = await Costumer.aggregate([
+    const ventasPorEquipo = await CrmAgente.aggregate([
       { $match: match },
-      { $group: { _id: '$TEAM', ventas: { $sum: 1 }, puntaje: { $sum: { $ifNull: ['$PUNTAJE', 0] } } } },
+      { $group: { _id: '$equipo', ventas: { $sum: 1 }, puntaje: { $sum: { $ifNull: ['$puntaje', 0] } } } },
       { $project: { _id: 0, equipo: '$_id', ventas: 1, puntaje: 1 } },
       { $sort: { equipo: 1 } }
     ]);
