@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Lead = require('./models/lead');
-const Costumer = require('./models/costumer');
+const Costumer = require('./models/Costumer');
 
 const MONGO_URL = process.env.MONGO_URL || "TU_STRING_DE_CONEXION_MONGODB";
 

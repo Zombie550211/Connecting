@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Costumer = require('./models/costumer');
+const Costumer = require('./models/Costumer');
 require('dotenv').config();
 
 async function checkData() {

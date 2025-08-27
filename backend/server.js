@@ -435,105 +435,6 @@ app.post('/api/leads', protect, async (req, res) => {
   }
 });
 
-// Nueva ruta para las gráficas de la página de leads
-app.get('/api/graficas', protect, async (req, res) => {
-  try {
-    const { fecha } = req.query;
-    if (!fecha) {
-      return res.status(400).json({ ok: false, error: 'La fecha es requerida' });
-    }
-
-    console.log(`Buscando datos para la fecha: ${fecha}`); // <-- LOG DE DIAGNÓSTICO
-
-    const resultados = await CrmAgente.find({ dia_venta: fecha });
-
-    const ventasPorEquipo = {};
-    const puntosPorEquipo = {};
-    const ventasPorProducto = {};
-
-    resultados.forEach(item => {
-      // Procesar ventas y puntos por equipo
-      if (item.equipo) {
-        ventasPorEquipo[item.equipo] = (ventasPorEquipo[item.equipo] || 0) + 1;
-        puntosPorEquipo[item.equipo] = (puntosPorEquipo[item.equipo] || 0) + (item.puntaje || 0);
-      }
-      // Procesar ventas por producto
-      if (item.producto) {
-        ventasPorProducto[item.producto] = (ventasPorProducto[item.producto] || 0) + 1;
-      }
-    });
-
-    
-
-    res.json({
-      ok: true,
-      ventasPorEquipo,
-      puntosPorEquipo,
-      ventasPorProducto
-    });
-
-  } catch (error) {
-    console.error('Error al obtener datos para gráficas:', error);
-    res.status(500).json({ ok: false, error: 'Error interno del servidor' });
-  }
-});
-
-// Ruta para obtener todos los productos únicos
-app.get('/api/productos', protect, (req, res) => {
-  try {
-    const todosLosProductos = [
-      '225 AT&T AIR',
-      '100 MBPS AT&T',
-      '18 MBPS AT&T',
-      '1G AT&T',
-      '25 MBPS AT&T',
-      '300 MBPS AT&T',
-      '50 MBPS AT&T',
-      '500 MBPS AT&T',
-      '5G AT&T',
-      '75 MBPS AT&T',
-      'ALTAFIBER',
-      'FRONTIER',
-      'HUGHESNET',
-      'MAS LATINO',
-      'MAS ULTRA',
-      'OPTIMO MAS',
-      'OPTIMUM',
-      'SPECTRUM',
-      'VIASAT',
-      'WINDSTREAM',
-      'WOW',
-      'LINEA + CELULAR',
-      'VIVINT',
-      'KINETIC',
-      'SPECTRUM BUSINESS',
-      'AT&T BUSINESS',
-      'DIRECTV BUSINESS',
-      'CONSOLIDATE COMMUNICATION',
-      'ZYPYLFIBER',
-      'SPECTRUM 500',
-      'SPECTRUM 50',
-      'FRONTIER 200',
-      'FRONTIER 500',
-      'SPECTRUM 100',
-      'FRONTIER 100',
-      'FRONTIER 1G',
-      'SPECTRUM 1G',
-      'FRONTIER 2G',
-      'SPECTRUM DOUBLE PLAY PREMIER',
-      'SPECTRUM DOUBLE PLAY ADVANTAGE',
-      'FRONTIER 5G',
-      'EARTHLINK',
-      'BRIGHTSPEED',
-      '2G AT&T',
-      '2G SPECTRUM'
-    ];
-    res.json({ ok: true, productos: todosLosProductos });
-  } catch (error) {
-    console.error('Error al obtener la lista de productos:', error);
-    res.status(500).json({ ok: false, error: 'Error interno del servidor' });
-  }
-});
 
 // Ruta para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
@@ -542,8 +443,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/summary', summaryRoutes);
 app.use('/api/crm-agente', protect, crmAgenteRoutes);
 app.use('/api/costumer', protect, costumerRoutes);
+// Gráficas y productos (ventas por equipo/producto) protegidas
 app.use('/api/graficas', protect, graficasRoutes);
-app.use('/api', graficasRoutes);
+app.use('/api', protect, graficasRoutes); // habilita /api/ventas y /api/productos protegidos
 
 // Ruta raíz que redirige al login
 app.get('/', (req, res) => {
